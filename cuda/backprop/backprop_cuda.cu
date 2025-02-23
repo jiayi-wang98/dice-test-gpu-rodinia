@@ -145,7 +145,7 @@ void bpnn_train_cuda(BPNN *net, float *eo, float *eh)
 	sum += net->input_weights[0][j];
 	net-> hidden_units[j] = float(1.0 / (1.0 + exp(-sum)));
   }
-  #endif
+#endif
 
   bpnn_layerforward(net->hidden_units, net->output_units, net->hidden_weights, hid, out);
   bpnn_output_error(net->output_delta, net->target, net->output_units, out, &out_err);

@@ -1,0 +1,1 @@
+nvcc backprop_cuda.cu -o backprop -cudart shared

@@ -1,0 +1,1 @@
+nvcc nn_cuda.cu -o nn_cuda -cudart shared -Xcompiler "-fsanitize=address -fno-omit-frame-pointer"
