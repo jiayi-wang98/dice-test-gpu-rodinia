@@ -176,8 +176,57 @@ int main(int argc, char* argv[])
     //Copy data from device memory to host memory
     cudaMemcpy( distances, d_distances, sizeof(float)*numRecords, cudaMemcpyDeviceToHost );
 
+    // --- Compute CPU results ---
+    std::vector<Record> cpu_records = records; // make a copy of the original records
+    std::vector<float> cpu_distances(numRecords, 0.0f);
+    for (int i = 0; i < numRecords; i++) {
+        // Compute Euclidean distance on CPU
+        float dlat = lat - locations[i].lat;
+        float dlng = lng - locations[i].lng;
+        cpu_distances[i] = sqrtf(dlat * dlat + dlng * dlng);
+    }
+    findLowest(cpu_records, &cpu_distances[0], numRecords, resultsCount);
+
 	// find the resultsCount least distances
     findLowest(records,distances,numRecords,resultsCount);
+
+  // --- Compare CPU and GPU results ---
+  bool match = true;
+  const float epsilon = 1e-5f; // tolerance for floating-point comparisons
+  for (int i = 0; i < resultsCount; i++) {
+      if (fabs(cpu_records[i].distance - records[i].distance) > epsilon) {
+          match = false;
+          printf("Mismatch at index %d: CPU = %f, GPU = %f\n", i, cpu_records[i].distance, records[i].distance);
+      }
+  }
+  
+  if (match) {
+    printf("CPU and GPU results match for the top %d records.\n", resultsCount);
+    // Print a cool big smile face if correct
+    printf("\n");
+    printf("       .-\"\"\"\"\"-.\n");
+    printf("     .'         '.\n");
+    printf("    :             :\n");
+    printf("   :    ^     ^    :\n");
+    printf("   :     .---.     :\n");
+    printf("    :   (     )   :\n");
+    printf("     '.  '---'  .'\n");
+    printf("       '-.....-'\n");
+    printf("\n");
+} else {
+    printf("Discrepancies found between CPU and GPU results.\n");
+    // Print a sad face if mismatch
+    printf("\n");
+    printf("       .-\"\"\"\"\"-.\n");
+    printf("     .'         '.\n");
+    printf("    :   .-\"\"\"-.   :\n");
+    printf("   :   /       \\   :\n");
+    printf("   :  |  :( :(  |  :\n");
+    printf("    :  \\       /  :\n");
+    printf("     '. '-...-' .'\n");
+    printf("       '-.....-'\n");
+    printf("\n");
+}
 
     // print out results
     if (!quiet)
