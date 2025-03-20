@@ -84,7 +84,7 @@ int main(int argc, char* argv[])
     std::vector<Record> records;
 	std::vector<LatLong> locations;
 	char filename[100];
-	int resultsCount=10;
+	int resultsCount=1000;
 
     // parse command line
     if (parseCommandline(argc, argv, filename,&resultsCount,&lat,&lng,
@@ -112,7 +112,7 @@ int main(int argc, char* argv[])
 	cudaGetDeviceProperties( &deviceProp, 0 );
 	cudaThreadSynchronize();
 	unsigned long maxGridX = deviceProp.maxGridSize[0];
-	unsigned long threadsPerBlock = min( deviceProp.maxThreadsPerBlock, DEFAULT_THREADS_PER_BLOCK );
+	unsigned long threadsPerBlock = min( deviceProp.maxThreadsPerBlock, DEFAULT_THREADS_PER_BLOCK);
 	size_t totalDeviceMemory;
 	size_t freeDeviceMemory;
 	cudaMemGetInfo(  &freeDeviceMemory, &totalDeviceMemory );

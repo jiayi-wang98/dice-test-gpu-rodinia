@@ -17,7 +17,7 @@ LAT = 5,
 IN_REGS = (%ctaid.y,%nctaid.x,%ctaid.x,%ntid.x,%tid.x,%r2),
 OUT_REGS = (%r1,%p1),
 LD_DEST_REGS = (%f2), //sepcific ports
-STORE = 1, //sepcific ports
+STORE = 0, //sepcific ports
 BRANCH = 1,
 BRANCH_UNI = 0,
 BRANCH_PRED = (%p1),
@@ -40,7 +40,7 @@ BITSTREAM_LENGTH = 7,
 UNROLLING_FACTOR = 1,
 UNROLLING_STRATEGY = 0,
 LAT = 2,
-IN_REGS = (%f1,%f2,%rd5),
+IN_REGS = (%f1,%f2,%f3,%f5,%rd5),
 STORE = 1;
 
 DBB_ID = 4,
