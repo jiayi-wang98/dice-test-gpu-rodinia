@@ -3,4 +3,7 @@ rm -f ./_cuobjdump_*
 rm -f ./gpgpusim_power_report__*
 ./nn_cuda filelist_4 -r 10 -lat 30 -lng 90
 #./nn_cuda filelist_dbg -r 10 -lat 30 -lng 90
+#./nn_cuda filelist_dbg_512 -r 10 -lat 30 -lng 90
+#./nn_cuda filelist_dbg_2048 -r 10 -lat 30 -lng 90
+#./nn_cuda filelist_dbg_1024 -r 10 -lat 30 -lng 90
 #gdb --args ./nn_cuda filelist_4 -r 5 -lat 30 -lng 90
