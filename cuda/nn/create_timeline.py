@@ -54,6 +54,80 @@ def parse_log_file(file_path):
     
     return block_instances
 
+def extract_stats(file_path, output_file):
+    shader_stats = {}
+    global_stats = {}
+    
+    patterns = {
+        'shader_start': r'SHADER (\d+):',
+        'read_regfile': r'gpgpu_n_m_read_regfile_acesses = (\d+)',
+        'write_regfile': r'gpgpu_n_m_write_regfile_acesses = (\d+)',
+        'tot_regfile': r'gpgpu_n_tot_regfile_acesses = (\d+)',
+        'l1d_accesses': r'L1D_total_cache_accesses = (\d+)',
+        'l1d_misses': r'L1D_total_cache_misses = (\d+)',
+        'l1d_miss_rate': r'L1D_total_cache_miss_rate = ([\d.]+)',
+        'l2_accesses': r'L2_total_cache_accesses = (\d+)',
+        'l2_misses': r'L2_total_cache_misses = (\d+)',
+        'l2_miss_rate': r'L2_total_cache_miss_rate = ([\d.]+)'
+    }
+    
+    current_shader = None
+    
+    try:
+        with open(file_path, 'r') as file:
+            for line in file:
+                # Check for shader start
+                match = re.search(patterns['shader_start'], line)
+                if match:
+                    current_shader = int(match.group(1))
+                    shader_stats[current_shader] = {}
+                    continue
+                
+                # Shader-specific stats
+                if current_shader is not None:
+                    read_match = re.search(patterns['read_regfile'], line)
+                    if read_match:
+                        shader_stats[current_shader]['read_regfile'] = int(read_match.group(1))
+                    
+                    write_match = re.search(patterns['write_regfile'], line)
+                    if write_match:
+                        shader_stats[current_shader]['write_regfile'] = int(write_match.group(1))
+                        current_shader = None  # Reset after last stat for this shader
+                
+                # Global stats
+                for key, pattern in patterns.items():
+                    if key in ['shader_start', 'read_regfile', 'write_regfile']:
+                        continue
+                    match = re.search(pattern, line)
+                    if match:
+                        value = int(match.group(1)) if key in ['tot_regfile', 'l1d_accesses', 'l1d_misses', 'l2_accesses', 'l2_misses'] else float(match.group(1))
+                        global_stats[key] = value
+    
+        # Write stats to output file
+        with open(output_file, 'w') as out_file:
+            out_file.write("Shader Statistics:\n")
+            for shader_id, stats in sorted(shader_stats.items()):
+                out_file.write(f"SHADER {shader_id}:\n")
+                out_file.write(f"  gpgpu_n_m_read_regfile_acesses = {stats.get('read_regfile', 0)}\n")
+                out_file.write(f"  gpgpu_n_m_write_regfile_acesses = {stats.get('write_regfile', 0)}\n")
+            out_file.write("\nGlobal Statistics:\n")
+            out_file.write(f"gpgpu_n_tot_regfile_acesses = {global_stats.get('tot_regfile', 0)}\n")
+            out_file.write(f"L1D_total_cache_accesses = {global_stats.get('l1d_accesses', 0)}\n")
+            out_file.write(f"L1D_total_cache_misses = {global_stats.get('l1d_misses', 0)}\n")
+            out_file.write(f"L1D_total_cache_miss_rate = {global_stats.get('l1d_miss_rate', 0.0)}\n")
+            out_file.write(f"L2_total_cache_accesses = {global_stats.get('l2_accesses', 0)}\n")
+            out_file.write(f"L2_total_cache_misses = {global_stats.get('l2_misses', 0)}\n")
+            out_file.write(f"L2_total_cache_miss_rate = {global_stats.get('l2_miss_rate', 0.0)}\n")
+        
+        print(f"Statistics written to {output_file}")
+    
+    except FileNotFoundError:
+        print(f"Error: File '{file_path}' not found")
+        sys.exit(1)
+    except Exception as e:
+        print(f"Error processing stats: {str(e)}")
+        sys.exit(1)
+
 def create_timeline_chart(block_instances, output_file='timeline.png'):
     fig, ax = plt.subplots(figsize=(12, 10))
     
@@ -71,18 +145,15 @@ def create_timeline_chart(block_instances, output_file='timeline.png'):
     y_positions = {}
     mem_wb_rows = defaultdict(list)
     
-    # Assign positions for non-MEM_WRITEBACK stages
     for instance in block_instances:
         if instance['stage'] != 'MEM_WRITEBACK':
             y_positions[(instance['stage'], instance['hw_cta'], instance['block'])] = base_positions[instance['stage']]
     
-    # Collect and sort MEM_WRITEBACK instances
     mem_wb_instances = sorted(
         [i for i in block_instances if i['stage'] == 'MEM_WRITEBACK'],
         key=lambda x: (x['start'], x['end'])
     )
     
-    # Place MEM_WRITEBACK instances based on table_index
     for instance in mem_wb_instances:
         start = instance['start']
         end = instance['end']
@@ -94,13 +165,11 @@ def create_timeline_chart(block_instances, output_file='timeline.png'):
         mem_wb_rows[table_index].append((start, end, hw_cta, block))
         y_positions[key] = base_positions['MEM_WRITEBACK'] - table_index * 0.8
     
-    # Debug y_positions for MEM_WRITEBACK
     print("Y-Positions for MEM_WRITEBACK:")
     for key, pos in y_positions.items():
         if key[0] == 'MEM_WRITEBACK':
             print(f"Key: {key}, Y-Position: {pos}")
     
-    # Plot all instances
     for instance in block_instances:
         stage = instance['stage']
         hw_cta = instance['hw_cta']
@@ -120,11 +189,9 @@ def create_timeline_chart(block_instances, output_file='timeline.png'):
                             facecolor=pair_colors[(hw_cta, block)],
                             alpha=0.7, edgecolor='black')
         ax.add_patch(rect)
-        # Change legend to vertical format: (hw_cta)\n(block)
         ax.text(start + duration/2, y_pos, f'({hw_cta})\n({block})',
                 ha='center', va='center', color='black', fontsize=8)
     
-    # Customize plot
     yticks = []
     yticklabels = []
     for stage in base_positions:
@@ -151,7 +218,6 @@ def create_timeline_chart(block_instances, output_file='timeline.png'):
     ax.grid(True, alpha=0.3)
     plt.tight_layout()
     
-    # Debug output for lanes
     for table_idx in sorted(mem_wb_rows.keys()):
         print(f"Lane {table_idx}: {sorted(mem_wb_rows[table_idx], key=lambda x: x[0])}")
     
@@ -166,9 +232,11 @@ def main():
     
     log_file = sys.argv[1]
     output_file = log_file.rsplit('.', 1)[0] + '_timeline.png'
+    stats_file = log_file.rsplit('.', 1)[0] + '_status.info'
     
     block_instances = parse_log_file(log_file)
     create_timeline_chart(block_instances, output_file)
+    extract_stats(log_file, stats_file)
 
 if __name__ == "__main__":
     main()
