@@ -29,7 +29,7 @@ float init_time = 0, mem_alloc_time = 0, h2d_time = 0, kernel_time = 0,
 #define print( x )			printf( #x ": %lu\n", (unsigned long) x )
 #define DEBUG				false
 
-#define DEFAULT_THREADS_PER_BLOCK 256
+#define DEFAULT_THREADS_PER_BLOCK 512
 
 #define MAX_ARGS 10
 #define REC_LENGTH 53 // size of a record in db

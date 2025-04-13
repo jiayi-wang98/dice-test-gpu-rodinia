@@ -1,0 +1,4 @@
+rm -f ./_app_*
+rm -f ./_cuobjdump_*
+rm -f ./gpgpusim_power_report__*
+gdb --args ./bfs random_graph.txt

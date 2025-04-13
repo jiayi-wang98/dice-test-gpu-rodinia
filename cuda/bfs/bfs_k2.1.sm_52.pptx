@@ -1,0 +1,68 @@
+
+
+
+
+
+
+
+
+.version 7.7
+.target sm_52
+.address_size 64
+
+.visible .entry _Z7Kernel2PbS_S_S_i(
+.param .u64 _Z7Kernel2PbS_S_S_i_param_0,
+.param .u64 _Z7Kernel2PbS_S_S_i_param_1,
+.param .u64 _Z7Kernel2PbS_S_S_i_param_2,
+.param .u64 _Z7Kernel2PbS_S_S_i_param_3,
+.param .u32 _Z7Kernel2PbS_S_S_i_param_4
+)
+{
+.reg .pred %p<3>;
+.reg .b16 %rs<4>;
+.reg .b32 %r<6>;
+.reg .b64 %rd<13>;
+
+$DICE_BB_0:
+ld.param.u64 %rd3, [_Z7Kernel2PbS_S_S_i_param_0];
+ld.param.u64 %rd4, [_Z7Kernel2PbS_S_S_i_param_1];
+ld.param.u64 %rd5, [_Z7Kernel2PbS_S_S_i_param_2];
+ld.param.u64 %rd6, [_Z7Kernel2PbS_S_S_i_param_3];
+ld.param.u32 %r2, [_Z7Kernel2PbS_S_S_i_param_4];
+
+$DICE_BB_1:
+mov.u32 %r3, %ctaid.x;
+shl.b32 %r4, %r3, 9;
+mov.u32 %r5, %tid.x;
+add.s32 %r1, %r4, %r5;
+setp.ge.s32 %p1, %r1, %r2;
+@%p1 bra $DICE_BB_5;
+
+$DICE_BB_2:
+cvta.to.global.u64 %rd7, %rd4;
+cvt.s64.s32 %rd1, %r1;
+add.s64 %rd2, %rd7, %rd1;
+ld.global.u8 %rs1, [%rd2];
+
+$DICE_BB_3:
+setp.eq.s16 %p2, %rs1, 0;
+@%p2 bra $DICE_BB_5;
+
+$DICE_BB_4:
+cvta.to.global.u64 %rd8, %rd3;
+add.s64 %rd9, %rd8, %rd1;
+mov.u16 %rs2, 1;
+st.global.u8 [%rd9], %rs2;
+cvta.to.global.u64 %rd10, %rd5;
+add.s64 %rd11, %rd10, %rd1;
+st.global.u8 [%rd11], %rs2;
+cvta.to.global.u64 %rd12, %rd6;
+st.global.u8 [%rd12], %rs2;
+mov.u16 %rs3, 0;
+st.global.u8 [%rd2], %rs3;
+
+$DICE_BB_5:
+ret;
+
+}
+
