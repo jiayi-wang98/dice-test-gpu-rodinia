@@ -1,0 +1,157 @@
+// DICECompiler PPTX for: .\examples\rodinia\bfs\bfs.ptx
+.version 7.7
+.target sm_52
+.address_size 64
+.visible .entry _Z6KernelP4NodePiPbS2_S2_S1_i(
+.param .u64 _Z6KernelP4NodePiPbS2_S2_S1_i_param_0,
+.param .u64 _Z6KernelP4NodePiPbS2_S2_S1_i_param_1,
+.param .u64 _Z6KernelP4NodePiPbS2_S2_S1_i_param_2,
+.param .u64 _Z6KernelP4NodePiPbS2_S2_S1_i_param_3,
+.param .u64 _Z6KernelP4NodePiPbS2_S2_S1_i_param_4,
+.param .u64 _Z6KernelP4NodePiPbS2_S2_S1_i_param_5,
+.param .u32 _Z6KernelP4NodePiPbS2_S2_S1_i_param_6
+)
+{
+.reg .b32 %r<13>;
+.reg .pred %p<16>;
+.reg .b32 %w<5>;
+
+$DICE_BB0_0:
+ld.param.u64 %r0, [_Z6KernelP4NodePiPbS2_S2_S1_i_param_0];
+ld.param.u64 %r1, [_Z6KernelP4NodePiPbS2_S2_S1_i_param_1];
+ld.param.u64 %r2, [_Z6KernelP4NodePiPbS2_S2_S1_i_param_2];
+ld.param.u64 %r3, [_Z6KernelP4NodePiPbS2_S2_S1_i_param_3];
+ld.param.u64 %r4, [_Z6KernelP4NodePiPbS2_S2_S1_i_param_4];
+ld.param.u64 %r5, [_Z6KernelP4NodePiPbS2_S2_S1_i_param_5];
+ld.param.u32 %r6, [_Z6KernelP4NodePiPbS2_S2_S1_i_param_6];
+
+$DICE_BB0_1:
+cvta.to.global.u64 %r7, %r5;
+mov.u32 %w0, %ctaid.x;
+shl.b32 %w1, %w0, 9;
+mov.u32 %w2, %tid.x;
+add.s32 %w3, %w1, %w2;
+setp.ge.s32 %p0, %w3, %r6;
+@!%p0 cvta.to.global.u64 %w4, %r2;
+@!%p0 cvt.s64.s32 %r8, %w3;
+@!%p0 add.s64 %r9, %w4, %r8;
+@!%p0 ld.global.u8 %r10, [%r9];
+
+$DICE_BB0_2:
+setp.eq.s16 %p1, %r10, 0;
+norn.pred %p2, %p1, !%p1;
+@%p2 mov.u16 %w0, 0;
+@%p2 cvta.to.global.u64 %w1, %r0;
+@%p2 shl.b64 %w2, %r8, 3;
+@%p2 add.s64 %r2, %w1, %w2;
+@%p2 add.s64 %r5, %r2, 4;
+norn.pred %p3, %p1, !%p1;
+norn.pred %p4, %p1, !%p1;
+norn.pred %p5, %p1, !%p1;
+norn.pred %p6, %p1, !%p1;
+@%p2 st.global.u8 [%r9], %w0;
+
+$DICE_BB0_3:
+@%p2 ld.global.u32 %r0, [%r2+4];
+
+$DICE_BB0_4:
+setp.lt.s32 %p7, %r0, 1;
+andn.pred %p8, %p3, %p7;
+@%p8 shl.b64 %w0, %r8, 2;
+@%p8 add.s64 %r2, %r7, %w0;
+@%p8 ld.global.u32 %r6, [%r5+-4];
+@%p8 cvta.to.global.u64 %r9, %r1;
+@%p8 cvta.to.global.u64 %r10, %r4;
+@%p8 cvta.to.global.u64 %r11, %r3;
+@%p8 mov.u16 %r12, 1;
+andn.pred %p9, %p4, %p7;
+andn.pred %p10, %p6, %p7;
+
+$DICE_BB0_5:
+@%p8 mul.wide.s32 %w0, %r6, 4;
+@%p8 add.s64 %w1, %r9, %w0;
+@%p8 mov.u32 %r1, %r6;
+@%p9 ld.global.s32 %r3, [%w1];
+@%p10 add.s32 %r4, %r1, 1;
+
+$DICE_BB0_6:
+@%p9 add.s64 %w0, %r10, %r3;
+@%p9 ld.global.u8 %r8, [%w0];
+
+$DICE_BB0_7:
+setp.ne.s16 %p11, %r8, 0;
+norn.pred %p12, %p11, !%p3;
+and.pred %p13, %p5, %p12;
+@%p13 ld.global.u32 %r9, [%r2];
+@%p13 shl.b64 %w0, %r3, 2;
+@%p13 add.s64 %r10, %r7, %w0;
+@%p13 add.s64 %w1, %r11, %r3;
+@%p13 st.global.u8 [%w1], %r12;
+
+$DICE_BB0_8:
+@%p13 add.s32 %w0, %r9, 1;
+@%p13 st.global.u32 [%r10], %w0;
+@%p13 ld.global.u32 %r2, [%r5];
+@%p13 ld.global.u32 %r3, [%r5+-4];
+
+$DICE_BB0_9:
+@%p10 add.s32 %w0, %r6, %r0;
+setp.lt.s32 %p14, %r1, %w0;
+and.pred %p15, %p10, %p14;
+@%p15 bra $DICE_BB0_2;
+
+$DICE_BB0_10:
+ret;
+
+}
+
+.visible .entry _Z7Kernel2PbS_S_S_i(
+.param .u64 _Z7Kernel2PbS_S_S_i_param_0,
+.param .u64 _Z7Kernel2PbS_S_S_i_param_1,
+.param .u64 _Z7Kernel2PbS_S_S_i_param_2,
+.param .u64 _Z7Kernel2PbS_S_S_i_param_3,
+.param .u32 _Z7Kernel2PbS_S_S_i_param_4
+)
+{
+.reg .b32 %r<12>;
+.reg .pred %p<3>;
+.reg .b32 %w<1>;
+
+$DICE_BB1_0:
+ld.param.u64 %r0, [_Z7Kernel2PbS_S_S_i_param_0];
+ld.param.u64 %r1, [_Z7Kernel2PbS_S_S_i_param_1];
+ld.param.u64 %r2, [_Z7Kernel2PbS_S_S_i_param_2];
+ld.param.u64 %r3, [_Z7Kernel2PbS_S_S_i_param_3];
+ld.param.u32 %r4, [_Z7Kernel2PbS_S_S_i_param_4];
+
+$DICE_BB1_1:
+mov.u32 %r5, %ctaid.x;
+shl.b32 %r6, %r5, 9;
+mov.u32 %r7, %tid.x;
+add.s32 %w0, %r6, %r7;
+setp.ge.s32 %p0, %w0, %r4;
+@!%p0 cvta.to.global.u64 %r8, %r1;
+@!%p0 cvt.s64.s32 %r9, %w0;
+@!%p0 add.s64 %r10, %r8, %r9;
+@!%p0 ld.global.u8 %r11, [%r10];
+
+$DICE_BB1_2:
+setp.eq.s16 %p1, %r11, 0;
+norn.pred %p2, %p1, !%p1;
+@%p2 cvta.to.global.u64 %r1, %r0;
+@%p2 add.s64 %r4, %r1, %r9;
+@%p2 mov.u16 %w0, 1;
+@%p2 st.global.u8 [%r4], %w0;
+@%p2 cvta.to.global.u64 %r5, %r2;
+@%p2 add.s64 %r6, %r5, %r9;
+@%p2 st.global.u8 [%r6], %w0;
+@%p2 cvta.to.global.u64 %r7, %r3;
+@%p2 st.global.u8 [%r7], %w0;
+@%p2 mov.u16 %r8, 0;
+@%p2 st.global.u8 [%r10], %r8;
+
+$DICE_BB1_3:
+ret;
+
+}
+

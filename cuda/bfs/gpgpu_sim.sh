@@ -1,1 +1,1 @@
-nvcc bfs.cu -o bfs -cudart shared -Xcompiler "-fsanitize=address -fno-omit-frame-pointer"
+nvcc bfs.cu -o bfs -cudart shared -O2 -Xcompiler "-fsanitize=address -fno-omit-frame-pointer" 
