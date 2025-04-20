@@ -5,6 +5,10 @@
 #include <omp.h>
 #include <cuda.h>
 #include <sys/time.h>
+#include <fcntl.h>      // for open
+#include <unistd.h>     // for read, close
+#include <stdlib.h>     // for malloc, free
+#include <stdio.h>      // for printf
 
 #define BIGRND 0x7fffffff
 #define GPU
@@ -56,6 +60,7 @@ void bpnn_zero_weights(float **w, int m, int n);
 float drnd();
 float dpn1();
 double gettime();
+void compare_results(const char* label, float* cpu, float* gpu, int n, float tolerance);
 __global__ void bpnn_layerforward_CUDA(float *input_cuda, float *output_hidden_cuda, float *input_hidden_cuda, float *hidden_partial_sum, int in, int hid);
 __global__ void bpnn_adjust_weights_cuda(float *delta, int hid, float *ly, int in, float *w, float *oldw);
 
@@ -134,6 +139,46 @@ void bpnn_zero_weights(float **w, int m, int n) {
         }
     }
 }
+
+
+void compare_results(const char* label, float* cpu, float* gpu, int n, float tolerance) {
+    int mismatches = 0;
+    for (int i = 1; i <= n; i++) {  // skip bias at index 0
+        float diff = fabs(cpu[i] - gpu[i]);
+        if (diff > tolerance) {
+            printf("Mismatch in %s at index %d: CPU=%f, GPU=%f, diff=%f\n", label, i, cpu[i], gpu[i], diff);
+            mismatches++;
+        }
+    }
+    if (mismatches == 0) {
+        printf("CPU and GPU results match!\n");
+        printf("\n");
+        printf("       .-\"\"\"\"\"-.\n");
+        printf("     .'         '.\n");
+        printf("    :             :\n");
+        printf("   :    ^     ^    :\n");
+        printf("   :     .---.     :\n");
+        printf("    :   (     )   :\n");
+        printf("     '.  '---'  .'\n");
+        printf("       '-.....-'\n");
+        printf("\n");
+        printf("PASS: %s CPU and GPU results match within tolerance %.6f\n", label, tolerance);
+    } else {
+        printf("CPU and GPU results differ!\n");
+        printf("\n");
+        printf("**        **\n");
+        printf(" **      ** \n");
+        printf("  **    **  \n");
+        printf("   **  **   \n");
+        printf("   **  **   \n");
+        printf("  **    **  \n");
+        printf(" **      ** \n");
+        printf("**        **\n");
+        printf("\n");
+        printf("FAIL: %d mismatches in %s output\n", mismatches, label);
+    }
+}
+
 
 void bpnn_initialize(int seed) {
     printf("Random number generator seed: %d\n", seed);
@@ -309,23 +354,28 @@ void bpnn_save(BPNN *net, char *filename) {
     fclose(pFile);
 }
 
-BPNN *bpnn_read(char *filename) {
+__host__ BPNN *bpnn_read(char *filename) {
     char *mem;
     BPNN *new_net;
     int fd, n1, n2, n3, i, j, memcnt;
-    if ((fd = open(filename, 0, 0644)) == -1) {
-        return (NULL);
+
+    if ((fd = open(filename, O_RDONLY, 0644)) == -1) {
+        return NULL;
     }
+
     printf("Reading '%s'\n", filename);
     read(fd, (char *) &n1, sizeof(int));
     read(fd, (char *) &n2, sizeof(int));
     read(fd, (char *) &n3, sizeof(int));
+
     new_net = bpnn_internal_create(n1, n2, n3);
     printf("'%s' contains a %dx%dx%d network\n", filename, n1, n2, n3);
+
     printf("Reading input weights...");
     memcnt = 0;
-    mem = (char *) malloc((unsigned) ((n1+1) * (n2+1) * sizeof(float)));
+    mem = (char *) malloc((n1+1) * (n2+1) * sizeof(float));
     read(fd, mem, (n1+1) * (n2+1) * sizeof(float));
+
     for (i = 0; i <= n1; i++) {
         for (j = 0; j <= n2; j++) {
             fastcopy(&(new_net->input_weights[i][j]), &mem[memcnt], sizeof(float));
@@ -333,10 +383,12 @@ BPNN *bpnn_read(char *filename) {
         }
     }
     free(mem);
+
     printf("Done\nReading hidden weights...");
     memcnt = 0;
-    mem = (char *) malloc((unsigned) ((n2+1) * (n3+1) * sizeof(float)));
+    mem = (char *) malloc((n2+1) * (n3+1) * sizeof(float));
     read(fd, mem, (n2+1) * (n3+1) * sizeof(float));
+
     for (i = 0; i <= n2; i++) {
         for (j = 0; j <= n3; j++) {
             fastcopy(&(new_net->hidden_weights[i][j]), &mem[memcnt], sizeof(float));
@@ -344,11 +396,14 @@ BPNN *bpnn_read(char *filename) {
         }
     }
     free(mem);
+
     close(fd);
     printf("Done\n");
+
     bpnn_zero_weights(new_net->input_prev_weights, n1, n2);
     bpnn_zero_weights(new_net->hidden_prev_weights, n2, n3);
-    return (new_net);
+
+    return new_net;
 }
 
 void load(BPNN *net) {
@@ -365,14 +420,32 @@ void load(BPNN *net) {
 }
 
 void backprop_face() {
-    BPNN *net;
-    float out_err, hid_err;
-    net = bpnn_create(layer_size, 16, 1);
+    BPNN *net_cpu, *net_gpu;
+    float out_err_cpu, hid_err_cpu, out_err_gpu, hid_err_gpu;
+
     printf("Input layer size : %d\n", layer_size);
-    load(net);
-    printf("Starting training kernel\n");
-    bpnn_train_cuda(net, &out_err, &hid_err);
-    bpnn_free(net);
+
+    // Create two identical networks for fair comparison
+    net_cpu = bpnn_create(layer_size, 16, 1);
+    net_gpu = bpnn_create(layer_size, 16, 1);
+
+    load(net_cpu);
+    fastcopy(net_gpu->input_units, net_cpu->input_units, (layer_size + 1) * sizeof(float));
+    fastcopy(net_gpu->target, net_cpu->target, sizeof(float) * 2); // since output_n is 1
+
+    printf("Starting CPU training...\n");
+    bpnn_train(net_cpu, &out_err_cpu, &hid_err_cpu);
+
+    printf("Starting GPU training...\n");
+    bpnn_train_cuda(net_gpu, &out_err_gpu, &hid_err_gpu);
+
+    // Compare hidden and output units
+    compare_results("Hidden Layer", net_cpu->hidden_units, net_gpu->hidden_units, net_cpu->hidden_n, 1e-4);
+    compare_results("Output Layer", net_cpu->output_units, net_gpu->output_units, net_cpu->output_n, 1e-4);
+
+    bpnn_free(net_cpu);
+    bpnn_free(net_gpu);
+
     printf("Training done\n");
 }
 
