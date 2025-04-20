@@ -9,3 +9,8 @@ data/*
 *.log
 *.png
 *.info
+
+cuda/pathfinder/result.txt
+
+_app*
+_cuobjdump*

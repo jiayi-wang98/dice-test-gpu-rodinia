@@ -1,0 +1,1 @@
+nvcc gaussian.cu -o gaussian -cudart shared -Xcompiler "-fsanitize=address -fno-omit-frame-pointer"

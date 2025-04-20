@@ -1,0 +1,1 @@
+nvcc pathfinder.cu -o pathfinder -cudart shared -Xcompiler "-fsanitize=address -fno-omit-frame-pointer"

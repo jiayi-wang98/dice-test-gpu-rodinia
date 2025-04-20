@@ -1,0 +1,9 @@
+ptxas info    : 0 bytes gmem
+ptxas info    : Compiling entry function '_Z4Fan2PfS_S_iii' for 'sm_52'
+ptxas info    : Function properties for _Z4Fan2PfS_S_iii
+    0 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
+ptxas info    : Used 12 registers, 356 bytes cmem[0]
+ptxas info    : Compiling entry function '_Z4Fan1PfS_ii' for 'sm_52'
+ptxas info    : Function properties for _Z4Fan1PfS_ii
+    0 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
+ptxas info    : Used 14 registers, 344 bytes cmem[0], 12 bytes cmem[2]

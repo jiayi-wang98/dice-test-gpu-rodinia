@@ -59,10 +59,15 @@ def extract_stats(file_path, output_file):
     global_stats = {}
     
     patterns = {
+        'gpu_total_sim_cycle': r'gpu_tot_sim_cycle = (\d+)',
         'shader_start': r'SHADER (\d+):',
         'read_regfile': r'gpgpu_n_m_read_regfile_acesses = (\d+)',
         'write_regfile': r'gpgpu_n_m_write_regfile_acesses = (\d+)',
         'tot_regfile': r'gpgpu_n_tot_regfile_acesses = (\d+)',
+        'l1i_accesses': r'L1I_total_cache_accesses = (\d+)',
+        'l1b_accesses': r'L1B_total_cache_accesses = (\d+)',
+        'l1c_accesses': r'L1C_total_cache_accesses = (\d+)',
+        'l1t_accesses': r'L1T_total_cache_accesses = (\d+)',
         'l1d_accesses': r'L1D_total_cache_accesses = (\d+)',
         'l1d_misses': r'L1D_total_cache_misses = (\d+)',
         'l1d_miss_rate': r'L1D_total_cache_miss_rate = ([\d.]+)',
@@ -106,15 +111,33 @@ def extract_stats(file_path, output_file):
         # Write stats to output file
         with open(output_file, 'w') as out_file:
             out_file.write("Shader Statistics:\n")
+            out_file.write(f"gpu_tot_sim_cycle = {global_stats.get('gpu_total_sim_cycle', 0)}\n")
             for shader_id, stats in sorted(shader_stats.items()):
                 out_file.write(f"SHADER {shader_id}:\n")
                 out_file.write(f"  gpgpu_n_m_read_regfile_acesses = {stats.get('read_regfile', 0)}\n")
                 out_file.write(f"  gpgpu_n_m_write_regfile_acesses = {stats.get('write_regfile', 0)}\n")
             out_file.write("\nGlobal Statistics:\n")
             out_file.write(f"gpgpu_n_tot_regfile_acesses = {global_stats.get('tot_regfile', 0)}\n")
+            out_file.write(f"L1I_total_cache_accesses = {global_stats.get('l1i_accesses', 0)}\n")
+            out_file.write(f"L1B_total_cache_accesses = {global_stats.get('l1b_accesses', 0)}\n")
+            out_file.write(f"L1C_total_cache_accesses = {global_stats.get('l1c_accesses', 0)}\n")
+            out_file.write(f"L1T_total_cache_accesses = {global_stats.get('l1t_accesses', 0)}\n")
             out_file.write(f"L1D_total_cache_accesses = {global_stats.get('l1d_accesses', 0)}\n")
             out_file.write(f"L1D_total_cache_misses = {global_stats.get('l1d_misses', 0)}\n")
             out_file.write(f"L1D_total_cache_miss_rate = {global_stats.get('l1d_miss_rate', 0.0)}\n")
+
+            # Assuming global_stats is a dictionary containing the cache access counts
+            total_l1_cache_accesses = (
+                global_stats.get('l1i_accesses', 0) +
+                global_stats.get('l1b_accesses', 0) +
+                global_stats.get('l1c_accesses', 0) +
+                global_stats.get('l1t_accesses', 0) +
+                global_stats.get('l1d_accesses', 0)
+            )
+
+            # Optionally, write to the output file
+            out_file.write(f"Total_L1_cache_accesses = {total_l1_cache_accesses}\n")
+
             out_file.write(f"L2_total_cache_accesses = {global_stats.get('l2_accesses', 0)}\n")
             out_file.write(f"L2_total_cache_misses = {global_stats.get('l2_misses', 0)}\n")
             out_file.write(f"L2_total_cache_miss_rate = {global_stats.get('l2_miss_rate', 0.0)}\n")
