@@ -1,1 +1,1 @@
-nvcc backprop_cuda_all.cu -o backprop -cudart shared -Xcompiler "-fsanitize=address -fno-omit-frame-pointer" 
+nvcc -O2 backprop_cuda_all.cu -o backprop -cudart shared -Xcompiler "-fsanitize=address -fno-omit-frame-pointer" 

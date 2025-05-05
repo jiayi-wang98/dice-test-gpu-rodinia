@@ -1,5 +1,5 @@
 rm -f ./_app_*
 rm -f ./_cuobjdump_*
 rm -f ./gpgpusim_power_report__*
-gdb --args ./bfs random_graph.txt
-#gdb --args ./bfs ../../data/bfs/graph4096.txt
+#gdb --args ./bfs random_graph.txt
+gdb --args ./bfs ../../data/bfs/graph4096.txt

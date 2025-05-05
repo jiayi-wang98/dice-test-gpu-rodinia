@@ -1,0 +1,3 @@
+gdb --args ./backprop 32
+#./backprop 1024
+#./backprop 2097152

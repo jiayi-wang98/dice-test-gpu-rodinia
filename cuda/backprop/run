@@ -1,2 +1,6 @@
-#./backprop 2097152
+rm -f ./_app_*
+rm -f ./_cuobjdump_*
+rm -f ./gpgpusim_power_report__*
 ./backprop 512
+#./backprop 1024
+#./backprop 2097152
