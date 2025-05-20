@@ -135,16 +135,64 @@ void bpnn_train_cuda(BPNN *net, float *eo, float *eh)
 		exit(EXIT_FAILURE);
 	}
   
-  cudaMemcpy(partial_sum, hidden_partial_sum, num_blocks * WIDTH * sizeof(float), cudaMemcpyDeviceToHost);
-     
-  for (int j = 1; j <= hid; j++) {
-    sum = 0.0;
+  cudaMemcpy(partial_sum, hidden_partial_sum, num_blocks * WIDTH * sizeof(float), cudaMemcpyDeviceToHost);  
+
+  //using cpu result to isolate the error in different kernels
+
+  //for (int j = 1; j <= hid; j++) {
+  //  sum = 0.0;
+  //  for (int k = 0; k < num_blocks; k++) {	
+  //    sum += partial_sum[k * hid + j-1] ;
+  //  }
+	//  sum += net->input_weights[0][j];
+	//  net-> hidden_units[j] = float(1.0 / (1.0 + exp(-sum)));
+  //}
+
+  //compare the result of GPU and CPU one by one
+  int compare_error = 0;
+  for(int j = 1; j <= hid; j++) {
+    float sum = 0.0;
     for (int k = 0; k < num_blocks; k++) {	
       sum += partial_sum[k * hid + j-1] ;
     }
-	sum += net->input_weights[0][j];
-	net-> hidden_units[j] = float(1.0 / (1.0 + exp(-sum)));
+    //cpu sum
+    float cpu_sum = 0.0;
+    for (int k = 1; k <= in; k++) {	
+      cpu_sum += net->input_weights[k][j] * net->input_units[k]; 
+    }
+    float diff = fabs(sum - cpu_sum);
+    if (diff > 0.0001) {
+      compare_error += 1;
+      printf("Error in GPU and CPU computation: %d %f %f\n", j, sum, cpu_sum);
+    }
   }
+
+  if(compare_error > 0) {
+    printf("[**ERROR] GPU and CPU results are different in layer forward kernel!!\n");
+    printf("CPU and GPU results differ!\n");
+    printf("\n");
+    printf("**        **\n");
+    printf(" **      ** \n");
+    printf("  **    **  \n");
+    printf("   **  **   \n");
+    printf("   **  **   \n");
+    printf("  **    **  \n");
+    printf(" **      ** \n");
+    printf("**        **\n");
+    printf("\n");
+    // Flush output buffers
+    fflush(stdout);
+    fflush(stderr);
+    
+    // Gracefully terminate
+    exit(EXIT_FAILURE);
+  } else {
+    printf("[**SUCCESS] GPU and CPU results are the same in layer forward kernel!!\n");
+  }
+
+  //using cpu result to isolate the error in different kernels
+  printf("Performing CPU computation\n");
+  bpnn_layerforward(net->input_units, net->hidden_units,net->input_weights, in, hid);
 #endif
 
   bpnn_layerforward(net->hidden_units, net->output_units, net->hidden_weights, hid, out);
@@ -180,6 +228,53 @@ void bpnn_train_cuda(BPNN *net, float *eo, float *eh)
   cudaMemcpy(net->input_units, input_cuda, (in + 1) * sizeof(float), cudaMemcpyDeviceToHost);
   cudaMemcpy(input_weights_one_dim, input_hidden_cuda, (in + 1) * (hid + 1) * sizeof(float), cudaMemcpyDeviceToHost);
     
+  //compare the result of GPU and CPU one by one
+
+  //cpu results
+  bpnn_adjust_weights(net->hidden_delta, hid, net->input_units, in, net->input_weights, net->input_prev_weights);
+
+  //compare input weights one dim
+  int kernel2_error = 0;
+  for (int j = 1; j <= in; j++) {
+    for (int k = 1; k <= hid; k++) {
+      float diff = fabs(input_weights_one_dim[j * (hid + 1) + k] - net->input_weights[j][k]);
+      if (diff > 0.0001) {
+        printf("Error in GPU and CPU computation: %d %d %f %f\n", j, k, input_weights_one_dim[j * (hid + 1) + k], net->input_weights[j][k]);
+        kernel2_error += 1;
+      }
+    }
+  }
+
+  if (kernel2_error > 0) {
+    printf("[**ERROR] GPU and CPU results are different in adjust weights kernel!!\n");
+    printf("CPU and GPU results differ!\n");
+    printf("\n");
+    printf("**        **\n");
+    printf(" **      ** \n");
+    printf("  **    **  \n");
+    printf("   **  **   \n");
+    printf("   **  **   \n");
+    printf("  **    **  \n");
+    printf(" **      ** \n");
+    printf("**        **\n");
+    printf("\n");
+    // Flush output buffers
+    fflush(stdout);
+    fflush(stderr);
+  } else {
+    printf("CPU and GPU results match!\n");
+    printf("\n");
+    printf("       .-\"\"\"\"\"-.\n");
+    printf("     .'         '.\n");
+    printf("    :             :\n");
+    printf("   :    ^     ^    :\n");
+    printf("   :     .---.     :\n");
+    printf("    :   (     )   :\n");
+    printf("     '.  '---'  .'\n");
+    printf("       '-.....-'\n");
+    printf("\n");
+  }
+
   cudaFree(input_cuda);
   cudaFree(output_hidden_cuda);
   cudaFree(input_hidden_cuda);
@@ -191,9 +286,9 @@ void bpnn_train_cuda(BPNN *net, float *eo, float *eh)
   free(input_weights_one_dim);
   free(input_weights_prev_one_dim);
 
+
+
 #endif   
-  
-  
   
 
 }

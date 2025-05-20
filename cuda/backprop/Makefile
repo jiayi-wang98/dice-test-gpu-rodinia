@@ -1,8 +1,9 @@
 include ../../common/make.config
 
+ASAN_FLAGS := -fsanitize=address -fno-omit-frame-pointer -lstdc++
 # C compiler
-CC = g++
-CC_FLAGS = -g  -O2 -fsanitize=address -fno-omit-frame-pointer
+CC = gcc
+CC_FLAGS = -g -fopenmp -O2 $(ASAN_FLAGS)
 
 # CUDA compiler
 NVCC = $(CUDA_DIR)/bin/nvcc

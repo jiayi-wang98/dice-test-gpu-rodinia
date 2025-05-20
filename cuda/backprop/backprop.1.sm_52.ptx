@@ -55,16 +55,16 @@ st.shared.f32 [%r4], %f1;
 
 $L__BB0_2:
 bar.sync 0;
-add.s32 %r15, %r3, %r10;
-add.s32 %r16, %r10, 1;
-mad.lo.s32 %r17, %r16, %r2, %r15;
+add.s32 %r15, %r10, 1;
+add.s32 %r16, %r2, 1;
+mad.lo.s32 %r17, %r15, %r16, %r3;
 shl.b32 %r18, %r10, 4;
 add.s32 %r19, %r18, 16;
 mad.lo.s32 %r20, %r19, %r1, %r17;
 cvta.to.global.u64 %rd8, %rd3;
 mul.wide.s32 %rd9, %r20, 4;
 add.s64 %rd1, %rd8, %rd9;
-ld.global.f32 %f2, [%rd1+8];
+ld.global.f32 %f2, [%rd1+4];
 shl.b32 %r21, %r2, 6;
 mov.u32 %r22, _ZZ22bpnn_layerforward_CUDAPfS_S_S_iiE13weight_matrix;
 add.s32 %r23, %r22, %r21;
@@ -146,7 +146,7 @@ st.shared.f32 [%r5], %f21;
 $L__BB0_10:
 bar.sync 0;
 ld.shared.f32 %f22, [%r5];
-st.global.f32 [%rd1+8], %f22;
+st.global.f32 [%rd1+4], %f22;
 bar.sync 0;
 @%p1 bra $L__BB0_12;
 

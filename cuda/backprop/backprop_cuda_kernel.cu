@@ -20,7 +20,8 @@ bpnn_layerforward_CUDA(float *input_cuda,
    int by = blockIdx.y;
    int tx = threadIdx.x;
    int ty = threadIdx.y;
-   int index =  ( hid + 1 ) * HEIGHT * by + ( hid + 1 ) * ty + tx + 1 + ( hid + 1 ) ;  
+   //int index =  ( hid + 1 ) * HEIGHT * by + ( hid + 1 ) * ty+ tx + 1 + ( hid + 1 ) ;  
+   int index =  ( hid + 1 ) * HEIGHT * by + ( hid + 1 ) * (ty + 1) + (tx + 1);  
    int index_in = HEIGHT * by + ty + 1;
    __shared__ float input_node[HEIGHT];
    __shared__ float weight_matrix[HEIGHT][WIDTH];
@@ -33,8 +34,7 @@ bpnn_layerforward_CUDA(float *input_cuda,
    __syncthreads();   
    for ( int i = 1 ; i <= __log2f(HEIGHT) ; i++){
 	   int power_two = __powf(2, i);
-	   if( ty % power_two == 0 )
-	   weight_matrix[ty][tx] = weight_matrix[ty][tx] + weight_matrix[ty + power_two/2][tx];
+	   if( ty % power_two == 0 ) weight_matrix[ty][tx] = weight_matrix[ty][tx] + weight_matrix[ty + power_two/2][tx];
 	   __syncthreads();
    }
    input_hidden_cuda[index] = weight_matrix[ty][tx];

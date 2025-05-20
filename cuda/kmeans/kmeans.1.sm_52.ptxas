@@ -1,0 +1,9 @@
+ptxas info    : 0 bytes gmem, 4352 bytes cmem[3]
+ptxas info    : Compiling entry function '_Z11kmeansPointPfiiiPiS_S_S0_' for 'sm_52'
+ptxas info    : Function properties for _Z11kmeansPointPfiiiPiS_S_S0_
+    0 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
+ptxas info    : Used 20 registers, 380 bytes cmem[0], 1 textures
+ptxas info    : Compiling entry function '_Z14invert_mappingPfS_ii' for 'sm_52'
+ptxas info    : Function properties for _Z14invert_mappingPfS_ii
+    0 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
+ptxas info    : Used 24 registers, 344 bytes cmem[0]
