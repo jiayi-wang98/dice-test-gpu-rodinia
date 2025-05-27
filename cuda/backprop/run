@@ -1,7 +1,6 @@
 rm -f ./_app_*
 rm -f ./_cuobjdump_*
 rm -f ./gpgpusim_power_report__*
-cp ./gpgpusim_dice.config ./gpgpusim.config
-./backprop 16
-#./backprop 1024
+#./backprop 16
+./backprop 960
 #./backprop 2097152

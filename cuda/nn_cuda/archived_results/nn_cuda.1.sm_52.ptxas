@@ -1,0 +1,5 @@
+ptxas info    : 0 bytes gmem
+ptxas info    : Compiling entry function '_Z6euclidP7latLongPfiff' for 'sm_52'
+ptxas info    : Function properties for _Z6euclidP7latLongPfiff
+    0 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
+ptxas info    : Used 10 registers, 348 bytes cmem[0], 8 bytes cmem[2]

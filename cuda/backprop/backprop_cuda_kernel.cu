@@ -29,7 +29,7 @@ bpnn_layerforward_CUDA(float *input_cuda,
    input_node[ty] = input_cuda[index_in] ;
    __syncthreads();
    weight_matrix[ty][tx] = input_hidden_cuda[index];
-   __syncthreads();
+   //__syncthreads();
    weight_matrix[ty][tx] = weight_matrix[ty][tx] * input_node[ty];
    __syncthreads();   
    for ( int i = 1 ; i <= __log2f(HEIGHT) ; i++){
@@ -38,7 +38,7 @@ bpnn_layerforward_CUDA(float *input_cuda,
 	   __syncthreads();
    }
    input_hidden_cuda[index] = weight_matrix[ty][tx];
-   __syncthreads();
+   //__syncthreads();
    if ( tx == 0 ) {
 	   hidden_partial_sum[by * hid + ty] = weight_matrix[tx][ty];
    }

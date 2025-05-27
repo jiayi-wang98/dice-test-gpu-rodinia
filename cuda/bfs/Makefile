@@ -9,7 +9,7 @@ SRC = bfs.cu
 EXE = bfs.out
 
 release: $(SRC)
-	$(CC) $(SRC) -o $(EXE) -I$(INCLUDE) -I../util -L$(CUDA_LIB_DIR) -DTIMING
+	$(CC) $(SRC) -o $(EXE) -I$(INCLUDE) -I../util -L$(CUDA_LIB_DIR) -DTIMING -cudart shared -Xcompiler "-fsanitize=address -fno-omit-frame-pointer" 
 
 clang: $(SRC)
 	clang++ $(SRC) -o $(EXE) -I../util --cuda-gpu-arch=sm_20 \

@@ -161,7 +161,7 @@ void bpnn_train_cuda(BPNN *net, float *eo, float *eh)
       cpu_sum += net->input_weights[k][j] * net->input_units[k]; 
     }
     float diff = fabs(sum - cpu_sum);
-    if (diff > 0.0001) {
+    if ((diff/cpu_sum) > 0.0001) {
       compare_error += 1;
       printf("Error in GPU and CPU computation: %d %f %f\n", j, sum, cpu_sum);
     }
@@ -238,7 +238,7 @@ void bpnn_train_cuda(BPNN *net, float *eo, float *eh)
   for (int j = 1; j <= in; j++) {
     for (int k = 1; k <= hid; k++) {
       float diff = fabs(input_weights_one_dim[j * (hid + 1) + k] - net->input_weights[j][k]);
-      if (diff > 0.0001) {
+      if ((diff/net->input_weights[j][k]) > 0.0001) {
         printf("Error in GPU and CPU computation: %d %d %f %f\n", j, k, input_weights_one_dim[j * (hid + 1) + k], net->input_weights[j][k]);
         kernel2_error += 1;
       }

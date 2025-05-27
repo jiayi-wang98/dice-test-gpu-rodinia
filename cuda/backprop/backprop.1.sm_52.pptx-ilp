@@ -1,0 +1,277 @@
+// DICECompiler PPTX for: examples/rodinia/backprop/backprop.ptx
+.version 7.7
+.target sm_52
+.address_size 64
+.visible .entry _Z22bpnn_layerforward_CUDAPfS_S_S_ii(
+.param .u64 _Z22bpnn_layerforward_CUDAPfS_S_S_ii_param_0,
+.param .u64 _Z22bpnn_layerforward_CUDAPfS_S_S_ii_param_1,
+.param .u64 _Z22bpnn_layerforward_CUDAPfS_S_S_ii_param_2,
+.param .u64 _Z22bpnn_layerforward_CUDAPfS_S_S_ii_param_3,
+.param .u32 _Z22bpnn_layerforward_CUDAPfS_S_S_ii_param_4,
+.param .u32 _Z22bpnn_layerforward_CUDAPfS_S_S_ii_param_5
+)
+{
+.reg .b32 %c<32>;
+.reg .b32 %r<32>;
+.reg .pred %p<32>;
+.reg .b32 %w<9>;
+
+.shared .align 4 .b8 _ZZ22bpnn_layerforward_CUDAPfS_S_S_iiE10input_node[64];
+.shared .align 4 .b8 _ZZ22bpnn_layerforward_CUDAPfS_S_S_iiE13weight_matrix[1024];
+
+$DICE_BB0_0:
+ld.param.u64 %c0, [_Z22bpnn_layerforward_CUDAPfS_S_S_ii_param_0];
+ld.param.u64 %c1, [_Z22bpnn_layerforward_CUDAPfS_S_S_ii_param_2];
+ld.param.u64 %c2, [_Z22bpnn_layerforward_CUDAPfS_S_S_ii_param_3];
+ld.param.u32 %c3, [_Z22bpnn_layerforward_CUDAPfS_S_S_ii_param_5];
+
+$DICE_BB0_1:
+mov.u32 %r0, %ctaid.y;
+mov.u32 %r1, %tid.y;
+mov.u32 %r2, %tid.x;
+setp.ne.s32 %p0, %r2, 0;
+shl.b32 %r3, %r1, 2;
+mov.u32 %w0, _ZZ22bpnn_layerforward_CUDAPfS_S_S_iiE10input_node;
+add.s32 %r4, %w0, %r3;
+@!%p0 shl.b32 %w1, %r0, 4;
+@!%p0 add.s32 %w2, %r1, %w1;
+@!%p0 cvta.to.global.u64 %w3, %c0;
+@!%p0 mul.wide.s32 %w4, %w2, 4;
+@!%p0 add.s64 %w5, %w3, %w4;
+@!%p0 ld.global.f32 %r5, [%w5+4];
+
+$DICE_BB0_2:
+@!%p0 st.shared.f32 [%r4], %r5;
+
+$DICE_BB0_3:
+//bar.sync 0;
+add.s32 %w0, %r2, %c3;
+add.s32 %w1, %c3, 1;
+mad.lo.s32 %w2, %w1, %r1, %w0;
+shl.b32 %w3, %c3, 4;
+add.s32 %w4, %w3, 16;
+mad.lo.s32 %w5, %w4, %r0, %w2;
+cvta.to.global.u64 %w6, %c1;
+mul.wide.s32 %w7, %w5, 4;
+add.s64 %r5, %w6, %w7;
+ld.global.f32 %r6, [%r5+8];
+shl.b32 %w8, %r1, 6;
+mov.u32 %r7, _ZZ22bpnn_layerforward_CUDAPfS_S_S_iiE13weight_matrix;
+add.s32 %r8, %r7, %w8;
+shl.b32 %r9, %r2, 2;
+
+$DICE_BB0_4:
+add.s32 %r2, %r8, %r9;
+st.shared.f32 [%r2], %r6;
+
+$DICE_BB0_5:
+//bar.sync 0;
+ld.shared.f32 %r6, [%r4];
+ld.shared.f32 %r8, [%r2];
+
+$DICE_BB0_6:
+mul.f32 %w0, %r8, %r6;
+st.shared.f32 [%r2], %w0;
+
+$DICE_BB0_7:
+//bar.sync 0;
+mov.f32 %w0, 0f40000000;
+cvt.rzi.s32.f32 %w1, %w0;
+rem.s32 %w2, %r1, %w1;
+setp.ne.s32 %p1, %w2, 0;
+@!%p1 ld.shared.f32 %r4, [%r2];
+@!%p1 shr.u32 %w3, %w1, 31;
+@!%p1 add.s32 %w4, %w1, %w3;
+@!%p1 shr.s32 %w5, %w4, 1;
+@!%p1 mad.lo.s32 %w6, %w5, 64, %r2;
+@!%p1 ld.shared.f32 %r6, [%w6];
+
+$DICE_BB0_8:
+@!%p1 add.f32 %w0, %r4, %r6;
+@!%p1 st.shared.f32 [%r2], %w0;
+
+$DICE_BB0_9:
+//bar.sync 0;
+mov.f32 %w0, 0f40800000;
+cvt.rzi.s32.f32 %w1, %w0;
+rem.s32 %w2, %r1, %w1;
+setp.ne.s32 %p2, %w2, 0;
+@!%p2 ld.shared.f32 %r4, [%r2];
+@!%p2 shr.u32 %w3, %w1, 31;
+@!%p2 add.s32 %w4, %w1, %w3;
+@!%p2 shr.s32 %w5, %w4, 1;
+@!%p2 mad.lo.s32 %w6, %w5, 64, %r2;
+@!%p2 ld.shared.f32 %r6, [%w6];
+
+$DICE_BB0_10:
+@!%p2 add.f32 %w0, %r4, %r6;
+@!%p2 st.shared.f32 [%r2], %w0;
+
+$DICE_BB0_11:
+//bar.sync 0;
+mov.f32 %w0, 0f41000000;
+cvt.rzi.s32.f32 %w1, %w0;
+rem.s32 %w2, %r1, %w1;
+setp.ne.s32 %p3, %w2, 0;
+@!%p3 ld.shared.f32 %r4, [%r2];
+@!%p3 shr.u32 %w3, %w1, 31;
+@!%p3 add.s32 %w4, %w1, %w3;
+@!%p3 shr.s32 %w5, %w4, 1;
+@!%p3 mad.lo.s32 %w6, %w5, 64, %r2;
+@!%p3 ld.shared.f32 %r6, [%w6];
+
+$DICE_BB0_12:
+@!%p3 add.f32 %w0, %r4, %r6;
+@!%p3 st.shared.f32 [%r2], %w0;
+
+$DICE_BB0_13:
+//bar.sync 0;
+mov.f32 %w0, 0f41800000;
+cvt.rzi.s32.f32 %w1, %w0;
+rem.s32 %w2, %r1, %w1;
+setp.ne.s32 %p4, %w2, 0;
+@!%p4 ld.shared.f32 %r4, [%r2];
+@!%p4 shr.u32 %w3, %w1, 31;
+@!%p4 add.s32 %w4, %w1, %w3;
+@!%p4 shr.s32 %w5, %w4, 1;
+@!%p4 mad.lo.s32 %w6, %w5, 64, %r2;
+@!%p4 ld.shared.f32 %r6, [%w6];
+
+$DICE_BB0_14:
+@!%p4 add.f32 %w0, %r4, %r6;
+@!%p4 st.shared.f32 [%r2], %w0;
+
+$DICE_BB0_15:
+//bar.sync 0;
+ld.shared.f32 %r4, [%r2];
+
+$DICE_BB0_16:
+st.global.f32 [%r5+8], %r4;
+
+$DICE_BB0_17:
+//bar.sync 0;
+@!%p0 add.s32 %w0, %r7, %r3;
+@!%p0 ld.shared.f32 %r2, [%w0];
+@!%p0 mad.lo.s32 %w1, %r0, %c3, %r1;
+@!%p0 cvta.to.global.u64 %w2, %c2;
+@!%p0 mul.wide.s32 %w3, %w1, 4;
+@!%p0 add.s64 %r4, %w2, %w3;
+
+$DICE_BB0_18:
+@!%p0 st.global.f32 [%r4], %r2;
+
+$DICE_BB0_19:
+ret ;
+
+}
+
+.visible .entry _Z24bpnn_adjust_weights_cudaPfiS_iS_S_(
+.param .u64 _Z24bpnn_adjust_weights_cudaPfiS_iS_S__param_0,
+.param .u32 _Z24bpnn_adjust_weights_cudaPfiS_iS_S__param_1,
+.param .u64 _Z24bpnn_adjust_weights_cudaPfiS_iS_S__param_2,
+.param .u32 _Z24bpnn_adjust_weights_cudaPfiS_iS_S__param_3,
+.param .u64 _Z24bpnn_adjust_weights_cudaPfiS_iS_S__param_4,
+.param .u64 _Z24bpnn_adjust_weights_cudaPfiS_iS_S__param_5
+)
+{
+.reg .b32 %c<32>;
+.reg .b32 %r<32>;
+.reg .pred %p<32>;
+.reg .b32 %w<12>;
+
+
+$DICE_BB1_0:
+ld.param.u64 %c0, [_Z24bpnn_adjust_weights_cudaPfiS_iS_S__param_0];
+ld.param.u32 %c1, [_Z24bpnn_adjust_weights_cudaPfiS_iS_S__param_1];
+ld.param.u64 %c2, [_Z24bpnn_adjust_weights_cudaPfiS_iS_S__param_2];
+ld.param.u64 %c3, [_Z24bpnn_adjust_weights_cudaPfiS_iS_S__param_4];
+ld.param.u64 %c4, [_Z24bpnn_adjust_weights_cudaPfiS_iS_S__param_5];
+
+$DICE_BB1_1:
+shl.b32 %w0, %c1, 4;
+add.s32 %w1, %w0, 16;
+mov.u32 %r0, %ctaid.y;
+add.s32 %w2, %c1, 1;
+mov.u32 %r1, %tid.y;
+mov.u32 %r2, %tid.x;
+add.s32 %w3, %r2, %c1;
+mad.lo.s32 %w4, %w2, %r1, %w3;
+mad.lo.s32 %w5, %w1, %r0, %w4;
+cvta.to.global.u64 %w6, %c0;
+mul.wide.s32 %w7, %r2, 4;
+add.s64 %r3, %w6, %w7;
+ld.global.f32 %r4, [%r3+4];
+cvta.to.global.u64 %r5, %c4;
+mul.wide.s32 %r6, %w5, 4;
+add.s64 %r7, %r5, %r6;
+ld.global.f32 %r8, [%r7+8];
+ld.global.f32 %r9, [%r3+4];
+ld.global.f32 %r10, [%r7+8];
+
+$DICE_BB1_2:
+cvta.to.global.u64 %r11, %c3;
+shl.b32 %w0, %r0, 4;
+add.s32 %w1, %r1, %w0;
+cvt.f64.f32 %r12, %r4;
+cvta.to.global.u64 %w2, %c2;
+mul.wide.s32 %w3, %w1, 4;
+add.s64 %w4, %w2, %w3;
+ld.global.f32 %r13, [%w4+4];
+cvt.f64.f32 %r14, %r8;
+add.s64 %r15, %r11, %r6;
+ld.global.f32 %r16, [%r15+8];
+cvt.f64.f32 %w5, %r9;
+mul.f64 %r17, %w5, 0d3FD3333333333333;
+ld.global.f32 %r18, [%w4+4];
+cvt.f64.f32 %r19, %r10;
+
+$DICE_BB1_3:
+mul.f64 %w0, %r12, 0d3FD3333333333333;
+cvt.f64.f32 %w1, %r13;
+mul.f64 %w2, %r14, 0d3FD3333333333333;
+fma.rn.f64 %w3, %w0, %w1, %w2;
+cvt.f64.f32 %w4, %r16;
+add.f64 %w5, %w3, %w4;
+cvt.rn.f32.f64 %w6, %w5;
+st.global.f32 [%r15+8], %w6;
+cvt.f64.f32 %w7, %r18;
+mul.f64 %w8, %r19, 0d3FD3333333333333;
+fma.rn.f64 %w9, %r17, %w7, %w8;
+cvt.rn.f32.f64 %w10, %w9;
+st.global.f32 [%r7+8], %w10;
+bar.sync 0;
+
+$DICE_BB1_4:
+or.b32 %w0, %r1, %r0;
+setp.ne.s32 %p0, %w0, 0;
+@!%p0 add.s32 %w1, %r2, 1;
+@!%p0 ld.global.f32 %r4, [%r3+4];
+@!%p0 mul.wide.s32 %w2, %w1, 4;
+@!%p0 add.s64 %r6, %r5, %w2;
+@!%p0 ld.global.f32 %r7, [%r6];
+@!%p0 add.s64 %r8, %r11, %w2;
+@!%p0 ld.global.f32 %r9, [%r8];
+@!%p0 ld.global.f32 %r10, [%r3+4];
+@!%p0 ld.global.f32 %r12, [%r6];
+
+$DICE_BB1_5:
+@!%p0 cvt.f64.f32 %w0, %r4;
+@!%p0 cvt.f64.f32 %w1, %r7;
+@!%p0 mul.f64 %w2, %w1, 0d3FD3333333333333;
+@!%p0 fma.rn.f64 %w3, %w0, 0d3FD3333333333333, %w2;
+@!%p0 cvt.f64.f32 %w4, %r9;
+@!%p0 add.f64 %w5, %w3, %w4;
+@!%p0 cvt.rn.f32.f64 %w6, %w5;
+@!%p0 st.global.f32 [%r8], %w6;
+@!%p0 cvt.f64.f32 %w7, %r10;
+@!%p0 cvt.f64.f32 %w8, %r12;
+@!%p0 mul.f64 %w9, %w8, 0d3FD3333333333333;
+@!%p0 fma.rn.f64 %w10, %w7, 0d3FD3333333333333, %w9;
+@!%p0 cvt.rn.f32.f64 %w11, %w10;
+@!%p0 st.global.f32 [%r6], %w11;
+
+$DICE_BB1_6:
+ret ;
+
+}
+

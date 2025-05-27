@@ -1,0 +1,58 @@
+// DICECompiler PPTX for: examples/rodinia/nn/nn.ptx
+.version 7.7
+.target sm_52
+.address_size 64
+.visible .entry _Z6euclidP7latLongPfiff(
+.param .u64 _Z6euclidP7latLongPfiff_param_0,
+.param .u64 _Z6euclidP7latLongPfiff_param_1,
+.param .u32 _Z6euclidP7latLongPfiff_param_2,
+.param .f32 _Z6euclidP7latLongPfiff_param_3,
+.param .f32 _Z6euclidP7latLongPfiff_param_4
+)
+{
+.reg .b32 %c<32>;
+.reg .b32 %r<32>;
+.reg .pred %p<1>;
+.reg .b32 %w<12>;
+
+
+$DICE_BB0_0:
+ld.param.u64 %c0, [_Z6euclidP7latLongPfiff_param_0];
+ld.param.u64 %c1, [_Z6euclidP7latLongPfiff_param_1];
+ld.param.u32 %c2, [_Z6euclidP7latLongPfiff_param_2];
+ld.param.f32 %c3, [_Z6euclidP7latLongPfiff_param_3];
+ld.param.f32 %c4, [_Z6euclidP7latLongPfiff_param_4];
+
+$DICE_BB0_1:
+mov.u32 %w0, %ctaid.y;
+mov.u32 %w1, %nctaid.x;
+mov.u32 %w2, %ctaid.x;
+mad.lo.s32 %w3, %w1, %w0, %w2;
+mov.u32 %w4, %ntid.x;
+mov.u32 %w5, %tid.x;
+mad.lo.s32 %r5, %w3, %w4, %w5;
+setp.ge.s32 %p0, %r5, %c2;
+cvta.to.global.u64 %w9, %c0;
+mul.wide.s32 %w10, %r5, 8;
+add.s64 %w11, %w9, %w10;
+@!%p0 ld.global.f32 %r6, [%w11];
+@!%p0 ld.global.f32 %r7, [%w11+4];
+@%p0 bra $DICE_BB0_3;
+
+$DICE_BB0_2:
+cvta.to.global.u64 %w7, %c1;
+mul.wide.s32 %w8, %r5, 4;
+add.s64 %w5, %w7, %w8;
+sub.f32 %w0, %c3, %r6;
+sub.f32 %w1, %c4, %r7;
+mul.f32 %w2, %w1, %w1;
+fma.rn.f32 %w3, %w0, %w0, %w2;
+sqrt.rn.f32 %w4, %w3;
+st.global.f32 [%w5], %w4;
+
+$DICE_BB0_3:
+ret;
+
+}
+
+

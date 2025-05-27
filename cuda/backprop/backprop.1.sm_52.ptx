@@ -24,7 +24,7 @@
 )
 {
 .reg .pred %p<7>;
-.reg .f32 %f<24>;
+.reg .f32 %f<23>;
 .reg .b32 %r<49>;
 .reg .b64 %rd<13>;
 
@@ -64,99 +64,95 @@ mad.lo.s32 %r20, %r19, %r1, %r17;
 cvta.to.global.u64 %rd8, %rd3;
 mul.wide.s32 %rd9, %r20, 4;
 add.s64 %rd1, %rd8, %rd9;
-ld.global.f32 %f2, [%rd1+4];
+ld.shared.f32 %f2, [%r4];
+ld.global.f32 %f3, [%rd1+4];
+mul.f32 %f4, %f3, %f2;
 shl.b32 %r21, %r2, 6;
 mov.u32 %r22, _ZZ22bpnn_layerforward_CUDAPfS_S_S_iiE13weight_matrix;
 add.s32 %r23, %r22, %r21;
 shl.b32 %r24, %r3, 2;
 add.s32 %r5, %r23, %r24;
-st.shared.f32 [%r5], %f2;
+st.shared.f32 [%r5], %f4;
 bar.sync 0;
-ld.shared.f32 %f3, [%r4];
-ld.shared.f32 %f4, [%r5];
-mul.f32 %f5, %f4, %f3;
-st.shared.f32 [%r5], %f5;
-bar.sync 0;
-mov.f32 %f6, 0f40000000;
-cvt.rzi.s32.f32 %r6, %f6;
+mov.f32 %f5, 0f40000000;
+cvt.rzi.s32.f32 %r6, %f5;
 rem.s32 %r25, %r2, %r6;
 setp.ne.s32 %p2, %r25, 0;
 @%p2 bra $L__BB0_4;
 
-ld.shared.f32 %f7, [%r5];
+ld.shared.f32 %f6, [%r5];
 shr.u32 %r26, %r6, 31;
 add.s32 %r27, %r6, %r26;
 shr.s32 %r28, %r27, 1;
 mad.lo.s32 %r29, %r28, 64, %r5;
-ld.shared.f32 %f8, [%r29];
-add.f32 %f9, %f7, %f8;
-st.shared.f32 [%r5], %f9;
+ld.shared.f32 %f7, [%r29];
+add.f32 %f8, %f6, %f7;
+st.shared.f32 [%r5], %f8;
 
 $L__BB0_4:
 bar.sync 0;
-mov.f32 %f10, 0f40800000;
-cvt.rzi.s32.f32 %r7, %f10;
+mov.f32 %f9, 0f40800000;
+cvt.rzi.s32.f32 %r7, %f9;
 rem.s32 %r30, %r2, %r7;
 setp.ne.s32 %p3, %r30, 0;
 @%p3 bra $L__BB0_6;
 
-ld.shared.f32 %f11, [%r5];
+ld.shared.f32 %f10, [%r5];
 shr.u32 %r31, %r7, 31;
 add.s32 %r32, %r7, %r31;
 shr.s32 %r33, %r32, 1;
 mad.lo.s32 %r34, %r33, 64, %r5;
-ld.shared.f32 %f12, [%r34];
-add.f32 %f13, %f11, %f12;
-st.shared.f32 [%r5], %f13;
+ld.shared.f32 %f11, [%r34];
+add.f32 %f12, %f10, %f11;
+st.shared.f32 [%r5], %f12;
 
 $L__BB0_6:
 bar.sync 0;
-mov.f32 %f14, 0f41000000;
-cvt.rzi.s32.f32 %r8, %f14;
+mov.f32 %f13, 0f41000000;
+cvt.rzi.s32.f32 %r8, %f13;
 rem.s32 %r35, %r2, %r8;
 setp.ne.s32 %p4, %r35, 0;
 @%p4 bra $L__BB0_8;
 
-ld.shared.f32 %f15, [%r5];
+ld.shared.f32 %f14, [%r5];
 shr.u32 %r36, %r8, 31;
 add.s32 %r37, %r8, %r36;
 shr.s32 %r38, %r37, 1;
 mad.lo.s32 %r39, %r38, 64, %r5;
-ld.shared.f32 %f16, [%r39];
-add.f32 %f17, %f15, %f16;
-st.shared.f32 [%r5], %f17;
+ld.shared.f32 %f15, [%r39];
+add.f32 %f16, %f14, %f15;
+st.shared.f32 [%r5], %f16;
 
 $L__BB0_8:
 bar.sync 0;
-mov.f32 %f18, 0f41800000;
-cvt.rzi.s32.f32 %r9, %f18;
+mov.f32 %f17, 0f41800000;
+cvt.rzi.s32.f32 %r9, %f17;
 rem.s32 %r40, %r2, %r9;
 setp.ne.s32 %p5, %r40, 0;
 @%p5 bra $L__BB0_10;
 
-ld.shared.f32 %f19, [%r5];
+ld.shared.f32 %f18, [%r5];
 shr.u32 %r41, %r9, 31;
 add.s32 %r42, %r9, %r41;
 shr.s32 %r43, %r42, 1;
 mad.lo.s32 %r44, %r43, 64, %r5;
-ld.shared.f32 %f20, [%r44];
-add.f32 %f21, %f19, %f20;
-st.shared.f32 [%r5], %f21;
+ld.shared.f32 %f19, [%r44];
+add.f32 %f20, %f18, %f19;
+st.shared.f32 [%r5], %f20;
 
 $L__BB0_10:
 bar.sync 0;
-ld.shared.f32 %f22, [%r5];
-st.global.f32 [%rd1+4], %f22;
-bar.sync 0;
+ld.shared.f32 %f21, [%r5];
+st.global.f32 [%rd1+4], %f21;
 @%p1 bra $L__BB0_12;
 
 add.s32 %r47, %r22, %r11;
-ld.shared.f32 %f23, [%r47];
+ld.shared.f32 %f22, [%r47];
 mad.lo.s32 %r48, %r1, %r10, %r2;
 cvta.to.global.u64 %rd10, %rd4;
 mul.wide.s32 %rd11, %r48, 4;
 add.s64 %rd12, %rd10, %rd11;
-st.global.f32 [%rd12], %f23;
+st.global.f32 [%rd12], %f22;
 
 $L__BB0_12:
 ret;
