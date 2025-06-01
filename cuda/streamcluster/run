@@ -1,1 +1,5 @@
-./sc_gpu 10 20 256 65536 65536 1000 none output.txt 1
+rm -f ./_app_*
+rm -f ./_cuobjdump_*
+rm -f ./gpgpusim_power_report__*
+#./streamcluster 10 20 256 65536 65536 1000 none output.txt 1 2
+./streamcluster 10 20 4 512 512 500 none output.txt 1 2

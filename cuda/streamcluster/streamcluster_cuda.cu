@@ -127,6 +127,30 @@ void freeHostMem()
 }
 
 //=======================================
+// Compute Cost on CPU
+//=======================================
+void compute_cost_cpu(int num, int dim, long x, Point *p, int K, int stride,
+                      float *coord_h, float *work_mem_h, int *center_table_h, bool *switch_membership_h)
+{
+    for (int tid = 0; tid < num; tid++) {
+        float *lower = &work_mem_h[tid * stride];
+        
+        // Cost between this point and point[x]: Euclidean distance multiplied by weight
+        float x_cost = dist(p[tid], p[x], dim) * p[tid].weight;
+        
+        // If computed cost is less than original (it saves), mark it as to reassign
+        if (x_cost < p[tid].cost) {
+            switch_membership_h[tid] = true;
+            lower[K] += x_cost - p[tid].cost;
+        }
+        // If computed cost is larger, save the difference
+        else {
+            lower[center_table_h[p[tid].assign]] += p[tid].cost - x_cost;
+        }
+    }
+}
+
+//=======================================
 // pgain Entry - CUDA SETUP + CUDA CALL
 //=======================================
 float pgain( long x, Points *points, float z, long int *numcenters, int kmax, bool *is_center, int *center_table, bool *switch_membership, bool isCoordChanged,
@@ -287,6 +311,66 @@ float pgain( long x, Points *points, float z, long int *numcenters, int kmax, bo
 	
 	cudaEventRecord(start,0);
 #endif
+
+	//=======================================
+    // VALIDATION: COMPARE GPU AND CPU RESULTS
+    //=======================================
+    float *work_mem_h_cpu = (float*) malloc(stride * (nThread + 1) * sizeof(float));
+    bool *switch_membership_h_cpu = (bool*) malloc(num * sizeof(bool));
+    memset(work_mem_h_cpu, 0, stride * (nThread + 1) * sizeof(float));
+    memset(switch_membership_h_cpu, 0, num * sizeof(bool));
+
+    compute_cost_cpu(num, dim, x, points->p, K, stride, coord_h, work_mem_h_cpu, center_table, switch_membership_h_cpu);
+
+    bool valid = true;
+    for (int i = 0; i < num; i++) {
+        if (switch_membership[i] != switch_membership_h_cpu[i]) {
+            printf("Mismatch in switch_membership at index %d: GPU=%d, CPU=%d\n",
+                   i, switch_membership[i], switch_membership_h_cpu[i]);
+            valid = false;
+        }
+        for (int j = 0; j < stride; j++) {
+            if (fabs(work_mem_h[i * stride + j] - work_mem_h_cpu[i * stride + j]) > 1e-5) {
+                printf("Mismatch in work_mem at index [%d,%d]: GPU=%f, CPU=%f\n",
+                       i, j, work_mem_h[i * stride + j], work_mem_h_cpu[i * stride + j]);
+                valid = false;
+            }
+        }
+    }
+    printf("Validation %s for iteration %d\n", valid ? "PASSED" : "FAILED", iter);
+	if (!valid) {
+		printf("[**ERROR] GPU and CPU results are different in adjust weights kernel!!\n");
+		printf("CPU and GPU results differ!\n");
+		printf("\n");
+		printf("**        **\n");
+		printf(" **      ** \n");
+		printf("  **    **  \n");
+		printf("   **  **   \n");
+		printf("   **  **   \n");
+		printf("  **    **  \n");
+		printf(" **      ** \n");
+		printf("**        **\n");
+		printf("\n");
+		// Flush output buffers
+		fflush(stdout);
+		fflush(stderr);
+		exit(EXIT_FAILURE);
+	  } else {
+		printf("CPU and GPU results match!\n");
+		printf("\n");
+		printf("       .-\"\"\"\"\"-.\n");
+		printf("     .'         '.\n");
+		printf("    :             :\n");
+		printf("   :    ^     ^    :\n");
+		printf("   :     .---.     :\n");
+		printf("    :   (     )   :\n");
+		printf("     '.  '---'  .'\n");
+		printf("       '-.....-'\n");
+		printf("\n");
+	  }
+
+    free(work_mem_h_cpu);
+    free(switch_membership_h_cpu);
 	
 	//=======================================
 	// CPU (SERIAL) WORK

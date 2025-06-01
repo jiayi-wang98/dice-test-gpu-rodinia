@@ -87,6 +87,16 @@ collect:
 	@echo "==> Collecting data for $(app)..."
 	@python3 collect_data.py $(SUMMARY_DIR)/$(STD_LOGFILE) $(SUMMARY_DIR) --$(test)
 
+time_line:
+	@echo "==> Generating timeline for $(app)..."
+	@log_file=$$(find $(SUMMARY_DIR) -type f -name "test_dice_*.log" ! -name "*_asan.log" | head -n 1); \
+	if [ -z "$$log_file" ]; then \
+		echo "No suitable log file found for test_dice."; \
+	else \
+		echo "Using log file: $$log_file"; \
+		python3 create_timeline.py $$log_file; \
+	fi
+
 
 # Clean up configs, logs, builds, and rundir for the given app
 clean:

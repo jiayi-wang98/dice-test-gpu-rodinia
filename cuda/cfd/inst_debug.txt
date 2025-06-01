@@ -1,0 +1,582 @@
+[thd=1] : (euler3d.1.sm_52.ptx:30 - ld.param.u32 %r1, [_Z25cuda_initialize_variablesiPf_param_0];)
+Output Registers:
+       %r1   .b32 0x00017b80
+Register File Contents:
+       %r1   .b32 0x00017b80
+[thd=1] : (euler3d.1.sm_52.ptx:31 - ld.param.u64 %rd1, [_Z25cuda_initialize_variablesiPf_param_1];)
+Output Registers:
+      %rd1   .b64 0xc064ce00
+Register File Contents:
+      %rd1   .b64 0xc064ce00
+       %r1   .b32 0x00017b80
+[thd=1] : (euler3d.1.sm_52.ptx:32 - cvta.to.global.u64 %rd2, %rd1;)
+Output Registers:
+      %rd2   .b64 0xc064ce00
+Input Registers:
+      %rd1   .b64 0xc064ce00
+Register File Contents:
+      %rd2   .b64 0xc064ce00
+       %r1   .b32 0x00017b80
+      %rd1   .b64 0xc064ce00
+[thd=1] : (euler3d.1.sm_52.ptx:33 - mov.u32 %r2, %ntid.x;)
+Output Registers:
+       %r2   .b32 0x000000c0
+Register File Contents:
+       %r2   .b32 0x000000c0
+      %rd2   .b64 0xc064ce00
+       %r1   .b32 0x00017b80
+      %rd1   .b64 0xc064ce00
+[thd=1] : (euler3d.1.sm_52.ptx:34 - mov.u32 %r3, %ctaid.x;)
+Output Registers:
+       %r3   .b32 0x00000000
+Register File Contents:
+       %r3   .b32 0x00000000
+       %r2   .b32 0x000000c0
+      %rd2   .b64 0xc064ce00
+       %r1   .b32 0x00017b80
+      %rd1   .b64 0xc064ce00
+[thd=1] : (euler3d.1.sm_52.ptx:35 - mov.u32 %r4, %tid.x;)
+Output Registers:
+       %r4   .b32 0x00000000
+Register File Contents:
+       %r4   .b32 0x00000000
+       %r3   .b32 0x00000000
+       %r2   .b32 0x000000c0
+      %rd2   .b64 0xc064ce00
+       %r1   .b32 0x00017b80
+      %rd1   .b64 0xc064ce00
+[thd=1] : (euler3d.1.sm_52.ptx:36 - mad.lo.s32 %r5, %r2, %r3, %r4;)
+Output Registers:
+       %r5   .b32 0x00000000
+Input Registers:
+       %r4   .b32 0x00000000
+       %r2   .b32 0x000000c0
+       %r3   .b32 0x00000000
+Register File Contents:
+       %r5   .b32 0x00000000
+      %rd1   .b64 0xc064ce00
+       %r1   .b32 0x00017b80
+      %rd2   .b64 0xc064ce00
+       %r2   .b32 0x000000c0
+       %r3   .b32 0x00000000
+       %r4   .b32 0x00000000
+[thd=1] : (euler3d.1.sm_52.ptx:37 - ld.const.f32 %f1, [ff_variable];)
+Output Registers:
+       %f1   .f32 1.399999976158142 [0x3fb33333]
+Register File Contents:
+       %r5   .b32 0x00000000
+      %rd1   .b64 0xc064ce00
+       %r1   .b32 0x00017b80
+       %f1   .f32 1.399999976158142 [0x3fb33333]
+      %rd2   .b64 0xc064ce00
+       %r2   .b32 0x000000c0
+       %r3   .b32 0x00000000
+       %r4   .b32 0x00000000
+[thd=1] : (euler3d.1.sm_52.ptx:38 - mul.wide.s32 %rd3, %r5, 4;)
+Output Registers:
+      %rd3   .b64 0x0
+Input Registers:
+       %r5   .b32 0x00000000
+Register File Contents:
+      %rd3   .b64 0x0
+       %r5   .b32 0x00000000
+      %rd1   .b64 0xc064ce00
+       %r1   .b32 0x00017b80
+       %f1   .f32 1.399999976158142 [0x3fb33333]
+      %rd2   .b64 0xc064ce00
+       %r2   .b32 0x000000c0
+       %r3   .b32 0x00000000
+       %r4   .b32 0x00000000
+[thd=1] : (euler3d.1.sm_52.ptx:39 - add.s64 %rd4, %rd2, %rd3;)
+Output Registers:
+      %rd4   .b64 0xc064ce00
+Input Registers:
+      %rd3   .b64 0x0
+      %rd2   .b64 0xc064ce00
+Register File Contents:
+      %rd4   .b64 0xc064ce00
+      %rd3   .b64 0x0
+       %r5   .b32 0x00000000
+      %rd1   .b64 0xc064ce00
+       %r1   .b32 0x00017b80
+       %f1   .f32 1.399999976158142 [0x3fb33333]
+      %rd2   .b64 0xc064ce00
+       %r2   .b32 0x000000c0
+       %r3   .b32 0x00000000
+       %r4   .b32 0x00000000
+[thd=1] : (euler3d.1.sm_52.ptx:40 - st.global.f32 [%rd4], %f1;)
+Input Registers:
+       %f1   .f32 1.399999976158142 [0x3fb33333]
+      %rd4   .b64 0xc064ce00
+Register File Contents:
+      %rd4   .b64 0xc064ce00
+      %rd3   .b64 0x0
+       %r5   .b32 0x00000000
+      %rd1   .b64 0xc064ce00
+       %r1   .b32 0x00017b80
+       %f1   .f32 1.399999976158142 [0x3fb33333]
+      %rd2   .b64 0xc064ce00
+       %r2   .b32 0x000000c0
+       %r3   .b32 0x00000000
+       %r4   .b32 0x00000000
+[thd=1] : (euler3d.1.sm_52.ptx:41 - ld.const.f32 %f2, [ff_variable+4];)
+Output Registers:
+       %f2   .f32 1.680000066757202 [0x3fd70a3e]
+Register File Contents:
+      %rd4   .b64 0xc064ce00
+       %f2   .f32 1.680000066757202 [0x3fd70a3e]
+      %rd3   .b64 0x0
+       %r5   .b32 0x00000000
+      %rd1   .b64 0xc064ce00
+       %r1   .b32 0x00017b80
+       %f1   .f32 1.399999976158142 [0x3fb33333]
+      %rd2   .b64 0xc064ce00
+       %r2   .b32 0x000000c0
+       %r3   .b32 0x00000000
+       %r4   .b32 0x00000000
+[thd=1] : (euler3d.1.sm_52.ptx:42 - add.s32 %r6, %r5, %r1;)
+Output Registers:
+       %r6   .b32 0x00017b80
+Input Registers:
+       %r1   .b32 0x00017b80
+       %r5   .b32 0x00000000
+Register File Contents:
+       %r6   .b32 0x00017b80
+      %rd4   .b64 0xc064ce00
+       %f2   .f32 1.680000066757202 [0x3fd70a3e]
+      %rd3   .b64 0x0
+       %r5   .b32 0x00000000
+      %rd1   .b64 0xc064ce00
+       %r1   .b32 0x00017b80
+       %f1   .f32 1.399999976158142 [0x3fb33333]
+      %rd2   .b64 0xc064ce00
+       %r2   .b32 0x000000c0
+       %r3   .b32 0x00000000
+       %r4   .b32 0x00000000
+[thd=1] : (euler3d.1.sm_52.ptx:43 - mul.wide.s32 %rd5, %r1, 4;)
+Output Registers:
+      %rd5   .b64 0x5ee00
+Input Registers:
+       %r1   .b32 0x00017b80
+Register File Contents:
+      %rd5   .b64 0x5ee00
+       %r6   .b32 0x00017b80
+      %rd4   .b64 0xc064ce00
+       %f2   .f32 1.680000066757202 [0x3fd70a3e]
+      %rd3   .b64 0x0
+       %r5   .b32 0x00000000
+      %rd1   .b64 0xc064ce00
+       %r1   .b32 0x00017b80
+       %f1   .f32 1.399999976158142 [0x3fb33333]
+      %rd2   .b64 0xc064ce00
+       %r2   .b32 0x000000c0
+       %r3   .b32 0x00000000
+       %r4   .b32 0x00000000
+[thd=1] : (euler3d.1.sm_52.ptx:44 - add.s64 %rd6, %rd4, %rd5;)
+Output Registers:
+      %rd6   .b64 0xc06abc00
+Input Registers:
+      %rd5   .b64 0x5ee00
+      %rd4   .b64 0xc064ce00
+Register File Contents:
+      %rd6   .b64 0xc06abc00
+      %rd5   .b64 0x5ee00
+       %r6   .b32 0x00017b80
+      %rd4   .b64 0xc064ce00
+       %f2   .f32 1.680000066757202 [0x3fd70a3e]
+      %rd3   .b64 0x0
+       %r5   .b32 0x00000000
+      %rd1   .b64 0xc064ce00
+       %r1   .b32 0x00017b80
+       %f1   .f32 1.399999976158142 [0x3fb33333]
+      %rd2   .b64 0xc064ce00
+       %r2   .b32 0x000000c0
+       %r3   .b32 0x00000000
+       %r4   .b32 0x00000000
+[thd=1] : (euler3d.1.sm_52.ptx:45 - st.global.f32 [%rd6], %f2;)
+Input Registers:
+       %f2   .f32 1.680000066757202 [0x3fd70a3e]
+      %rd6   .b64 0xc06abc00
+Register File Contents:
+      %rd6   .b64 0xc06abc00
+      %rd5   .b64 0x5ee00
+       %r6   .b32 0x00017b80
+      %rd4   .b64 0xc064ce00
+       %f2   .f32 1.680000066757202 [0x3fd70a3e]
+      %rd3   .b64 0x0
+       %r5   .b32 0x00000000
+      %rd1   .b64 0xc064ce00
+       %r1   .b32 0x00017b80
+       %f1   .f32 1.399999976158142 [0x3fb33333]
+      %rd2   .b64 0xc064ce00
+       %r2   .b32 0x000000c0
+       %r3   .b32 0x00000000
+       %r4   .b32 0x00000000
+[thd=1] : (euler3d.1.sm_52.ptx:46 - ld.const.f32 %f3, [ff_variable+8];)
+Output Registers:
+       %f3   .f32 0.000000000000000 [0x00000000]
+Register File Contents:
+      %rd6   .b64 0xc06abc00
+      %rd5   .b64 0x5ee00
+       %r6   .b32 0x00017b80
+       %f3   .f32 0.000000000000000 [0x00000000]
+      %rd4   .b64 0xc064ce00
+       %f2   .f32 1.680000066757202 [0x3fd70a3e]
+      %rd3   .b64 0x0
+       %r5   .b32 0x00000000
+      %rd1   .b64 0xc064ce00
+       %r1   .b32 0x00017b80
+       %f1   .f32 1.399999976158142 [0x3fb33333]
+      %rd2   .b64 0xc064ce00
+       %r2   .b32 0x000000c0
+       %r3   .b32 0x00000000
+       %r4   .b32 0x00000000
+[thd=1] : (euler3d.1.sm_52.ptx:47 - add.s32 %r7, %r6, %r1;)
+Output Registers:
+       %r7   .b32 0x0002f700
+Input Registers:
+       %r1   .b32 0x00017b80
+       %r6   .b32 0x00017b80
+Register File Contents:
+       %r7   .b32 0x0002f700
+      %rd6   .b64 0xc06abc00
+      %rd5   .b64 0x5ee00
+       %r6   .b32 0x00017b80
+       %f3   .f32 0.000000000000000 [0x00000000]
+      %rd4   .b64 0xc064ce00
+       %f2   .f32 1.680000066757202 [0x3fd70a3e]
+      %rd3   .b64 0x0
+       %r5   .b32 0x00000000
+      %rd1   .b64 0xc064ce00
+       %r1   .b32 0x00017b80
+       %f1   .f32 1.399999976158142 [0x3fb33333]
+      %rd2   .b64 0xc064ce00
+       %r2   .b32 0x000000c0
+       %r3   .b32 0x00000000
+       %r4   .b32 0x00000000
+[thd=1] : (euler3d.1.sm_52.ptx:48 - shl.b32 %r8, %r1, 1;)
+Output Registers:
+       %r8   .b32 0x0002f700
+Input Registers:
+       %r1   .b32 0x00017b80
+Register File Contents:
+       %r8   .b32 0x0002f700
+       %r4   .b32 0x00000000
+       %r3   .b32 0x00000000
+       %r2   .b32 0x000000c0
+      %rd2   .b64 0xc064ce00
+       %f1   .f32 1.399999976158142 [0x3fb33333]
+       %r1   .b32 0x00017b80
+      %rd1   .b64 0xc064ce00
+       %r5   .b32 0x00000000
+      %rd3   .b64 0x0
+       %f2   .f32 1.680000066757202 [0x3fd70a3e]
+      %rd4   .b64 0xc064ce00
+       %f3   .f32 0.000000000000000 [0x00000000]
+       %r6   .b32 0x00017b80
+      %rd5   .b64 0x5ee00
+      %rd6   .b64 0xc06abc00
+       %r7   .b32 0x0002f700
+[thd=1] : (euler3d.1.sm_52.ptx:49 - mul.wide.s32 %rd7, %r8, 4;)
+Output Registers:
+      %rd7   .b64 0xbdc00
+Input Registers:
+       %r8   .b32 0x0002f700
+Register File Contents:
+      %rd7   .b64 0xbdc00
+       %r8   .b32 0x0002f700
+       %r4   .b32 0x00000000
+       %r3   .b32 0x00000000
+       %r2   .b32 0x000000c0
+      %rd2   .b64 0xc064ce00
+       %f1   .f32 1.399999976158142 [0x3fb33333]
+       %r1   .b32 0x00017b80
+      %rd1   .b64 0xc064ce00
+       %r5   .b32 0x00000000
+      %rd3   .b64 0x0
+       %f2   .f32 1.680000066757202 [0x3fd70a3e]
+      %rd4   .b64 0xc064ce00
+       %f3   .f32 0.000000000000000 [0x00000000]
+       %r6   .b32 0x00017b80
+      %rd5   .b64 0x5ee00
+      %rd6   .b64 0xc06abc00
+       %r7   .b32 0x0002f700
+[thd=1] : (euler3d.1.sm_52.ptx:50 - add.s64 %rd8, %rd4, %rd7;)
+Output Registers:
+      %rd8   .b64 0xc070aa00
+Input Registers:
+      %rd7   .b64 0xbdc00
+      %rd4   .b64 0xc064ce00
+Register File Contents:
+      %rd8   .b64 0xc070aa00
+      %rd7   .b64 0xbdc00
+       %r8   .b32 0x0002f700
+       %r4   .b32 0x00000000
+       %r3   .b32 0x00000000
+       %r2   .b32 0x000000c0
+      %rd2   .b64 0xc064ce00
+       %f1   .f32 1.399999976158142 [0x3fb33333]
+       %r1   .b32 0x00017b80
+      %rd1   .b64 0xc064ce00
+       %r5   .b32 0x00000000
+      %rd3   .b64 0x0
+       %f2   .f32 1.680000066757202 [0x3fd70a3e]
+      %rd4   .b64 0xc064ce00
+       %f3   .f32 0.000000000000000 [0x00000000]
+       %r6   .b32 0x00017b80
+      %rd5   .b64 0x5ee00
+      %rd6   .b64 0xc06abc00
+       %r7   .b32 0x0002f700
+[thd=1] : (euler3d.1.sm_52.ptx:51 - st.global.f32 [%rd8], %f3;)
+Input Registers:
+       %f3   .f32 0.000000000000000 [0x00000000]
+      %rd8   .b64 0xc070aa00
+Register File Contents:
+      %rd8   .b64 0xc070aa00
+      %rd7   .b64 0xbdc00
+       %r8   .b32 0x0002f700
+       %r4   .b32 0x00000000
+       %r3   .b32 0x00000000
+       %r2   .b32 0x000000c0
+      %rd2   .b64 0xc064ce00
+       %f1   .f32 1.399999976158142 [0x3fb33333]
+       %r1   .b32 0x00017b80
+      %rd1   .b64 0xc064ce00
+       %r5   .b32 0x00000000
+      %rd3   .b64 0x0
+       %f2   .f32 1.680000066757202 [0x3fd70a3e]
+      %rd4   .b64 0xc064ce00
+       %f3   .f32 0.000000000000000 [0x00000000]
+       %r6   .b32 0x00017b80
+      %rd5   .b64 0x5ee00
+      %rd6   .b64 0xc06abc00
+       %r7   .b32 0x0002f700
+[thd=1] : (euler3d.1.sm_52.ptx:52 - ld.const.f32 %f4, [ff_variable+12];)
+Output Registers:
+       %f4   .f32 0.000000000000000 [0x00000000]
+Register File Contents:
+       %f4   .f32 0.000000000000000 [0x00000000]
+      %rd8   .b64 0xc070aa00
+      %rd7   .b64 0xbdc00
+       %r8   .b32 0x0002f700
+       %r4   .b32 0x00000000
+       %r3   .b32 0x00000000
+       %r2   .b32 0x000000c0
+      %rd2   .b64 0xc064ce00
+       %f1   .f32 1.399999976158142 [0x3fb33333]
+       %r1   .b32 0x00017b80
+      %rd1   .b64 0xc064ce00
+       %r5   .b32 0x00000000
+      %rd3   .b64 0x0
+       %f2   .f32 1.680000066757202 [0x3fd70a3e]
+      %rd4   .b64 0xc064ce00
+       %f3   .f32 0.000000000000000 [0x00000000]
+       %r6   .b32 0x00017b80
+      %rd5   .b64 0x5ee00
+      %rd6   .b64 0xc06abc00
+       %r7   .b32 0x0002f700
+[thd=1] : (euler3d.1.sm_52.ptx:53 - add.s32 %r9, %r7, %r1;)
+Output Registers:
+       %r9   .b32 0x00047280
+Input Registers:
+       %r1   .b32 0x00017b80
+       %r7   .b32 0x0002f700
+Register File Contents:
+       %r9   .b32 0x00047280
+       %f4   .f32 0.000000000000000 [0x00000000]
+      %rd8   .b64 0xc070aa00
+      %rd7   .b64 0xbdc00
+       %r8   .b32 0x0002f700
+       %r4   .b32 0x00000000
+       %r3   .b32 0x00000000
+       %r2   .b32 0x000000c0
+      %rd2   .b64 0xc064ce00
+       %f1   .f32 1.399999976158142 [0x3fb33333]
+       %r1   .b32 0x00017b80
+      %rd1   .b64 0xc064ce00
+       %r5   .b32 0x00000000
+      %rd3   .b64 0x0
+       %f2   .f32 1.680000066757202 [0x3fd70a3e]
+      %rd4   .b64 0xc064ce00
+       %f3   .f32 0.000000000000000 [0x00000000]
+       %r6   .b32 0x00017b80
+      %rd5   .b64 0x5ee00
+      %rd6   .b64 0xc06abc00
+       %r7   .b32 0x0002f700
+[thd=1] : (euler3d.1.sm_52.ptx:54 - mul.wide.s32 %rd9, %r9, 4;)
+Output Registers:
+      %rd9   .b64 0x11ca00
+Input Registers:
+       %r9   .b32 0x00047280
+Register File Contents:
+      %rd9   .b64 0x11ca00
+       %r9   .b32 0x00047280
+       %f4   .f32 0.000000000000000 [0x00000000]
+      %rd8   .b64 0xc070aa00
+      %rd7   .b64 0xbdc00
+       %r8   .b32 0x0002f700
+       %r4   .b32 0x00000000
+       %r3   .b32 0x00000000
+       %r2   .b32 0x000000c0
+      %rd2   .b64 0xc064ce00
+       %f1   .f32 1.399999976158142 [0x3fb33333]
+       %r1   .b32 0x00017b80
+      %rd1   .b64 0xc064ce00
+       %r5   .b32 0x00000000
+      %rd3   .b64 0x0
+       %f2   .f32 1.680000066757202 [0x3fd70a3e]
+      %rd4   .b64 0xc064ce00
+       %f3   .f32 0.000000000000000 [0x00000000]
+       %r6   .b32 0x00017b80
+      %rd5   .b64 0x5ee00
+      %rd6   .b64 0xc06abc00
+       %r7   .b32 0x0002f700
+[thd=1] : (euler3d.1.sm_52.ptx:55 - add.s64 %rd10, %rd2, %rd9;)
+Output Registers:
+     %rd10   .b64 0xc0769800
+Input Registers:
+      %rd9   .b64 0x11ca00
+      %rd2   .b64 0xc064ce00
+Register File Contents:
+     %rd10   .b64 0xc0769800
+      %rd9   .b64 0x11ca00
+       %r9   .b32 0x00047280
+       %f4   .f32 0.000000000000000 [0x00000000]
+      %rd8   .b64 0xc070aa00
+      %rd7   .b64 0xbdc00
+       %r8   .b32 0x0002f700
+       %r4   .b32 0x00000000
+       %r3   .b32 0x00000000
+       %r2   .b32 0x000000c0
+      %rd2   .b64 0xc064ce00
+       %f1   .f32 1.399999976158142 [0x3fb33333]
+       %r1   .b32 0x00017b80
+      %rd1   .b64 0xc064ce00
+       %r5   .b32 0x00000000
+      %rd3   .b64 0x0
+       %f2   .f32 1.680000066757202 [0x3fd70a3e]
+      %rd4   .b64 0xc064ce00
+       %f3   .f32 0.000000000000000 [0x00000000]
+       %r6   .b32 0x00017b80
+      %rd5   .b64 0x5ee00
+      %rd6   .b64 0xc06abc00
+       %r7   .b32 0x0002f700
+[thd=1] : (euler3d.1.sm_52.ptx:56 - st.global.f32 [%rd10], %f4;)
+Input Registers:
+       %f4   .f32 0.000000000000000 [0x00000000]
+     %rd10   .b64 0xc0769800
+Register File Contents:
+     %rd10   .b64 0xc0769800
+      %rd9   .b64 0x11ca00
+       %r9   .b32 0x00047280
+       %f4   .f32 0.000000000000000 [0x00000000]
+      %rd8   .b64 0xc070aa00
+      %rd7   .b64 0xbdc00
+       %r8   .b32 0x0002f700
+       %r4   .b32 0x00000000
+       %r3   .b32 0x00000000
+       %r2   .b32 0x000000c0
+      %rd2   .b64 0xc064ce00
+       %f1   .f32 1.399999976158142 [0x3fb33333]
+       %r1   .b32 0x00017b80
+      %rd1   .b64 0xc064ce00
+       %r5   .b32 0x00000000
+      %rd3   .b64 0x0
+       %f2   .f32 1.680000066757202 [0x3fd70a3e]
+      %rd4   .b64 0xc064ce00
+       %f3   .f32 0.000000000000000 [0x00000000]
+       %r6   .b32 0x00017b80
+      %rd5   .b64 0x5ee00
+      %rd6   .b64 0xc06abc00
+       %r7   .b32 0x0002f700
+[thd=1] : (euler3d.1.sm_52.ptx:57 - ld.const.f32 %f5, [ff_variable+16];)
+Output Registers:
+       %f5   .f32 3.508000373840332 [0x40608314]
+Register File Contents:
+       %f5   .f32 3.508000373840332 [0x40608314]
+     %rd10   .b64 0xc0769800
+      %rd9   .b64 0x11ca00
+       %r9   .b32 0x00047280
+       %f4   .f32 0.000000000000000 [0x00000000]
+      %rd8   .b64 0xc070aa00
+      %rd7   .b64 0xbdc00
+       %r8   .b32 0x0002f700
+       %r4   .b32 0x00000000
+       %r3   .b32 0x00000000
+       %r2   .b32 0x000000c0
+      %rd2   .b64 0xc064ce00
+       %f1   .f32 1.399999976158142 [0x3fb33333]
+       %r1   .b32 0x00017b80
+      %rd1   .b64 0xc064ce00
+       %r5   .b32 0x00000000
+      %rd3   .b64 0x0
+       %f2   .f32 1.680000066757202 [0x3fd70a3e]
+      %rd4   .b64 0xc064ce00
+       %f3   .f32 0.000000000000000 [0x00000000]
+       %r6   .b32 0x00017b80
+      %rd5   .b64 0x5ee00
+      %rd6   .b64 0xc06abc00
+       %r7   .b32 0x0002f700
+[thd=1] : (euler3d.1.sm_52.ptx:58 - add.s64 %rd11, %rd8, %rd7;)
+Output Registers:
+     %rd11   .b64 0xc07c8600
+Input Registers:
+      %rd7   .b64 0xbdc00
+      %rd8   .b64 0xc070aa00
+Register File Contents:
+     %rd11   .b64 0xc07c8600
+       %f5   .f32 3.508000373840332 [0x40608314]
+     %rd10   .b64 0xc0769800
+      %rd9   .b64 0x11ca00
+       %r9   .b32 0x00047280
+       %f4   .f32 0.000000000000000 [0x00000000]
+      %rd8   .b64 0xc070aa00
+      %rd7   .b64 0xbdc00
+       %r8   .b32 0x0002f700
+       %r4   .b32 0x00000000
+       %r3   .b32 0x00000000
+       %r2   .b32 0x000000c0
+      %rd2   .b64 0xc064ce00
+       %f1   .f32 1.399999976158142 [0x3fb33333]
+       %r1   .b32 0x00017b80
+      %rd1   .b64 0xc064ce00
+       %r5   .b32 0x00000000
+      %rd3   .b64 0x0
+       %f2   .f32 1.680000066757202 [0x3fd70a3e]
+      %rd4   .b64 0xc064ce00
+       %f3   .f32 0.000000000000000 [0x00000000]
+       %r6   .b32 0x00017b80
+      %rd5   .b64 0x5ee00
+      %rd6   .b64 0xc06abc00
+       %r7   .b32 0x0002f700
+[thd=1] : (euler3d.1.sm_52.ptx:59 - st.global.f32 [%rd11], %f5;)
+Input Registers:
+       %f5   .f32 3.508000373840332 [0x40608314]
+     %rd11   .b64 0xc07c8600
+Register File Contents:
+     %rd11   .b64 0xc07c8600
+       %f5   .f32 3.508000373840332 [0x40608314]
+     %rd10   .b64 0xc0769800
+      %rd9   .b64 0x11ca00
+       %r9   .b32 0x00047280
+       %f4   .f32 0.000000000000000 [0x00000000]
+      %rd8   .b64 0xc070aa00
+      %rd7   .b64 0xbdc00
+       %r8   .b32 0x0002f700
+       %r4   .b32 0x00000000
+       %r3   .b32 0x00000000
+       %r2   .b32 0x000000c0
+      %rd2   .b64 0xc064ce00
+       %f1   .f32 1.399999976158142 [0x3fb33333]
+       %r1   .b32 0x00017b80
+      %rd1   .b64 0xc064ce00
+       %r5   .b32 0x00000000
+      %rd3   .b64 0x0
+       %f2   .f32 1.680000066757202 [0x3fd70a3e]
+      %rd4   .b64 0xc064ce00
+       %f3   .f32 0.000000000000000 [0x00000000]
+       %r6   .b32 0x00017b80
+      %rd5   .b64 0x5ee00
+      %rd6   .b64 0xc06abc00
+       %r7   .b32 0x0002f700
+[thd=1] : (euler3d.1.sm_52.ptx:60 - ret;)

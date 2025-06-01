@@ -17,7 +17,12 @@ UNROLLING_STRATEGY = 0,
 LAT = 8,
 IN_REGS = (%ctaid.x, %ctaid.y, %nctaid.x, %ntid.x, %c0, %c2, %tid.x),
 OUT_REGS = (%p0, %r5),
-LD_DEST_REGS = (%r6, %r7);
+LD_DEST_REGS = (%r6, %r7),
+BRANCH = 1,
+BRANCH_UNI = 0,
+BRANCH_PRED = (%p0),
+BRANCH_TARGET = 3,
+BRANCH_RECVPC = 3;
 
 DBB_ID = 2,
 BITSTREAM_ADDR = $DICE_BB0_2,

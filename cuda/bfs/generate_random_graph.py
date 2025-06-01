@@ -54,4 +54,4 @@ def generate_random_graph(n_nodes, edge_probability=0.1, output_file="random_gra
 # Example usage
 if __name__ == "__main__":
     # Generate a 512-node graph with 10% edge probability
-    generate_random_graph(512, edge_probability=0.01)
+    generate_random_graph(30720, edge_probability=0.0002)

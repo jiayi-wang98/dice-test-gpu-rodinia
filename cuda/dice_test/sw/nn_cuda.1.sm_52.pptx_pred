@@ -37,6 +37,7 @@ mul.wide.s32 %w10, %r5, 8;
 add.s64 %w11, %w9, %w10;
 @!%p0 ld.global.f32 %r6, [%w11];
 @!%p0 ld.global.f32 %r7, [%w11+4];
+@%p0 bra $DICE_BB0_3;
 
 $DICE_BB0_2:
 cvta.to.global.u64 %w7, %c1;
@@ -47,7 +48,7 @@ sub.f32 %w1, %c4, %r7;
 mul.f32 %w2, %w1, %w1;
 fma.rn.f32 %w3, %w0, %w0, %w2;
 sqrt.rn.f32 %w4, %w3;
-@!%p0 st.global.f32 [%w5], %w4;
+st.global.f32 [%w5], %w4;
 
 $DICE_BB0_3:
 ret;

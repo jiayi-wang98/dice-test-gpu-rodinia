@@ -1,0 +1,186 @@
+// DICECompiler PPTX for: examples/rodinia/streamcluster/sc_gpu.1.sm_52.ptx
+.version 7.7
+.target sm_52
+.address_size 64
+.visible .entry _Z19kernel_compute_costiilP5PointiiPfS1_PiPb(
+.param .u32 _Z19kernel_compute_costiilP5PointiiPfS1_PiPb_param_0,
+.param .u32 _Z19kernel_compute_costiilP5PointiiPfS1_PiPb_param_1,
+.param .u64 _Z19kernel_compute_costiilP5PointiiPfS1_PiPb_param_2,
+.param .u64 _Z19kernel_compute_costiilP5PointiiPfS1_PiPb_param_3,
+.param .u32 _Z19kernel_compute_costiilP5PointiiPfS1_PiPb_param_4,
+.param .u32 _Z19kernel_compute_costiilP5PointiiPfS1_PiPb_param_5,
+.param .u64 _Z19kernel_compute_costiilP5PointiiPfS1_PiPb_param_6,
+.param .u64 _Z19kernel_compute_costiilP5PointiiPfS1_PiPb_param_7,
+.param .u64 _Z19kernel_compute_costiilP5PointiiPfS1_PiPb_param_8,
+.param .u64 _Z19kernel_compute_costiilP5PointiiPfS1_PiPb_param_9
+)
+{
+.reg .b32 %c<32>;
+.reg .b32 %r<32>;
+.reg .pred %p<32>;
+.reg .b32 %w<7>;
+
+
+$DICE_BB0_0:
+ld.param.u32 %c0, [_Z19kernel_compute_costiilP5PointiiPfS1_PiPb_param_0];
+ld.param.u32 %c1, [_Z19kernel_compute_costiilP5PointiiPfS1_PiPb_param_1];
+ld.param.u64 %c2, [_Z19kernel_compute_costiilP5PointiiPfS1_PiPb_param_2];
+ld.param.u64 %c3, [_Z19kernel_compute_costiilP5PointiiPfS1_PiPb_param_3];
+ld.param.u32 %c4, [_Z19kernel_compute_costiilP5PointiiPfS1_PiPb_param_4];
+ld.param.u32 %c5, [_Z19kernel_compute_costiilP5PointiiPfS1_PiPb_param_5];
+ld.param.u64 %c6, [_Z19kernel_compute_costiilP5PointiiPfS1_PiPb_param_6];
+ld.param.u64 %c7, [_Z19kernel_compute_costiilP5PointiiPfS1_PiPb_param_7];
+ld.param.u64 %c8, [_Z19kernel_compute_costiilP5PointiiPfS1_PiPb_param_8];
+ld.param.u64 %c9, [_Z19kernel_compute_costiilP5PointiiPfS1_PiPb_param_9];
+
+$DICE_BB0_1:
+cvta.to.global.u64 %r0, %c6;
+cvta.to.global.u64 %r1, %c7;
+mov.u32 %w0, %ctaid.y;
+mov.u32 %w1, %nctaid.x;
+mov.u32 %w2, %ctaid.x;
+mad.lo.s32 %w3, %w1, %w0, %w2;
+mov.u32 %w4, %ntid.x;
+mul.lo.s32 %r2, %w3, %w4;
+mov.u32 %r3, %tid.x;
+add.s32 %r4, %r2, %r3;
+setp.ge.s32 %p0, %r4, %c0;
+@%p0 bra $DICE_BB0_17;
+
+$DICE_BB0_2:
+mul.lo.s32 %w0, %r4, %c5;
+cvt.s64.s32 %r5, %w0;
+cvt.u32.u64 %r6, %c2;
+setp.lt.s32 %p1, %c1, 1;
+mov.f32 %r7, 0f00000000;
+@%p1 bra $DICE_BB0_11;
+
+$DICE_BB0_3:
+add.s32 %w0, %c1, -1;
+and.b32 %r8, %c1, 3;
+setp.lt.u32 %p2, %w0, 3;
+mov.f32 %r7, 0f00000000;
+mov.u32 %r10, 0;
+@%p2 bra $DICE_BB0_7;
+
+$DICE_BB0_4:
+sub.s32 %r11, %c1, %r8;
+mul.wide.s32 %w0, %r4, 4;
+add.s64 %r12, %r0, %w0;
+mul.wide.s32 %r13, %c0, 4;
+mul.wide.s32 %w1, %r6, 4;
+add.s64 %r14, %r0, %w1;
+
+$DICE_BB0_5:
+ld.global.f32 %r15, [%r14];
+ld.global.f32 %r16, [%r12];
+add.s64 %w0, %r12, %r13;
+add.s64 %w1, %r14, %r13;
+ld.global.f32 %r17, [%w1];
+ld.global.f32 %r18, [%w0];
+add.s64 %w2, %w0, %r13;
+add.s64 %w3, %w1, %r13;
+ld.global.f32 %r19, [%w3];
+ld.global.f32 %r20, [%w2];
+add.s64 %w4, %w2, %r13;
+add.s64 %r12, %w4, %r13;
+add.s64 %w5, %w3, %r13;
+add.s64 %r14, %w5, %r13;
+ld.global.f32 %r21, [%w5];
+ld.global.f32 %r22, [%w4];
+
+$DICE_BB0_6:
+sub.f32 %w0, %r16, %r15;
+fma.rn.f32 %w1, %w0, %w0, %r7;
+sub.f32 %w2, %r18, %r17;
+fma.rn.f32 %w3, %w2, %w2, %w1;
+sub.f32 %w4, %r20, %r19;
+fma.rn.f32 %w5, %w4, %w4, %w3;
+sub.f32 %w6, %r22, %r21;
+fma.rn.f32 %r7, %w6, %w6, %w5;
+add.s32 %r10, %r10, 4;
+add.s32 %r11, %r11, -4;
+setp.ne.s32 %p3, %r11, 0;
+@%p3 bra $DICE_BB0_5;
+
+$DICE_BB0_7:
+setp.eq.s32 %p4, %r8, 0;
+@%p4 bra $DICE_BB0_11;
+
+$DICE_BB0_8:
+mul.lo.s32 %w0, %r10, %c0;
+add.s32 %w1, %w0, %r6;
+mul.wide.s32 %w2, %w1, 4;
+add.s64 %r15, %r0, %w2;
+mul.wide.s32 %r16, %c0, 4;
+add.s32 %w3, %r3, %w0;
+add.s32 %w4, %w3, %r2;
+mul.wide.s32 %w5, %w4, 4;
+add.s64 %r17, %r0, %w5;
+
+$DICE_BB0_9:
+ld.global.f32 %r0, [%r15];
+ld.global.f32 %r2, [%r17];
+add.s64 %r15, %r15, %r16;
+add.s64 %r17, %r17, %r16;
+
+$DICE_BB0_10:
+sub.f32 %w0, %r2, %r0;
+fma.rn.f32 %r3, %w0, %w0, %r7;
+add.s32 %r8, %r8, -1;
+setp.ne.s32 %p5, %r8, 0;
+@%p5 bra $DICE_BB0_9;
+
+$DICE_BB0_11:
+cvt.s64.s32 %r0, %r4;
+cvta.to.global.u64 %w0, %c3;
+mul.wide.s32 %w1, %r4, 32;
+add.s64 %r2, %w0, %w1;
+ld.global.f32 %r6, [%r2];
+ld.global.f32 %r8, [%r2+24];
+//bra $DICE_BB0_13;
+
+$DICE_BB0_12:
+mul.f32 %r4, %r7, %r6;
+setp.lt.f32 %p6, %r4, %r8;
+@%p6 bra $DICE_BB0_13;
+
+$DICE_BB0_13:
+cvta.to.global.u64 %w0, %c9;
+add.s64 %w1, %w0, %r0;
+mov.u16 %w2, 1;
+st.global.u8 [%w1], %w2;
+ld.global.f32 %r3, [%r2+24];
+cvt.s64.s32 %w3, %c4;
+add.s64 %w4, %r5, %w3;
+shl.b64 %w5, %w4, 2;
+add.s64 %r6, %r1, %w5;
+ld.global.f32 %r9, [%r6];
+sub.f32 %r10, %r8, %r4;
+ld.global.u64 %r13, [%r2+16];
+cvta.to.global.u64 %r16, %c8;
+//bra $DICE_BB0_17;
+
+$DICE_BB0_14:
+sub.f32 %w0, %r4, %r3;
+add.f32 %w1, %r9, %w0;
+st.global.f32 [%r6], %w1;
+shl.b64 %w2, %r13, 2;
+add.s64 %w3, %r16, %w2;
+ld.global.s32 %r0, [%w3];
+
+$DICE_BB0_15:
+add.s64 %w0, %r0, %r5;
+shl.b64 %w1, %w0, 2;
+add.s64 %r2, %r1, %w1;
+ld.global.f32 %r3, [%r2];
+
+$DICE_BB0_16:
+add.f32 %w0, %r10, %r3;
+st.global.f32 [%r2], %w0;
+
+$DICE_BB0_17:
+ret ;
+
+}
+
