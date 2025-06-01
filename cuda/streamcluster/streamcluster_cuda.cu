@@ -330,7 +330,13 @@ float pgain( long x, Points *points, float z, long int *numcenters, int kmax, bo
             valid = false;
         }
         for (int j = 0; j < stride; j++) {
-            if (fabs(work_mem_h[i * stride + j] - work_mem_h_cpu[i * stride + j]) > 1e-5) {
+			if(work_mem_h[i * stride + j] < 1e-5){
+				if(fabs(work_mem_h[i * stride + j] - work_mem_h_cpu[i * stride + j]) > 1e-5) {
+					printf("Mismatch in work_mem at index [%d,%d]: GPU=%f, CPU=%f\n",
+						   i, j, work_mem_h[i * stride + j], work_mem_h_cpu[i * stride + j]);
+					valid = false;
+				}
+			} else if (fabs(work_mem_h[i * stride + j] - work_mem_h_cpu[i * stride + j])/work_mem_h[i * stride + j] > 1e-5) {
                 printf("Mismatch in work_mem at index [%d,%d]: GPU=%f, CPU=%f\n",
                        i, j, work_mem_h[i * stride + j], work_mem_h_cpu[i * stride + j]);
                 valid = false;

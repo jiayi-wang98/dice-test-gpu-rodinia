@@ -1,0 +1,2 @@
+#./streamcluster 10 20 256 65536 65536 1000 none output.txt 1 2
+gdb --args ./streamcluster 10 20 4 512 512 500 none output.txt 1 2

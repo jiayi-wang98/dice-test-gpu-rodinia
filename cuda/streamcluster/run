@@ -1,5 +1,13 @@
 rm -f ./_app_*
 rm -f ./_cuobjdump_*
 rm -f ./gpgpusim_power_report__*
+
+#if streamcluster.1.sm_52.meta and streamcluster.1.sm_52.pptx exist, coy them to streamcluster.2.sm_52.meta and streamcluster.2.sm_52.pptx
+if [ -f ./streamcluster.1.sm_52.meta ]; then
+    cp ./streamcluster.1.sm_52.meta ./streamcluster.2.sm_52.meta
+fi
+if [ -f ./streamcluster.1.sm_52.pptx ]; then
+    cp ./streamcluster.1.sm_52.pptx ./streamcluster.2.sm_52.pptx
+fi
 #./streamcluster 10 20 256 65536 65536 1000 none output.txt 1 2
 ./streamcluster 10 20 4 512 512 500 none output.txt 1 2

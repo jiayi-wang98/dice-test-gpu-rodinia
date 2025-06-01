@@ -103,8 +103,8 @@ clean:
 	@echo "==> Cleaning up for $(app)..."
 	-@rm -f $(BENCH_DIR)/gpgpusim.config
 	-@rm -f $(BENCH_DIR)/*.log
-	-@rm -f $(BENCH_DIR)/*.meta
-	-@rm -f $(BENCH_DIR)/*.pptx
+	-@rm -f $(BENCH_DIR)/*.1.sm_52.meta
+	-@rm -f $(BENCH_DIR)/*.1.sm_52.pptx
 	-@rm -rf $(BENCH_DIR)/build
 	-@rm -rf $(RUNDIR)
 	-@rm -rf $(SUMMARY_DIR)
