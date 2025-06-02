@@ -59,6 +59,8 @@ float init_time = 0, mem_alloc_time = 0, h2d_time = 0, kernel_time = 0,
 int Size;
 float *a, *b, *finalVec;
 float *m;
+static int max_iterations = 1;	// max iterations for cuda kernel call
+static int cuda_kernel_called_times = 0;	// max iterations for cuda kernel call
 
 FILE *fp;
 
@@ -359,6 +361,14 @@ void ForwardSub()
 	cudaMemcpy(m_cuda, m, Size * Size * sizeof(float),cudaMemcpyHostToDevice );
 	cudaMemcpy(a_cuda, a, Size * Size * sizeof(float),cudaMemcpyHostToDevice );
 	cudaMemcpy(b_cuda, b, Size * sizeof(float),cudaMemcpyHostToDevice );
+
+	// ---------- CPU Validation Section ----------
+	float* m_cpu = (float*)calloc(Size * Size, sizeof(float));
+	float* a_cpu = (float*)malloc(Size * Size * sizeof(float));
+	float* b_cpu = (float*)malloc(Size * sizeof(float));
+	
+	memcpy(a_cpu, a, Size * Size * sizeof(float)); // a_org is the original input matrix
+	memcpy(b_cpu, b, Size * sizeof(float));        // b_org is the original input vector
 	
 	int block_size,grid_size;
 	
@@ -391,6 +401,8 @@ void ForwardSub()
 		Fan2<<<dimGridXY,dimBlockXY>>>(m_cuda,a_cuda,b_cuda,Size,Size-t,t);
 		cudaThreadSynchronize();
 		checkCUDAError("Fan2");
+		cuda_kernel_called_times++;
+		if(cuda_kernel_called_times >= max_iterations) break;
 	}
 	// end timing kernels
 	struct timeval time_end;
@@ -409,6 +421,80 @@ void ForwardSub()
 	cudaFree(m_cuda);
 	cudaFree(a_cuda);
 	cudaFree(b_cuda);
+
+    // CPU Fan1 and Fan2
+	int iterations = 0;
+    for (t = 0; t < Size - 1; t++) {
+        for (int i = t + 1; i < Size; ++i) {
+            m_cpu[i * Size + t] = a_cpu[i * Size + t] / a_cpu[t * Size + t];
+        }
+
+        for (int i = t + 1; i < Size; ++i) {
+            for (int j = t; j < Size; ++j) {
+                a_cpu[i * Size + j] -= m_cpu[i * Size + t] * a_cpu[t * Size + j];
+            }
+            b_cpu[i] -= m_cpu[i * Size + t] * b_cpu[t];
+        }
+		iterations++;
+		if (iterations >= max_iterations) {
+			break;
+		}
+    }
+
+    // Validate result
+    auto validate = [](const float* ref, const float* test, int size, float tol = 1e-5f) {
+        for (int i = 0; i < size; ++i) {
+			if( fabs(ref[i]) < 1e-6) {
+				if (fabs(ref[i] - test[i]) > tol) {
+					printf("Mismatch at index %d: ref = %f, test = %f\n", i, ref[i], test[i]);
+					return false;
+				}
+			}
+            else if (fabs(ref[i] - test[i])/fabs(ref[i]) > tol) {
+                printf("Mismatch at index %d: ref = %f, test = %f\n", i, ref[i], test[i]);
+                return false;
+            }
+        }
+        return true;
+    };
+
+    bool validA = validate(a_cpu, a, Size * Size);
+    bool validB = validate(b_cpu, b, Size);
+    bool validM = validate(m_cpu, m, Size * Size);
+
+    if (validA && validB && validM) {
+		printf("CPU and GPU results match!\n");
+		printf("\n");
+		printf("       .-\"\"\"\"\"-.\n");
+		printf("     .'         '.\n");
+		printf("    :             :\n");
+		printf("   :    ^     ^    :\n");
+		printf("   :     .---.     :\n");
+		printf("    :   (     )   :\n");
+		printf("     '.  '---'  .'\n");
+		printf("       '-.....-'\n");
+		printf("\n");
+    } else {
+		printf("[**ERROR] GPU and CPU results are different!!\n");
+		printf("CPU and GPU results differ!\n");
+		printf("\n");
+		printf("**        **\n");
+		printf(" **      ** \n");
+		printf("  **    **  \n");
+		printf("   **  **   \n");
+		printf("   **  **   \n");
+		printf("  **    **  \n");
+		printf(" **      ** \n");
+		printf("**        **\n");
+		printf("\n");
+		// Flush output buffers
+		fflush(stdout);
+		fflush(stderr);
+    }
+
+    free(m_cpu);
+    free(a_cpu);
+    free(b_cpu);
 }
 
 /*------------------------------------------------------

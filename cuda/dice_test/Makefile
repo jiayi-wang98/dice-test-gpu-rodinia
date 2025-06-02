@@ -45,6 +45,12 @@ test_all:
 	  $(MAKE) test_gpu  app=$$b; \
 	done
 
+test_specific:
+	@for b in $$(cat benchmarks_spec.lst); do \
+	  $(MAKE) test_dice app=$$b; \
+	  $(MAKE) test_gpu  app=$$b; \
+	done
+
 # Copy the appropriate config into the benchmark dir
 copy_config:
 	@echo "==> Copying config for $(test) into $(BENCH_DIR)..."
