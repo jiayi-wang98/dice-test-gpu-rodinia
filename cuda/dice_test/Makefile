@@ -93,7 +93,7 @@ collect:
 	@echo "==> Collecting data for $(app)..."
 	@python3 collect_data.py $(SUMMARY_DIR)/$(STD_LOGFILE) $(SUMMARY_DIR) --$(test)
 
-time_line:
+timeline:
 	@echo "==> Generating timeline for $(app)..."
 	@log_file=$$(find $(SUMMARY_DIR) -type f -name "test_dice_*.log" ! -name "*_asan.log" | head -n 1); \
 	if [ -z "$$log_file" ]; then \
