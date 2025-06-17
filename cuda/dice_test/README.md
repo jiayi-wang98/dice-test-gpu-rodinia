@@ -15,9 +15,8 @@ This repository contains the DICE benchmark suite for evaluating performance on 
 
 ## Prerequisites
 
-- Ensure you have `make`, `python3`, and a compatible EDA tool environment set up.
-- The benchmark application directories (e.g., `../<app>`) must exist and contain the necessary source code.
-- Python scripts (`collect_data.py` and `create_timeline.py`) are Saved: System: are required for result collection and timeline visualization.
+- Ensure you have build dice_gpgpu-sim and **source setup_environment debug** in the dice_gpgpu-sim directroy.
+- Ensure you have downloaded data/ and put to ../../data.
 
 ## Usage
 

@@ -9,6 +9,7 @@ clean :
 	rm -rf *.o nn hurricane_gen
 
 nn : nn_cuda.cu
+	. /data/jwang710/dice_gpgpu-sim/setup_environment debug && \
 	$(CC) -cuda nn_cuda.cu -cudart shared -Xcompiler "-fsanitize=address -fno-omit-frame-pointer"
 	$(CC) -o nn nn_cuda.cu -cudart shared -Xcompiler "-fsanitize=address -fno-omit-frame-pointer"
 

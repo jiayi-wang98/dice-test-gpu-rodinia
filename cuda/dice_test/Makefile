@@ -19,7 +19,7 @@ SUMMARY_DIR  := result_summary/$(app)
 
 # Config files for each test type
 CFG_gpu      := $(CFG_DIR)/gpgpusim_gpu.config
-CFG_dice     := $(CFG_DIR)/gpgpusim_dice.config
+CFG_dice     := $(CFG_DIR)/gpgpusim_dice_rtx2060s.config
 
 # Metadata & pptx (only for dice)
 META_SRC     := $(SW_DIR)/$(app).1.sm_52.meta
@@ -51,17 +51,28 @@ test_specific:
 	  $(MAKE) test_gpu  app=$$b; \
 	done
 
+test_dice_all:
+	@for b in $$(cat benchmarks.lst); do \
+	  $(MAKE) test_dice app=$$b; \
+	done
+
+test_gpu_all:
+	@for b in $$(cat benchmarks.lst); do \
+	  $(MAKE) test_gpu app=$$b; \
+	done
+
 # Copy the appropriate config into the benchmark dir
 copy_config:
 	@echo "==> Copying config for $(test) into $(BENCH_DIR)..."
 ifeq ($(test),test_gpu)
 	@cp $(CFG_gpu) $(BENCH_DIR)/gpgpusim.config
-else
-	@cp $(CFG_dice) $(BENCH_DIR)/gpgpusim.config
-endif
 	@cp $(CFG_DIR)/gpuwattch_gtx480.xml $(BENCH_DIR)/gpuwattch_gtx480.xml
 	@cp $(CFG_DIR)/config_fermi_islip.icnt $(BENCH_DIR)/config_fermi_islip.icnt
-
+else
+	@cp $(CFG_dice) $(BENCH_DIR)/gpgpusim.config
+	@cp $(CFG_DIR)/config_turing_islip.icnt $(BENCH_DIR)/config_turing_islip.icnt
+endif
+	
 # Copy metadata & pptx (only for dice)
 copy_meta:
 ifeq ($(test),test_dice)

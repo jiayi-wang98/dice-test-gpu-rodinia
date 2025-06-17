@@ -1,6 +1,6 @@
 rm -f ./_app_*
 rm -f ./_cuobjdump_*
 rm -f ./gpgpusim_power_report__*
-./bfs random_graph.txt
+#./bfs random_graph.txt
 #./bfs ../../data/bfs/graph4096.txt
-#./bfs ../../data/bfs/graph65536.txt
+./bfs ../../data/bfs/graph65536.txt

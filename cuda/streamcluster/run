@@ -9,6 +9,6 @@ fi
 if [ -f ./streamcluster.1.sm_52.pptx ]; then
     cp ./streamcluster.1.sm_52.pptx ./streamcluster.2.sm_52.pptx
 fi
-#./streamcluster 10 20 256 65536 65536 1000 none output.txt 1 2
+./streamcluster 10 20 16 65536 65536 1000 none output.txt 1 2
 #./streamcluster 10 20 16 15360 15360 500 none output.txt 1 2
-./streamcluster 10 20 16 16384 16384 500 none output.txt 1 2
+#./streamcluster 10 20 16 16384 16384 500 none output.txt 1 2
