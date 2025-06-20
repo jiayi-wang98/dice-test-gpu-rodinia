@@ -75,7 +75,7 @@ and.pred %p2, %p0, %p1;
 setp.gt.s32 %p3, %w8, -1;
 setp.lt.s32 %p4, %w8, %c4;
 and.pred %p5, %p3, %p4;
-and.pred %p6, %p5, %p2, %p5, %p2;
+and.pred %p6, %p5, %p2;
 shl.b32 %r5, %r2, 6;
 mov.u32 %r6, _ZZ14calculate_tempiPfS_S_iiiiffffffE12temp_on_cuda;
 add.s32 %r7, %r6, %r5;
@@ -101,7 +101,6 @@ st.shared.f32 [%r9], %r11;
 st.shared.f32 [%r10], %r12;
 
 $DICE_BB0_4:
-bar.sync 0;
 mov.u32 %w0, _ZZ14calculate_tempiPfS_S_iiiiffffffE6temp_t;
 add.s32 %w1, %w0, %r5;
 add.s32 %r11, %w1, %r8;

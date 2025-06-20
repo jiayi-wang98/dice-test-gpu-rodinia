@@ -17,7 +17,11 @@ UNROLLING_STRATEGY = 0,
 LAT = 9,
 IN_REGS = (%c0, %c1, %c2, %c3),
 OUT_REGS = (%p0, %r3),
-LD_DEST_REGS = (%r1, %r2);
+LD_DEST_REGS = (%r1, %r2),
+BRANCH = 1,
+BRANCH_PRED = (%p0),
+BRANCH_TARGET = 3,
+BRANCH_RECVPC = 3;
 
 DBB_ID = 2,
 BITSTREAM_ADDR = $DICE_BB0_2,
@@ -44,31 +48,15 @@ IS_PARAMETER_LOAD;
 
 DBB_ID = 1,
 BITSTREAM_ADDR = $DICE_BB1_1,
-BITSTREAM_LENGTH = 24,
+BITSTREAM_LENGTH = 32,
 UNROLLING_FACTOR = 1,
 UNROLLING_STRATEGY = 0,
 LAT = 9,
-IN_REGS = (%c0, %c3, %c4, %c1),
-OUT_REGS = (%p3, %r0, %r2, %r3, %r6, %r7),
-LD_DEST_REGS = (%r4, %r5, %r8),
+IN_REGS = (%c0, %c1, %c2, %c3, %c4),
+OUT_REGS = (%p3, %p2, %r11, %r7),
+LD_DEST_REGS = (%r1, %r2, %r4, %r5, %r6, %r8),
 BRANCH = 1,
 BRANCH_PRED = (%p3),
-BRANCH_TARGET = 7,
-BRANCH_RECVPC = 7;
-
-
-DBB_ID = 4,
-BITSTREAM_ADDR = $DICE_BB1_4,
-BITSTREAM_LENGTH = 3,
-UNROLLING_FACTOR = 2,
-UNROLLING_STRATEGY = 0,
-LAT = 4,
-IN_REGS = (%r4, %r5, %r7, %r8, %c2, %c4, %r0, %r3, %r6),
-OUT_REGS = (%p2,%r4),
-LD_DEST_REGS = (%r1, %r2, %r5),
-STORE = 1,
-BRANCH = 1,
-BRANCH_PRED = (%p2),
 BRANCH_TARGET = 7,
 BRANCH_RECVPC = 7;
 
@@ -78,8 +66,8 @@ BITSTREAM_LENGTH = 3,
 UNROLLING_FACTOR = 4,
 UNROLLING_STRATEGY = 0,
 LAT = 3,
-IN_REGS = (%r1, %r2, %r4, %r5),
-STORE = 1;
+IN_REGS = (%r1, %r2, %r11, %r4, %r5, %r6, %r7, %r8),
+STORE = 2;
 
 DBB_ID = 7,
 BITSTREAM_ADDR = $DICE_BB1_7,

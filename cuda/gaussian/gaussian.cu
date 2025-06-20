@@ -41,7 +41,7 @@
 #elif defined(RD_WG_SIZE)
         #define BLOCK_SIZE_XY RD_WG_SIZE
 #else
-        #define BLOCK_SIZE_XY 4
+        #define BLOCK_SIZE_XY 16
 #endif
 
 #ifdef TIMING
@@ -59,8 +59,9 @@ float init_time = 0, mem_alloc_time = 0, h2d_time = 0, kernel_time = 0,
 int Size;
 float *a, *b, *finalVec;
 float *m;
-static int max_iterations = 1;	// max iterations for cuda kernel call
+static int max_iterations = 10;	// max iterations for cuda kernel call
 static int cuda_kernel_called_times = 0;	// max iterations for cuda kernel call
+int t_step = 20;
 
 FILE *fp;
 
@@ -395,7 +396,9 @@ void ForwardSub()
     // begin timing kernels
     struct timeval time_start;
     gettimeofday(&time_start, NULL);
-	for (t=0; t<(Size-1); t++) {
+	//for (t=0; t<(Size-1); t++) {
+	//to test performance for different size
+	for (t=0; t<(Size-1); t+=t_step) {
 		Fan1<<<dimGrid,dimBlock>>>(m_cuda,a_cuda,Size,t);
 		cudaThreadSynchronize();
 		Fan2<<<dimGridXY,dimBlockXY>>>(m_cuda,a_cuda,b_cuda,Size,Size-t,t);
@@ -424,7 +427,7 @@ void ForwardSub()
 
     // CPU Fan1 and Fan2
 	int iterations = 0;
-    for (t = 0; t < Size - 1; t++) {
+    for (t = 0; t < Size - 1; t+=t_step) {
         for (int i = t + 1; i < Size; ++i) {
             m_cpu[i * Size + t] = a_cpu[i * Size + t] / a_cpu[t * Size + t];
         }

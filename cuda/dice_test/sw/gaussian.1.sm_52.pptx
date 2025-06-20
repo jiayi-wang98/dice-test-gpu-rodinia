@@ -47,6 +47,7 @@ add.s64 %w14, %w0, %w13;
 @!%p0 ld.global.f32 %r1, [%w14];
 @!%p0 ld.global.f32 %r2, [%w9];
 add.s64 %r3, %w1, %w8;
+@%p0 bra $DICE_BB0_3;
 
 $DICE_BB0_2:
 div.rn.f32 %w0, %r2, %r1;
@@ -113,13 +114,7 @@ cvt.s64.s32 %r6, %w10;
 mul.wide.s32 %w11, %w10, 4;
 add.s64 %r7, %w0, %w11;
 @!%p3 ld.global.f32 %r8, [%r7];
-@%p3 bra $DICE_BB1_7;
-
-$DICE_BB1_4:
 setp.ne.s32 %p2, %r2, 0;
-mul.f32 %w0, %r5, %r4;
-sub.f32 %w1, %r8, %w0;
-st.global.f32 [%r7], %w1;
 shl.b64 %w0, %r6, 2;
 add.s64 %w1, %r0, %w0;
 cvta.to.global.u64 %w2, %c2;
@@ -128,14 +123,17 @@ add.s64 %w4, %w2, %w3;
 @!%p2 ld.global.f32 %r1, [%w4];
 @!%p2 ld.global.f32 %r2, [%w1];
 mul.wide.s32 %w5, %r3, 4;
-add.s64 %r4, %w4, %w5;
-@!%p2 ld.global.f32 %r5, [%r4];
-@%p2 bra $DICE_BB1_7;
+add.s64 %r11, %w4, %w5;
+@!%p2 ld.global.f32 %r6, [%r11];
+@%p3 bra $DICE_BB1_7;
 
 $DICE_BB1_6:
+mul.f32 %w0, %r5, %r4;
+sub.f32 %w1, %r8, %w0;
+@!%p3 st.global.f32 [%r7], %w1;
 mul.f32 %w0, %r2, %r1;
-sub.f32 %w1, %r5, %w0;
-st.global.f32 [%r4], %w1;
+sub.f32 %w1, %r6, %w0;
+@!%p2 st.global.f32 [%r11], %w1;
 
 $DICE_BB1_7:
 ret ;

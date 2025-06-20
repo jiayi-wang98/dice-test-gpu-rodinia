@@ -19,6 +19,8 @@ def parse_log(log_path):
         'L1C_total_cache_accesses': re.compile(r"L1C_total_cache_accesses = (?P<L1C>\d+)"),
         'L1T_total_cache_accesses': re.compile(r"L1T_total_cache_accesses = (?P<L1T>\d+)"),
         'gpgpu_n_tot_regfile_acesses': re.compile(r"gpgpu_n_tot_regfile_acesses = (?P<regs>\d+)"),
+        'gpgpu_n_tot_regfile_read_acesses': re.compile(r"gpgpu_n_tot_regfile_read_acesses = (?P<regs>\d+)"),
+        'gpgpu_n_tot_regfile_write_acesses': re.compile(r"gpgpu_n_tot_regfile_write_acesses = (?P<regs>\d+)"),
         'L2_total_cache_accesses': re.compile(r"L2_total_cache_accesses = (?P<L2_total>\d+)")
     }
 
@@ -64,7 +66,7 @@ def write_csv(entries, out_file, device_type):
         'gpu_sim_cycle', 'gpu_tot_sim_cycle', 'L2_BW', 'L2_BW_total',
         'L1I_total_cache_accesses', 'L1D_total_cache_accesses',
         'L1C_total_cache_accesses', 'L1T_total_cache_accesses',
-        'gpgpu_n_tot_regfile_acesses', 'L2_total_cache_accesses'
+        'gpgpu_n_tot_regfile_acesses', 'L2_total_cache_accesses','gpgpu_n_tot_regfile_read_acesses', 'gpgpu_n_tot_regfile_write_acesses'
     ]
 
     file_exists = out_file.exists()
