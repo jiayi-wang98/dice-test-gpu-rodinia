@@ -1,1 +1,4 @@
+rm -f ./_app_*
+rm -f ./_cuobjdump_*
+rm -f ./gpgpusim_power_report__*
 ./pathfinder 100000 100 20
