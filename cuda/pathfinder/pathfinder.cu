@@ -101,6 +101,8 @@ __global__ void dynproc_kernel(
         __shared__ int prev[BLOCK_SIZE];
         __shared__ int result[BLOCK_SIZE];
 
+        int result_tx;
+
 	int bx = blockIdx.x;
 	int tx = threadIdx.x;
 	
@@ -135,18 +137,18 @@ __global__ void dynproc_kernel(
                   int shortest = MIN(left, up);
                   shortest = MIN(shortest, right);
                   int index = cols*(startStep+i)+xidx;
-                  result[tx] = shortest + gpuWall[index];
+                  result_tx = shortest + gpuWall[index];
             }
             __syncthreads();
             if(i==iteration-1)
                 break;
             if(computed)
-                prev[tx]= result[tx];
+                prev[tx]= result_tx;
 	    __syncthreads();
       }
 
       if (computed){
-          gpuResult[xidx]=result[tx];		
+          gpuResult[xidx]=result_tx;		
       }
 }
 
@@ -303,7 +305,6 @@ int calc_path(int *gpuWall, int *gpuResult[2], int *cpuSrc, int *cpuDst, int row
                 match = false;
                 printf("Mismatch at iteration %d, index %d: GPU = %d, CPU = %d\n", 
                        cuda_kernel_called_times, i, result[i], cpuDstPtr[i]);
-                break;
             }
         }
         printf("Iteration %d: CPU and GPU results %s\n", cuda_kernel_called_times, match ? "match" : "do not match");

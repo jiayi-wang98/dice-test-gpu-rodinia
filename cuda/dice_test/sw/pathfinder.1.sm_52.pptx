@@ -55,35 +55,35 @@ shl.b32 %r4, %r2, 2;
 mov.u32 %r5, _ZZ14dynproc_kerneliPiS_S_iiiiE4prev;
 add.s32 %r6, %r5, %r4;
 or.pred %p2, %p0, %p1;
-@%p2 bra $DICE_BB0_4;
-
-$DICE_BB0_2:
 cvta.to.global.u64 %w0, %c2;
 mul.wide.s32 %w1, %r3, 4;
 add.s64 %w2, %w0, %w1;
-ld.global.u32 %r7, [%w2];
-
-$DICE_BB0_3:
-st.shared.u32 [%r6], %r7;
-
-$DICE_BB0_4:
-mov.u32 %w0, _ZZ14dynproc_kerneliPiS_S_iiiiE6result;
-add.s32 %r7, %w0, %r4;
-setp.lt.s32 %p3, %c0, 1;
-@%p3 bra $DICE_BB0_14;
-
-$DICE_BB0_5:
-mov.u32 %r4, 0;
+//from DB5
 neg.s32 %w0, %r1;
 shr.s32 %w1, %r1, 31;
-and.b32 %w2, %w1, %w0;
+and.b32 %r24, %w1, %w0;
+
+@!%p2 ld.global.u32 %r7, [%w2];
+
+$DICE_BB0_4:
+@!%p2 st.shared.u32 [%r6], %r7;
+mov.u32 %w0, _ZZ14dynproc_kerneliPiS_S_iiiiE6result;
+add.s32 %r26, %w0, %r4;
+setp.lt.s32 %p3, %c0, 1;
+//move from DB5
 add.s32 %w3, %r1, 255;
 setp.lt.s32 %p31, %w3, %c4;
 mov.u32 %w4, -255;
 sub.s32 %w5, %w4, %r1;
 add.s32 %w6, %c4, %w5;
 add.s32 %w7, %w6, 254;
-selp.b32 %w8, 255, %w7, %p31;
+selp.b32 %r25, 255, %w7, %p31;
+@%p3 bra $DICE_BB0_17;
+
+$DICE_BB0_5:
+mov.u32 %r4, 0;
+mov.b32 %w2, %r24;
+mov.b32 %w8, %r25;
 add.s32 %w9, %r2, -1;
 add.s32 %w10, %r2, 1;
 max.s32 %w11, %w9, %w2;
@@ -96,73 +96,56 @@ neg.s32 %r10, %c0;
 mad.lo.s32 %w15, %c5, %c4, %r2;
 add.s32 %w16, %w15, %r0;
 sub.s32 %r11, %w16, %c6;
-cvta.to.global.u64 %r12, %c1;
+
 setp.ge.s32 %p4, %r2, %w2;
 setp.le.s32 %p5, %r2, %w8;
 and.pred %p6, %p4, %p5;
-mov.u16 %r13, 0;
-mov.u16 %r14, 1;
 
 $DICE_BB0_6:
 mov.u32 %r0, 254;
+mov.u16 %r5, 0;
 sub.s32 %r1, %r0, %r4;
 setp.le.s32 %p7, %r2, %r1;
 setp.gt.s32 %p8, %r2, %r4;
 and.pred %p9, %p8, %p7;
 and.pred %p10, %p6, %p9;
 not.pred %p11, %p10;
-mov.u16 %r5, %r13;
-@%p11 bra $DICE_BB0_9;
-
-$DICE_BB0_7:
-ld.shared.u32 %r15, [%r8];
-ld.shared.u32 %r16, [%r6];
-ld.shared.u32 %r17, [%r9];
-mul.wide.s32 %r18, %r11, 4;
-add.s64 %r19, %r12, %r18;
-ld.global.u32 %r20, [%r19];
-
-$DICE_BB0_8:
-min.s32 %r21, %r15, %r16;
-min.s32 %r22, %r21, %r17;
-add.s32 %r23, %r22, %r20;
-st.shared.u32 [%r7], %r23;
-mov.u16 %r5, %r14;
+@!%p11 ld.shared.u32 %r23, [%r8];
+@!%p11 ld.shared.u32 %r24, [%r6];
+@!%p11 ld.shared.u32 %r25, [%r9];
+mul.wide.s32 %w18, %r11, 4;
+cvta.to.global.u64 %w12, %c1;
+add.s64 %w19, %w12, %w18;
+@!%p11 ld.global.u32 %r20, [%w19];
 
 $DICE_BB0_9:
+min.s32 %w21, %r23, %r24;
+min.s32 %w22, %w21, %r25;
+//add.s32 %w23, %w22, %r20;
+//@!%p11 st.shared.u32 [%r26], %w23;
+add.s32 %r31, %w22, %r20;
+@!%p11 mov.u16 %r5, 1;
 setp.eq.s32 %p12, %r10, -1;
-@%p12 bra $DICE_BB0_14;
-
-$DICE_BB0_10:
+not.pred %p31, %p12;
 setp.eq.s16 %p13, %r5, 0;
-@%p13 bra $DICE_BB0_13;
-
-$DICE_BB0_11:
-ld.shared.u32 %r24, [%r7];
-
-$DICE_BB0_12:
-st.shared.u32 [%r6], %r24;
-
-$DICE_BB0_13:
+or.pred %p29, %p13, %p12;
+//@!%p13 ld.shared.u32 %r24, [%r26];
+mov.u32 %r24, %r31;
+@!%p29 st.shared.u32 [%r6], %r24;
 add.s32 %r10, %r10, 1;
 add.s32 %r11, %r11, %c4;
 add.s32 %r4, %r4, 1;
 setp.lt.s32 %p14, %r4, %c0;
-@%p14 bra $DICE_BB0_6;
+and.pred %p30, %p14, %p31;
+@%p30 bra $DICE_BB0_6;
 
 $DICE_BB0_14:
 and.b16 %w0, %r5, 255;
 setp.eq.s16 %p15, %w0, 0;
-@%p15 bra $DICE_BB0_17;
-
-$DICE_BB0_15:
-ld.shared.u32 %r0, [%r7];
 cvta.to.global.u64 %w0, %c3;
 mul.wide.s32 %w1, %r3, 4;
 add.s64 %r1, %w0, %w1;
-
-$DICE_BB0_16:
-st.global.u32 [%r1], %r0;
+@!%p15 st.global.u32 [%r1], %r31;
 
 $DICE_BB0_17:
 ret;

@@ -48,7 +48,6 @@ test_all:
 test_specific:
 	@for b in $$(cat benchmarks_spec.lst); do \
 	  $(MAKE) test_dice app=$$b; \
-	  $(MAKE) test_gpu  app=$$b; \
 	done
 
 test_dice_all:

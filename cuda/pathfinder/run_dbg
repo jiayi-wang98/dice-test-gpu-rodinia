@@ -1,4 +1,4 @@
 rm -f ./_app_*
 rm -f ./_cuobjdump_*
 rm -f ./gpgpusim_power_report__*
-./pathfinder 121856 100 16
+gdb --args ./pathfinder 121856 100 16

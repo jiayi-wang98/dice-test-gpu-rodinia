@@ -3,3 +3,5 @@ bfs
 backprop
 streamcluster
 gaussian
+hotspot
+pathfinder

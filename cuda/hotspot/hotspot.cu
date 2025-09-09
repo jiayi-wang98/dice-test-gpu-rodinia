@@ -215,7 +215,7 @@ __global__ void calculate_temp(int iteration,  //number of iteration
         __shared__ float temp_on_cuda[BLOCK_SIZE][BLOCK_SIZE];
         __shared__ float power_on_cuda[BLOCK_SIZE][BLOCK_SIZE];
         __shared__ float temp_t[BLOCK_SIZE][BLOCK_SIZE]; // saving temparary temperature result
-
+    float temp_t_ty_tx;
 	float amb_temp = 80.0;
         float step_div_Cap;
         float Rx_1,Ry_1,Rz_1;
@@ -288,7 +288,7 @@ __global__ void calculate_temp(int iteration,  //number of iteration
                   IN_RANGE(tx, validXmin, validXmax) && \
                   IN_RANGE(ty, validYmin, validYmax) ) {
                   computed = true;
-                  temp_t[ty][tx] =   temp_on_cuda[ty][tx] + step_div_Cap * (power_on_cuda[ty][tx] + 
+                  temp_t_ty_tx =   temp_on_cuda[ty][tx] + step_div_Cap * (power_on_cuda[ty][tx] + 
 	       	         (temp_on_cuda[S][tx] + temp_on_cuda[N][tx] - 2.0*temp_on_cuda[ty][tx]) * Ry_1 + 
 		             (temp_on_cuda[ty][E] + temp_on_cuda[ty][W] - 2.0*temp_on_cuda[ty][tx]) * Rx_1 + 
 		             (amb_temp - temp_on_cuda[ty][tx]) * Rz_1);
@@ -298,7 +298,7 @@ __global__ void calculate_temp(int iteration,  //number of iteration
             if(i==iteration-1)
                 break;
             if(computed)	 //Assign the computation range
-                temp_on_cuda[ty][tx]= temp_t[ty][tx];
+                temp_on_cuda[ty][tx]= temp_t_ty_tx;
             __syncthreads();
           }
 
@@ -306,7 +306,7 @@ __global__ void calculate_temp(int iteration,  //number of iteration
       // after the last iteration, only threads coordinated within the 
       // small block perform the calculation and switch on ``computed''
       if (computed){
-          temp_dst[index]= temp_t[ty][tx];		
+          temp_dst[index]= temp_t_ty_tx;		
       }
 }
 
