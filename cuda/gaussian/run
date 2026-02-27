@@ -1,5 +1,6 @@
 rm -f ./_app_*
 rm -f ./_cuobjdump_*
 rm -f ./gpgpusim_power_report__*
-./gaussian -f ../../data/gaussian/matrix208.txt
-#./gaussian -s 256
+#./gaussian -f ../../data/gaussian/matrix208.txt
+./gaussian -s 304
+#./gaussian -s 512

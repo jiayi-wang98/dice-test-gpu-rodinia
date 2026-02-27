@@ -1,2 +1,5 @@
+rm -f ./_app_*
+rm -f ./_cuobjdump_*
+rm -f ./gpgpusim_power_report__*
 #./kmeans -o -i ../../data/kmeans/kdd_cup 
-./kmeans -o -i ../../data/kmeans/100
+./kmeans -o -t 200000 -i ../../data/kmeans/131072_8feat.txt

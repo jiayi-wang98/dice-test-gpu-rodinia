@@ -61,7 +61,7 @@ float *a, *b, *finalVec;
 float *m;
 static int max_iterations = 10;	// max iterations for cuda kernel call
 static int cuda_kernel_called_times = 0;	// max iterations for cuda kernel call
-int t_step = 20;
+int t_step = 30;
 
 FILE *fp;
 
@@ -313,9 +313,9 @@ __global__ void Fan1(float *m_cuda, float *a_cuda, int Size, int t)
 {   
 	//if(threadIdx.x + blockIdx.x * blockDim.x >= Size-1-t) printf(".");
 	//printf("blockIDx.x:%d,threadIdx.x:%d,Size:%d,t:%d,Size-1-t:%d\n",blockIdx.x,threadIdx.x,Size,t,Size-1-t);
-
-	if(threadIdx.x + blockIdx.x * blockDim.x >= Size-1-t) return;
-	*(m_cuda+Size*(blockDim.x*blockIdx.x+threadIdx.x+t+1)+t) = *(a_cuda+Size*(blockDim.x*blockIdx.x+threadIdx.x+t+1)+t) / *(a_cuda+Size*t+t);
+	int tid= threadIdx.x + blockIdx.x * blockDim.x;
+	if(tid >= Size-1-t) return;
+	*(m_cuda+Size*(tid+t+1)+t) = *(a_cuda+Size*(tid+t+1)+t) / *(a_cuda+Size*t+t);
 }
 
 /*-------------------------------------------------------

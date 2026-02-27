@@ -1,0 +1,314 @@
+// DICECompiler PPTX for: /data/jwang710/dice-test-gpu-rodinia/cuda/b+tree/b+tree.1.sm_52.ptx
+.version 7.7
+.target sm_52
+.address_size 64
+.visible .entry findK(
+.param .u64 findK_param_0,
+.param .u64 findK_param_1,
+.param .u64 findK_param_2,
+.param .u64 findK_param_3,
+.param .u64 findK_param_4,
+.param .u64 findK_param_5,
+.param .u64 findK_param_6,
+.param .u64 findK_param_7
+)
+{
+.reg .b16 %c<8>;
+.reg .b32 %r<14>;
+.reg .pred %p<2>;
+.reg .b32 %w<3>;
+
+
+$DICE_BB0_0:
+ld.param.u64 %c0, [findK_param_0];
+ld.param.u64 %c1, [findK_param_1];
+ld.param.u64 %c2, [findK_param_2];
+ld.param.u64 %c3, [findK_param_3];
+ld.param.u64 %c4, [findK_param_4];
+ld.param.u64 %c5, [findK_param_5];
+ld.param.u64 %c6, [findK_param_6];
+ld.param.u64 %c7, [findK_param_7];
+
+$DICE_BB0_1:
+mov.u32 %r4, %ctaid.x;
+cvt.s64.s32 %r0, %r4;
+cvta.to.global.u64 %w0, %c4;
+mul.wide.s32 %w1, %r4, 8;
+add.s64 %r1, %w0, %w1;
+mov.u32 %r5, %tid.x;
+cvt.s64.s32 %r2, %r5;
+cvta.to.global.u64 %r3, %c1;
+ld.global.u64 %r11, [%r1];
+
+$DICE_BB0_2:
+mul.lo.s64 %w0, %r11, 2068;
+add.s64 %w1, %r3, %w0;
+mul.wide.s32 %w0, %r5, 4;
+add.s64 %w2, %w1, %w0;
+ld.global.u32 %r12, [%w2+1032];
+cvta.to.global.u64 %w0, %c6;
+mul.wide.s32 %w1, %r4, 4;
+add.s64 %r4, %w0, %w1;
+ld.global.u32 %r10, [%r4];
+setp.lt.s64 %p0, %c0, 1;
+@%p0 bra $DICE_BB0_46;
+
+$DICE_BB0_3:
+cvt.u32.u64 %r5, %r2;
+add.s32 %w0, %r5, 1;
+cvt.s64.s32 %r6, %w0;
+cvta.to.global.u64 %w0, %c5;
+shl.b64 %w1, %r0, 3;
+add.s64 %r7, %w0, %w1;
+and.b64 %r8, %c0, 3;
+add.s64 %w0, %c0, -1;
+setp.lt.u64 %p0, %w0, 3;
+@!%p0 sub.s64 %r9, %r8, %c0;
+@!%p0 setp.ne.s32 %p1, %r5, 0;
+@%p0 bra $DICE_BB0_36;
+
+$DICE_BB0_4:
+setp.gt.s32 %p0, %r12, %r10;
+@!%p0 mul.lo.s64 %w0, %r11, 2068;
+@!%p0 add.s64 %w1, %r3, %w0;
+@!%p0 shl.b64 %w0, %r6, 2;
+@!%p0 add.s64 %w2, %w1, %w0;
+@!%p0 ld.global.u32 %r11, [%w2+1032];
+@%p0 bra $DICE_BB0_8;
+
+$DICE_BB0_5:
+setp.le.s32 %p0, %r11, %r10;
+@!%p0 ld.global.u64 %r10, [%r7];
+
+$DICE_BB0_6:
+@!%p0 mul.lo.s64 %w0, %r10, 2068;
+@!%p0 add.s64 %w1, %r3, %w0;
+@!%p0 shl.b64 %w0, %r2, 2;
+@!%p0 add.s64 %w2, %w1, %w0;
+@!%p0 ld.global.s32 %r10, [%w2+4];
+@%p0 bra $DICE_BB0_8;
+
+$DICE_BB0_7:
+setp.ge.s64 %p0, %r10, %c2;
+@!%p0 st.global.u64 [%r7], %r10;
+
+$DICE_BB0_8:
+bar.sync 0;
+@!%p1 ld.global.u64 %r10, [%r7];
+
+$DICE_BB0_9:
+@!%p1 st.global.u64 [%r1], %r10;
+
+$DICE_BB0_10:
+bar.sync 0;
+ld.global.u64 %r10, [%r1];
+
+$DICE_BB0_11:
+mul.lo.s64 %w0, %r10, 2068;
+add.s64 %w1, %r3, %w0;
+shl.b64 %r10, %r2, 2;
+add.s64 %w0, %w1, %r10;
+add.s64 %r12, %w0, 1032;
+ld.global.u32 %r11, [%r4];
+ld.global.u32 %r13, [%w0+1032];
+
+$DICE_BB0_12:
+setp.gt.s32 %p0, %r13, %r11;
+@!%p0 ld.global.u32 %r12, [%r12+4];
+@%p0 bra $DICE_BB0_16;
+
+$DICE_BB0_13:
+setp.le.s32 %p0, %r12, %r11;
+@!%p0 ld.global.u64 %r11, [%r7];
+
+$DICE_BB0_14:
+@!%p0 mul.lo.s64 %w0, %r11, 2068;
+@!%p0 add.s64 %w1, %r3, %w0;
+@!%p0 add.s64 %w0, %w1, %r10;
+@!%p0 ld.global.s32 %r11, [%w0+4];
+@%p0 bra $DICE_BB0_16;
+
+$DICE_BB0_15:
+setp.ge.s64 %p0, %r11, %c2;
+@!%p0 st.global.u64 [%r7], %r11;
+
+$DICE_BB0_16:
+bar.sync 0;
+@!%p1 ld.global.u64 %r11, [%r7];
+
+$DICE_BB0_17:
+@!%p1 st.global.u64 [%r1], %r11;
+
+$DICE_BB0_18:
+bar.sync 0;
+ld.global.u64 %r11, [%r1];
+
+$DICE_BB0_19:
+mul.lo.s64 %w0, %r11, 2068;
+add.s64 %w1, %r3, %w0;
+add.s64 %w0, %w1, %r10;
+add.s64 %r12, %w0, 1032;
+ld.global.u32 %r11, [%r4];
+ld.global.u32 %r13, [%w0+1032];
+
+$DICE_BB0_20:
+setp.gt.s32 %p0, %r13, %r11;
+@!%p0 ld.global.u32 %r12, [%r12+4];
+@%p0 bra $DICE_BB0_24;
+
+$DICE_BB0_21:
+setp.le.s32 %p0, %r12, %r11;
+@!%p0 ld.global.u64 %r11, [%r7];
+
+$DICE_BB0_22:
+@!%p0 mul.lo.s64 %w0, %r11, 2068;
+@!%p0 add.s64 %w1, %r3, %w0;
+@!%p0 add.s64 %w0, %w1, %r10;
+@!%p0 ld.global.s32 %r11, [%w0+4];
+@%p0 bra $DICE_BB0_24;
+
+$DICE_BB0_23:
+setp.ge.s64 %p0, %r11, %c2;
+@!%p0 st.global.u64 [%r7], %r11;
+
+$DICE_BB0_24:
+bar.sync 0;
+@!%p1 ld.global.u64 %r11, [%r7];
+
+$DICE_BB0_25:
+@!%p1 st.global.u64 [%r1], %r11;
+
+$DICE_BB0_26:
+bar.sync 0;
+ld.global.u64 %r11, [%r1];
+
+$DICE_BB0_27:
+mul.lo.s64 %w0, %r11, 2068;
+add.s64 %w1, %r3, %w0;
+add.s64 %w0, %w1, %r10;
+add.s64 %r12, %w0, 1032;
+ld.global.u32 %r11, [%r4];
+ld.global.u32 %r13, [%w0+1032];
+
+$DICE_BB0_28:
+setp.gt.s32 %p0, %r13, %r11;
+@!%p0 ld.global.u32 %r12, [%r12+4];
+@%p0 bra $DICE_BB0_32;
+
+$DICE_BB0_29:
+setp.le.s32 %p0, %r12, %r11;
+@!%p0 ld.global.u64 %r11, [%r7];
+
+$DICE_BB0_30:
+@!%p0 mul.lo.s64 %w0, %r11, 2068;
+@!%p0 add.s64 %w1, %r3, %w0;
+@!%p0 add.s64 %w0, %w1, %r10;
+@!%p0 ld.global.s32 %r11, [%w0+4];
+@%p0 bra $DICE_BB0_32;
+
+$DICE_BB0_31:
+setp.ge.s64 %p0, %r11, %c2;
+@!%p0 st.global.u64 [%r7], %r11;
+
+$DICE_BB0_32:
+bar.sync 0;
+@!%p1 ld.global.u64 %r11, [%r7];
+
+$DICE_BB0_33:
+@!%p1 st.global.u64 [%r1], %r11;
+
+$DICE_BB0_34:
+bar.sync 0;
+ld.global.u64 %r11, [%r1];
+
+$DICE_BB0_35:
+mul.lo.s64 %w0, %r11, 2068;
+add.s64 %w1, %r3, %w0;
+add.s64 %w0, %w1, %r10;
+ld.global.u32 %r12, [%w0+1032];
+ld.global.u32 %r10, [%r4];
+add.s64 %r9, %r9, 4;
+setp.ne.s64 %p0, %r9, 0;
+@%p0 bra $DICE_BB0_4;
+
+$DICE_BB0_36:
+setp.eq.s64 %p0, %r8, 0;
+@!%p0 neg.s64 %r8, %r8;
+@%p0 bra $DICE_BB0_46;
+
+$DICE_BB0_37:
+setp.gt.s32 %p0, %r12, %r10;
+@!%p0 mul.lo.s64 %w0, %r11, 2068;
+@!%p0 add.s64 %w1, %r3, %w0;
+@!%p0 shl.b64 %w0, %r6, 2;
+@!%p0 add.s64 %w2, %w1, %w0;
+@!%p0 ld.global.u32 %r9, [%w2+1032];
+@%p0 bra $DICE_BB0_41;
+
+$DICE_BB0_38:
+setp.le.s32 %p0, %r9, %r10;
+@!%p0 ld.global.u64 %r9, [%r7];
+
+$DICE_BB0_39:
+@!%p0 mul.lo.s64 %w0, %r9, 2068;
+@!%p0 add.s64 %w1, %r3, %w0;
+@!%p0 shl.b64 %w0, %r2, 2;
+@!%p0 add.s64 %w2, %w1, %w0;
+@!%p0 ld.global.s32 %r9, [%w2+4];
+@%p0 bra $DICE_BB0_41;
+
+$DICE_BB0_40:
+setp.ge.s64 %p0, %r9, %c2;
+@!%p0 st.global.u64 [%r7], %r9;
+
+$DICE_BB0_41:
+setp.ne.s32 %p0, %r5, 0;
+
+$DICE_BB0_42:
+bar.sync 0;
+@!%p0 ld.global.u64 %r9, [%r7];
+
+$DICE_BB0_43:
+@!%p0 st.global.u64 [%r1], %r9;
+
+$DICE_BB0_44:
+bar.sync 0;
+ld.global.u64 %r11, [%r1];
+
+$DICE_BB0_45:
+mul.lo.s64 %w0, %r11, 2068;
+add.s64 %w1, %r3, %w0;
+shl.b64 %w0, %r2, 2;
+add.s64 %w2, %w1, %w0;
+ld.global.u32 %r12, [%w2+1032];
+ld.global.u32 %r10, [%r4];
+add.s64 %r8, %r8, 1;
+setp.ne.s64 %p0, %r8, 0;
+@%p0 bra $DICE_BB0_37;
+
+$DICE_BB0_46:
+setp.ne.s32 %p0, %r12, %r10;
+@!%p0 mul.lo.s64 %w0, %r11, 2068;
+@!%p0 add.s64 %w1, %r3, %w0;
+@!%p0 shl.b64 %w0, %r2, 2;
+@!%p0 add.s64 %w2, %w1, %w0;
+@!%p0 cvta.to.global.u64 %r2, %c3;
+@!%p0 ld.global.u32 %r1, [%w2+4];
+@%p0 bra $DICE_BB0_49;
+
+$DICE_BB0_47:
+mul.wide.s32 %w0, %r1, 4;
+add.s64 %w1, %r2, %w0;
+cvta.to.global.u64 %w0, %c7;
+shl.b64 %w2, %r0, 2;
+add.s64 %r1, %w0, %w2;
+ld.global.u32 %r0, [%w1];
+
+$DICE_BB0_48:
+st.global.u32 [%r1], %r0;
+
+$DICE_BB0_49:
+ret;
+
+}
+

@@ -1,0 +1,102 @@
+{
+  "input_file": "/data/jwang710/dice-test-gpu-rodinia/cuda/cfd/euler3d.1.sm_52.ptx",
+  "resource_limits": {
+    "pe_count": 16,
+    "sfu_count": 4,
+    "ldst_port_count": 4
+  },
+  "overall": {
+    "kernel_count": 4,
+    "total_pgraph_count": 98,
+    "total_non_mov_ops": 565,
+    "avg_pgraph_size_non_mov_ops": 5.765306,
+    "avg_pgraph_utilization": {
+      "pe": 0.367985,
+      "sfu": 0.186224,
+      "ldst": 0.352041,
+      "total": 0.335034
+    }
+  },
+  "kernels": [
+    {
+      "function_id": 0,
+      "kernel_name": "_Z25cuda_initialize_variablesiPf",
+      "pgraph_count": 8,
+      "active_pgraph_count": 6,
+      "total_non_mov_ops": 24,
+      "avg_pgraph_size_non_mov_ops": 3.0,
+      "avg_active_pgraph_size_non_mov_ops": 4.0,
+      "total_resource_ops": {
+        "pe": 14,
+        "sfu": 0,
+        "ldst": 10
+      },
+      "avg_pgraph_utilization": {
+        "pe": 0.265625,
+        "sfu": 0.0,
+        "ldst": 0.75,
+        "total": 0.302083
+      }
+    },
+    {
+      "function_id": 1,
+      "kernel_name": "_Z24cuda_compute_step_factoriPfS_S_",
+      "pgraph_count": 8,
+      "active_pgraph_count": 6,
+      "total_non_mov_ops": 41,
+      "avg_pgraph_size_non_mov_ops": 5.125,
+      "avg_active_pgraph_size_non_mov_ops": 6.833333,
+      "total_resource_ops": {
+        "pe": 26,
+        "sfu": 8,
+        "ldst": 7
+      },
+      "avg_pgraph_utilization": {
+        "pe": 0.273438,
+        "sfu": 0.53125,
+        "ldst": 0.46875,
+        "total": 0.348958
+      }
+    },
+    {
+      "function_id": 2,
+      "kernel_name": "_Z17cuda_compute_fluxiPiPfS0_S0_",
+      "pgraph_count": 73,
+      "active_pgraph_count": 63,
+      "total_non_mov_ops": 450,
+      "avg_pgraph_size_non_mov_ops": 6.164384,
+      "avg_active_pgraph_size_non_mov_ops": 7.142857,
+      "total_resource_ops": {
+        "pe": 370,
+        "sfu": 34,
+        "ldst": 46
+      },
+      "avg_pgraph_utilization": {
+        "pe": 0.395548,
+        "sfu": 0.184932,
+        "ldst": 0.263699,
+        "total": 0.33847
+      }
+    },
+    {
+      "function_id": 3,
+      "kernel_name": "_Z14cuda_time_stepiiPfS_S_S_",
+      "pgraph_count": 9,
+      "active_pgraph_count": 7,
+      "total_non_mov_ops": 50,
+      "avg_pgraph_size_non_mov_ops": 5.555556,
+      "avg_active_pgraph_size_non_mov_ops": 7.142857,
+      "total_resource_ops": {
+        "pe": 33,
+        "sfu": 1,
+        "ldst": 16
+      },
+      "avg_pgraph_utilization": {
+        "pe": 0.319444,
+        "sfu": 0.055556,
+        "ldst": 0.611111,
+        "total": 0.324074
+      }
+    }
+  ]
+}

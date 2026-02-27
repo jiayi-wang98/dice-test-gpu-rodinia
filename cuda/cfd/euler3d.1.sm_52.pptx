@@ -1,0 +1,914 @@
+// DICECompiler PPTX for: /data/jwang710/dice-test-gpu-rodinia/cuda/cfd/euler3d.1.sm_52.ptx
+.version 7.7
+.target sm_52
+.address_size 64
+.const .align 4 .b8 ff_variable[20];
+.const .align 4 .b8 ff_flux_contribution_momentum_x[12];
+.const .align 4 .b8 ff_flux_contribution_momentum_y[12];
+.const .align 4 .b8 ff_flux_contribution_momentum_z[12];
+.const .align 4 .b8 ff_flux_contribution_density_energy[12];
+.visible .entry _Z25cuda_initialize_variablesiPf(
+.param .u32 _Z25cuda_initialize_variablesiPf_param_0,
+.param .u64 _Z25cuda_initialize_variablesiPf_param_1
+)
+{
+.reg .b16 %c<2>;
+.reg .b32 %r<5>;
+.reg .b32 %w<3>;
+
+
+$DICE_BB0_0:
+ld.param.u32 %c0, [_Z25cuda_initialize_variablesiPf_param_0];
+ld.param.u64 %c1, [_Z25cuda_initialize_variablesiPf_param_1];
+
+$DICE_BB0_1:
+cvta.to.global.u64 %r0, %c1;
+mov.u32 %w0, %ntid.x;
+mov.u32 %w1, %ctaid.x;
+mov.u32 %w2, %tid.x;
+mad.lo.s32 %r2, %w0, %w1, %w2;
+mul.wide.s32 %w0, %r2, 4;
+add.s64 %r1, %r0, %w0;
+ld.const.f32 %r3, [ff_variable];
+
+$DICE_BB0_2:
+st.global.f32 [%r1], %r3;
+add.s32 %r3, %r2, %c0;
+mul.wide.s32 %w0, %c0, 4;
+add.s64 %r4, %r1, %w0;
+ld.const.f32 %r2, [ff_variable+4];
+
+$DICE_BB0_3:
+st.global.f32 [%r4], %r2;
+add.s32 %r3, %r3, %c0;
+shl.b32 %w0, %c0, 1;
+mul.wide.s32 %r2, %w0, 4;
+add.s64 %r1, %r1, %r2;
+ld.const.f32 %r4, [ff_variable+8];
+
+$DICE_BB0_4:
+st.global.f32 [%r1], %r4;
+add.s32 %w0, %r3, %c0;
+mul.wide.s32 %w1, %w0, 4;
+add.s64 %r3, %r0, %w1;
+ld.const.f32 %r0, [ff_variable+12];
+
+$DICE_BB0_5:
+st.global.f32 [%r3], %r0;
+add.s64 %r1, %r1, %r2;
+ld.const.f32 %r0, [ff_variable+16];
+
+$DICE_BB0_6:
+st.global.f32 [%r1], %r0;
+
+$DICE_BB0_7:
+ret;
+
+}
+
+.visible .entry _Z24cuda_compute_step_factoriPfS_S_(
+.param .u32 _Z24cuda_compute_step_factoriPfS_S__param_0,
+.param .u64 _Z24cuda_compute_step_factoriPfS_S__param_1,
+.param .u64 _Z24cuda_compute_step_factoriPfS_S__param_2,
+.param .u64 _Z24cuda_compute_step_factoriPfS_S__param_3
+)
+{
+.reg .b16 %c<4>;
+.reg .b32 %r<8>;
+.reg .b32 %w<6>;
+
+
+$DICE_BB1_0:
+ld.param.u32 %c0, [_Z24cuda_compute_step_factoriPfS_S__param_0];
+ld.param.u64 %c1, [_Z24cuda_compute_step_factoriPfS_S__param_1];
+ld.param.u64 %c2, [_Z24cuda_compute_step_factoriPfS_S__param_2];
+ld.param.u64 %c3, [_Z24cuda_compute_step_factoriPfS_S__param_3];
+
+$DICE_BB1_1:
+cvta.to.global.u64 %r0, %c3;
+cvta.to.global.u64 %r2, %c2;
+cvta.to.global.u64 %w0, %c1;
+mov.u32 %w1, %ntid.x;
+mov.u32 %w2, %ctaid.x;
+mov.u32 %w3, %tid.x;
+mad.lo.s32 %w4, %w1, %w2, %w3;
+mul.wide.s32 %r1, %w4, 4;
+add.s64 %w1, %w0, %r1;
+ld.global.f32 %r3, [%w1];
+add.s32 %w2, %w4, %c0;
+mul.wide.s32 %w3, %c0, 4;
+add.s64 %w4, %w1, %w3;
+add.s32 %w3, %w2, %c0;
+shl.b32 %w2, %c0, 1;
+mul.wide.s32 %w5, %w2, 4;
+add.s64 %r7, %w1, %w5;
+add.s32 %w1, %w3, %c0;
+mul.wide.s32 %w2, %w1, 4;
+add.s64 %r5, %w0, %w2;
+add.s64 %r4, %r7, %w5;
+ld.global.f32 %r6, [%w4];
+
+$DICE_BB1_2:
+div.rn.f32 %r6, %r6, %r3;
+ld.global.f32 %r7, [%r7];
+
+$DICE_BB1_3:
+div.rn.f32 %r7, %r7, %r3;
+ld.global.f32 %r5, [%r5];
+
+$DICE_BB1_4:
+div.rn.f32 %w0, %r5, %r3;
+mul.f32 %w1, %r7, %r7;
+fma.rn.f32 %w2, %r6, %r6, %w1;
+fma.rn.f32 %r5, %w0, %w0, %w2;
+mul.f32 %w0, %r3, 0f3F000000;
+mov.f32 %r6, 0f3F000000;
+mul.f32 %r7, %w0, %r5;
+ld.global.f32 %r4, [%r4];
+
+$DICE_BB1_5:
+sub.f32 %w0, %r4, %r7;
+mul.f32 %w1, %w0, 0f3ECCCCCC;
+mul.f32 %w0, %w1, 0f3FB33333;
+div.rn.f32 %w1, %w0, %r3;
+sqrt.rn.f32 %r3, %w1;
+add.s64 %w0, %r2, %r1;
+ld.global.f32 %r2, [%w0];
+
+$DICE_BB1_6:
+sqrt.rn.f32 %w0, %r2;
+sqrt.rn.f32 %w1, %r5;
+add.f32 %w2, %r3, %w1;
+mul.f32 %w1, %w0, %w2;
+div.rn.f32 %w0, %r6, %w1;
+add.s64 %w1, %r0, %r1;
+st.global.f32 [%w1], %w0;
+
+$DICE_BB1_7:
+ret;
+
+}
+
+.visible .entry _Z17cuda_compute_fluxiPiPfS0_S0_(
+.param .u32 _Z17cuda_compute_fluxiPiPfS0_S0__param_0,
+.param .u64 _Z17cuda_compute_fluxiPiPfS0_S0__param_1,
+.param .u64 _Z17cuda_compute_fluxiPiPfS0_S0__param_2,
+.param .u64 _Z17cuda_compute_fluxiPiPfS0_S0__param_3,
+.param .u64 _Z17cuda_compute_fluxiPiPfS0_S0__param_4
+)
+{
+.reg .b16 %c<4>;
+.reg .b32 %r<58>;
+.reg .pred %p<1>;
+.reg .b32 %w<5>;
+
+
+$DICE_BB2_0:
+ld.param.u32 %c0, [_Z17cuda_compute_fluxiPiPfS0_S0__param_0];
+ld.param.u64 %c1, [_Z17cuda_compute_fluxiPiPfS0_S0__param_1];
+ld.param.u64 %c2, [_Z17cuda_compute_fluxiPiPfS0_S0__param_2];
+ld.param.u64 %c3, [_Z17cuda_compute_fluxiPiPfS0_S0__param_3];
+
+$DICE_BB2_1:
+cvta.to.global.u64 %r0, %c2;
+mov.u32 %w0, %ctaid.x;
+mov.u32 %w1, %ntid.x;
+mov.u32 %w2, %tid.x;
+mad.lo.s32 %w3, %w1, %w0, %w2;
+cvt.s64.s32 %r1, %w3;
+cvta.to.global.u64 %r2, %c3;
+mul.wide.s32 %r3, %w3, 4;
+add.s64 %w0, %r2, %r3;
+add.s32 %w1, %w3, %c0;
+cvt.s64.s32 %r4, %c0;
+mul.wide.s32 %w2, %c0, 4;
+add.s64 %w3, %w0, %w2;
+add.s32 %r5, %w1, %c0;
+shl.b32 %w1, %c0, 1;
+mul.wide.s32 %r6, %w1, 4;
+add.s64 %r7, %w0, %r6;
+add.s32 %w1, %r5, %c0;
+mul.wide.s32 %w2, %w1, 4;
+add.s64 %r8, %r2, %w2;
+add.s32 %r9, %w1, %c0;
+add.s64 %r10, %r7, %r6;
+ld.global.f32 %r11, [%w3];
+ld.global.f32 %r12, [%w0];
+
+$DICE_BB2_2:
+div.rn.f32 %r13, %r11, %r12;
+ld.global.f32 %r14, [%r7];
+
+$DICE_BB2_3:
+div.rn.f32 %r7, %r14, %r12;
+ld.global.f32 %r15, [%r8];
+
+$DICE_BB2_4:
+div.rn.f32 %r8, %r15, %r12;
+mul.f32 %w0, %r7, %r7;
+fma.rn.f32 %w1, %r13, %r13, %w0;
+fma.rn.f32 %r16, %r8, %r8, %w1;
+sqrt.rn.f32 %r17, %r16;
+mul.f32 %r18, %r12, 0fBF000000;
+ld.global.f32 %r19, [%r10];
+
+$DICE_BB2_5:
+fma.rn.f32 %w0, %r18, %r16, %r19;
+mul.f32 %r10, %w0, 0f3ECCCCCC;
+mul.f32 %w0, %r10, 0f3FB33333;
+div.rn.f32 %w1, %w0, %r12;
+sqrt.rn.f32 %r16, %w1;
+fma.rn.f32 %r18, %r11, %r13, %r10;
+mul.f32 %r20, %r13, %r14;
+mul.f32 %r21, %r13, %r15;
+fma.rn.f32 %r22, %r14, %r7, %r10;
+mul.f32 %r23, %r7, %r15;
+fma.rn.f32 %r24, %r15, %r8, %r10;
+add.f32 %w0, %r19, %r10;
+mul.f32 %r25, %r13, %w0;
+mul.f32 %r13, %r7, %w0;
+mul.f32 %r7, %r8, %w0;
+cvta.to.global.u64 %r8, %c1;
+add.s64 %r26, %r8, %r3;
+ld.global.s32 %r27, [%r26];
+add.s64 %r28, %r0, %r3;
+mul.wide.s32 %r3, %r9, 4;
+
+$DICE_BB2_6:
+add.s64 %r29, %r0, %r3;
+shl.b32 %w0, %c0, 2;
+add.s32 %w1, %r9, %w0;
+mul.wide.s32 %w0, %w1, 4;
+add.s64 %r3, %r0, %w0;
+ld.global.f32 %r9, [%r28];
+ld.global.f32 %r30, [%r29];
+
+$DICE_BB2_7:
+mul.f32 %w0, %r30, %r30;
+fma.rn.f32 %r31, %r9, %r9, %w0;
+ld.global.f32 %r32, [%r3];
+
+$DICE_BB2_8:
+fma.rn.f32 %r33, %r32, %r32, %r31;
+setp.gt.s64 %p0, %r27, -1;
+@%p0 bra $DICE_BB2_10;
+
+$DICE_BB2_9:
+bra $DICE_BB2_57;
+
+$DICE_BB2_10:
+cvt.u32.u64 %w0, %r27;
+add.s32 %w1, %w0, %c0;
+shl.b64 %w0, %r27, 2;
+add.s64 %w2, %r2, %w0;
+shl.b64 %w0, %r4, 2;
+add.s64 %w3, %w2, %w0;
+add.s32 %w4, %w1, %c0;
+mul.wide.s32 %w1, %w4, 4;
+add.s64 %r31, %r2, %w1;
+add.s64 %r34, %r31, %w0;
+add.s64 %r35, %r34, %w0;
+ld.global.f32 %r36, [%w3];
+ld.global.f32 %r37, [%w2];
+
+$DICE_BB2_11:
+div.rn.f32 %r38, %r36, %r37;
+ld.global.f32 %r39, [%r31];
+
+$DICE_BB2_12:
+div.rn.f32 %r31, %r39, %r37;
+ld.global.f32 %r40, [%r34];
+
+$DICE_BB2_13:
+div.rn.f32 %r34, %r40, %r37;
+mul.f32 %w0, %r31, %r31;
+fma.rn.f32 %w1, %r38, %r38, %w0;
+fma.rn.f32 %r41, %r34, %r34, %w1;
+mul.f32 %w0, %r37, 0f3F000000;
+mul.f32 %r42, %w0, %r41;
+ld.global.f32 %r43, [%r35];
+
+$DICE_BB2_14:
+sub.f32 %w0, %r43, %r42;
+mul.f32 %w1, %w0, 0f3ECCCCCC;
+mul.f32 %w0, %w1, 0f3FB33333;
+div.rn.f32 %w2, %w0, %r37;
+sqrt.rn.f32 %w0, %w2;
+fma.rn.f32 %r35, %r36, %r38, %w1;
+fma.rn.f32 %r42, %r39, %r31, %w1;
+fma.rn.f32 %r44, %r40, %r34, %w1;
+add.f32 %r45, %r43, %w1;
+sqrt.rn.f32 %w1, %r33;
+mul.f32 %w2, %w1, 0fBE4CCCCD;
+mul.f32 %w1, %w2, 0f3F000000;
+sqrt.rn.f32 %w2, %r41;
+add.f32 %w3, %r17, %w2;
+add.f32 %w2, %r16, %w3;
+add.f32 %w3, %w0, %w2;
+mul.f32 %r33, %w1, %w3;
+sub.f32 %w0, %r12, %r37;
+fma.rn.f32 %r37, %w0, %r33, 0f00000000;
+sub.f32 %r41, %r19, %r43;
+
+$DICE_BB2_15:
+fma.rn.f32 %w0, %r41, %r33, 0f00000000;
+sub.f32 %w1, %r11, %r36;
+fma.rn.f32 %w2, %w1, %r33, 0f00000000;
+sub.f32 %w1, %r14, %r39;
+fma.rn.f32 %w3, %w1, %r33, 0f00000000;
+sub.f32 %w1, %r15, %r40;
+fma.rn.f32 %r41, %w1, %r33, 0f00000000;
+add.f32 %w1, %r11, %r36;
+mul.f32 %r33, %r9, 0f3F000000;
+fma.rn.f32 %r36, %r33, %w1, %r37;
+fma.rn.f32 %w1, %r38, %r45, %r25;
+fma.rn.f32 %r37, %r33, %w1, %w0;
+add.f32 %w0, %r18, %r35;
+fma.rn.f32 %r35, %r33, %w0, %w2;
+fma.rn.f32 %r43, %r38, %r39, %r20;
+fma.rn.f32 %r46, %r33, %r43, %w3;
+
+$DICE_BB2_16:
+fma.rn.f32 %r47, %r38, %r40, %r21;
+fma.rn.f32 %w0, %r33, %r47, %r41;
+add.f32 %w1, %r14, %r39;
+mul.f32 %w2, %r30, 0f3F000000;
+fma.rn.f32 %w3, %w2, %w1, %r36;
+fma.rn.f32 %w1, %r31, %r45, %r13;
+fma.rn.f32 %r33, %w2, %w1, %r37;
+fma.rn.f32 %r36, %w2, %r43, %r35;
+add.f32 %w1, %r22, %r42;
+fma.rn.f32 %r35, %w2, %w1, %r46;
+fma.rn.f32 %r37, %r31, %r40, %r23;
+fma.rn.f32 %r31, %w2, %r37, %w0;
+add.f32 %w0, %r15, %r40;
+mul.f32 %r38, %r32, 0f3F000000;
+fma.rn.f32 %r39, %r38, %w0, %w3;
+fma.rn.f32 %r40, %r34, %r45, %r7;
+
+$DICE_BB2_17:
+fma.rn.f32 %r34, %r38, %r40, %r33;
+fma.rn.f32 %r33, %r38, %r47, %r36;
+fma.rn.f32 %r36, %r38, %r37, %r35;
+add.f32 %w0, %r24, %r44;
+fma.rn.f32 %r35, %r38, %w0, %r31;
+
+$DICE_BB2_18:
+shl.b64 %r31, %r4, 2;
+add.s64 %w0, %r26, %r31;
+ld.global.s32 %r4, [%w0];
+add.s64 %r26, %r29, %r31;
+add.s64 %r29, %r3, %r31;
+add.s64 %w0, %r28, %r31;
+ld.global.f32 %r3, [%w0];
+ld.global.f32 %r28, [%r26];
+
+$DICE_BB2_19:
+mul.f32 %w0, %r28, %r28;
+fma.rn.f32 %r37, %r3, %r3, %w0;
+ld.global.f32 %r38, [%r29];
+
+$DICE_BB2_20:
+fma.rn.f32 %r40, %r38, %r38, %r37;
+setp.gt.s64 %p0, %r4, -1;
+@%p0 bra $DICE_BB2_22;
+
+$DICE_BB2_21:
+bra $DICE_BB2_60;
+
+$DICE_BB2_22:
+cvt.u32.u64 %w0, %r4;
+add.s32 %w1, %w0, %c0;
+shl.b64 %w0, %r4, 2;
+add.s64 %w2, %r2, %w0;
+add.s64 %w0, %w2, %r31;
+add.s32 %w3, %w1, %c0;
+mul.wide.s32 %w1, %w3, 4;
+add.s64 %r37, %r2, %w1;
+add.s64 %r41, %r37, %r31;
+add.s64 %r42, %r41, %r31;
+ld.global.f32 %r43, [%w0];
+ld.global.f32 %r44, [%w2];
+
+$DICE_BB2_23:
+div.rn.f32 %r45, %r43, %r44;
+ld.global.f32 %r46, [%r37];
+
+$DICE_BB2_24:
+div.rn.f32 %r37, %r46, %r44;
+ld.global.f32 %r47, [%r41];
+
+$DICE_BB2_25:
+div.rn.f32 %r41, %r47, %r44;
+mul.f32 %w0, %r37, %r37;
+fma.rn.f32 %w1, %r45, %r45, %w0;
+fma.rn.f32 %r48, %r41, %r41, %w1;
+mul.f32 %w0, %r44, 0f3F000000;
+mul.f32 %r49, %w0, %r48;
+ld.global.f32 %r50, [%r42];
+
+$DICE_BB2_26:
+sub.f32 %w0, %r50, %r49;
+mul.f32 %w1, %w0, 0f3ECCCCCC;
+mul.f32 %w0, %w1, 0f3FB33333;
+div.rn.f32 %w2, %w0, %r44;
+sqrt.rn.f32 %w0, %w2;
+fma.rn.f32 %r42, %r43, %r45, %w1;
+fma.rn.f32 %r49, %r46, %r37, %w1;
+fma.rn.f32 %r51, %r47, %r41, %w1;
+add.f32 %r52, %r50, %w1;
+sqrt.rn.f32 %w1, %r40;
+mul.f32 %w2, %w1, 0fBE4CCCCD;
+mul.f32 %w1, %w2, 0f3F000000;
+sqrt.rn.f32 %w2, %r48;
+add.f32 %w3, %r17, %w2;
+add.f32 %w2, %r16, %w3;
+add.f32 %w3, %w0, %w2;
+mul.f32 %r40, %w1, %w3;
+sub.f32 %w0, %r12, %r44;
+fma.rn.f32 %r44, %w0, %r40, %r39;
+sub.f32 %r48, %r19, %r50;
+
+$DICE_BB2_27:
+fma.rn.f32 %w0, %r48, %r40, %r34;
+sub.f32 %w1, %r11, %r43;
+fma.rn.f32 %w2, %w1, %r40, %r33;
+sub.f32 %w1, %r14, %r46;
+fma.rn.f32 %w3, %w1, %r40, %r36;
+sub.f32 %w1, %r15, %r47;
+fma.rn.f32 %r48, %w1, %r40, %r35;
+add.f32 %w1, %r11, %r43;
+mul.f32 %r40, %r3, 0f3F000000;
+fma.rn.f32 %r43, %r40, %w1, %r44;
+fma.rn.f32 %w1, %r45, %r52, %r25;
+fma.rn.f32 %r44, %r40, %w1, %w0;
+add.f32 %w0, %r18, %r42;
+fma.rn.f32 %r42, %r40, %w0, %w2;
+fma.rn.f32 %r50, %r45, %r46, %r20;
+fma.rn.f32 %r53, %r40, %r50, %w3;
+
+$DICE_BB2_28:
+fma.rn.f32 %r54, %r45, %r47, %r21;
+fma.rn.f32 %w0, %r40, %r54, %r48;
+add.f32 %w1, %r14, %r46;
+mul.f32 %w2, %r28, 0f3F000000;
+fma.rn.f32 %w3, %w2, %w1, %r43;
+fma.rn.f32 %w1, %r37, %r52, %r13;
+fma.rn.f32 %r40, %w2, %w1, %r44;
+fma.rn.f32 %r43, %w2, %r50, %r42;
+add.f32 %w1, %r22, %r49;
+fma.rn.f32 %r42, %w2, %w1, %r53;
+fma.rn.f32 %r44, %r37, %r47, %r23;
+fma.rn.f32 %r37, %w2, %r44, %w0;
+add.f32 %w0, %r15, %r47;
+mul.f32 %r45, %r38, 0f3F000000;
+fma.rn.f32 %r39, %r45, %w0, %w3;
+fma.rn.f32 %r46, %r41, %r52, %r7;
+
+$DICE_BB2_29:
+fma.rn.f32 %r34, %r45, %r46, %r40;
+fma.rn.f32 %r33, %r45, %r54, %r43;
+fma.rn.f32 %r36, %r45, %r44, %r42;
+add.f32 %w0, %r24, %r51;
+fma.rn.f32 %r35, %r45, %w0, %r37;
+
+$DICE_BB2_30:
+mul.wide.s32 %w0, %r5, 4;
+add.s64 %w1, %r8, %w0;
+ld.global.s32 %r5, [%w1];
+add.s64 %r37, %r26, %r31;
+add.s64 %r26, %r29, %r31;
+add.s64 %w1, %r0, %w0;
+ld.global.f32 %r29, [%w1];
+ld.global.f32 %r40, [%r37];
+
+$DICE_BB2_31:
+mul.f32 %w0, %r40, %r40;
+fma.rn.f32 %r41, %r29, %r29, %w0;
+ld.global.f32 %r42, [%r26];
+
+$DICE_BB2_32:
+fma.rn.f32 %r43, %r42, %r42, %r41;
+setp.gt.s64 %p0, %r5, -1;
+@%p0 bra $DICE_BB2_34;
+
+$DICE_BB2_33:
+bra $DICE_BB2_63;
+
+$DICE_BB2_34:
+cvt.u32.u64 %w0, %r5;
+add.s32 %w1, %w0, %c0;
+shl.b64 %w0, %r5, 2;
+add.s64 %w2, %r2, %w0;
+add.s64 %w0, %w2, %r31;
+add.s32 %w3, %w1, %c0;
+mul.wide.s32 %w1, %w3, 4;
+add.s64 %r41, %r2, %w1;
+add.s64 %r44, %r41, %r31;
+add.s64 %r45, %r44, %r31;
+ld.global.f32 %r46, [%w0];
+ld.global.f32 %r47, [%w2];
+
+$DICE_BB2_35:
+div.rn.f32 %r48, %r46, %r47;
+ld.global.f32 %r49, [%r41];
+
+$DICE_BB2_36:
+div.rn.f32 %r41, %r49, %r47;
+ld.global.f32 %r50, [%r44];
+
+$DICE_BB2_37:
+div.rn.f32 %r44, %r50, %r47;
+mul.f32 %w0, %r41, %r41;
+fma.rn.f32 %w1, %r48, %r48, %w0;
+fma.rn.f32 %r51, %r44, %r44, %w1;
+mul.f32 %w0, %r47, 0f3F000000;
+mul.f32 %r52, %w0, %r51;
+ld.global.f32 %r53, [%r45];
+
+$DICE_BB2_38:
+sub.f32 %w0, %r53, %r52;
+mul.f32 %w1, %w0, 0f3ECCCCCC;
+mul.f32 %w0, %w1, 0f3FB33333;
+div.rn.f32 %w2, %w0, %r47;
+sqrt.rn.f32 %w0, %w2;
+fma.rn.f32 %r45, %r46, %r48, %w1;
+fma.rn.f32 %r52, %r49, %r41, %w1;
+fma.rn.f32 %r54, %r50, %r44, %w1;
+add.f32 %r55, %r53, %w1;
+sqrt.rn.f32 %w1, %r43;
+mul.f32 %w2, %w1, 0fBE4CCCCD;
+mul.f32 %w1, %w2, 0f3F000000;
+sqrt.rn.f32 %w2, %r51;
+add.f32 %w3, %r17, %w2;
+add.f32 %w2, %r16, %w3;
+add.f32 %w3, %w0, %w2;
+mul.f32 %r43, %w1, %w3;
+sub.f32 %w0, %r12, %r47;
+fma.rn.f32 %r47, %w0, %r43, %r39;
+sub.f32 %r51, %r19, %r53;
+
+$DICE_BB2_39:
+fma.rn.f32 %w0, %r51, %r43, %r34;
+sub.f32 %w1, %r11, %r46;
+fma.rn.f32 %w2, %w1, %r43, %r33;
+sub.f32 %w1, %r14, %r49;
+fma.rn.f32 %w3, %w1, %r43, %r36;
+sub.f32 %w1, %r15, %r50;
+fma.rn.f32 %r51, %w1, %r43, %r35;
+add.f32 %w1, %r11, %r46;
+mul.f32 %r43, %r29, 0f3F000000;
+fma.rn.f32 %r46, %r43, %w1, %r47;
+fma.rn.f32 %w1, %r48, %r55, %r25;
+fma.rn.f32 %r47, %r43, %w1, %w0;
+add.f32 %w0, %r18, %r45;
+fma.rn.f32 %r45, %r43, %w0, %w2;
+fma.rn.f32 %r53, %r48, %r49, %r20;
+fma.rn.f32 %r56, %r43, %r53, %w3;
+
+$DICE_BB2_40:
+fma.rn.f32 %r57, %r48, %r50, %r21;
+fma.rn.f32 %w0, %r43, %r57, %r51;
+add.f32 %w1, %r14, %r49;
+mul.f32 %w2, %r40, 0f3F000000;
+fma.rn.f32 %w3, %w2, %w1, %r46;
+fma.rn.f32 %w1, %r41, %r55, %r13;
+fma.rn.f32 %r43, %w2, %w1, %r47;
+fma.rn.f32 %r46, %w2, %r53, %r45;
+add.f32 %w1, %r22, %r52;
+fma.rn.f32 %r45, %w2, %w1, %r56;
+fma.rn.f32 %r47, %r41, %r50, %r23;
+fma.rn.f32 %r41, %w2, %r47, %w0;
+add.f32 %w0, %r15, %r50;
+mul.f32 %r48, %r42, 0f3F000000;
+fma.rn.f32 %r39, %r48, %w0, %w3;
+fma.rn.f32 %r49, %r44, %r55, %r7;
+
+$DICE_BB2_41:
+fma.rn.f32 %r34, %r48, %r49, %r43;
+fma.rn.f32 %r33, %r48, %r57, %r46;
+fma.rn.f32 %r36, %r48, %r47, %r45;
+add.f32 %w0, %r24, %r54;
+fma.rn.f32 %r35, %r48, %w0, %r41;
+
+$DICE_BB2_42:
+ld.param.u32 %c1, [_Z17cuda_compute_fluxiPiPfS0_S0__param_0];
+mov.u32 %w0, %tid.x;
+mov.u32 %w1, %ctaid.x;
+mov.u32 %w2, %ntid.x;
+mad.lo.s32 %w3, %w2, %w1, %w0;
+add.s32 %w0, %w3, %c1;
+add.s32 %w1, %w0, %c1;
+add.s32 %w0, %w1, %c1;
+cvt.s64.s32 %w1, %w0;
+shl.b64 %r41, %w1, 2;
+add.s64 %w0, %r8, %r41;
+ld.global.s32 %r8, [%w0];
+add.s64 %w0, %r37, %r31;
+add.s64 %r37, %r26, %r31;
+add.s64 %w1, %r0, %r41;
+ld.global.f32 %r0, [%w1];
+ld.global.f32 %r26, [%w0];
+
+$DICE_BB2_43:
+mul.f32 %w0, %r26, %r26;
+fma.rn.f32 %r43, %r0, %r0, %w0;
+ld.global.f32 %r44, [%r37];
+
+$DICE_BB2_44:
+fma.rn.f32 %r37, %r44, %r44, %r43;
+setp.gt.s64 %p0, %r8, -1;
+@%p0 bra $DICE_BB2_46;
+
+$DICE_BB2_45:
+bra $DICE_BB2_66;
+
+$DICE_BB2_46:
+cvt.u32.u64 %w0, %r8;
+add.s32 %w1, %w0, %c0;
+shl.b64 %w0, %r8, 2;
+add.s64 %w2, %r2, %w0;
+add.s64 %w0, %w2, %r31;
+add.s32 %w3, %w1, %c0;
+mul.wide.s32 %w1, %w3, 4;
+add.s64 %r43, %r2, %w1;
+add.s64 %r2, %r43, %r31;
+add.s64 %r45, %r2, %r31;
+ld.global.f32 %r46, [%w0];
+ld.global.f32 %r47, [%w2];
+
+$DICE_BB2_47:
+div.rn.f32 %r48, %r46, %r47;
+ld.global.f32 %r49, [%r43];
+
+$DICE_BB2_48:
+div.rn.f32 %r43, %r49, %r47;
+ld.global.f32 %r50, [%r2];
+
+$DICE_BB2_49:
+div.rn.f32 %r2, %r50, %r47;
+mul.f32 %w0, %r43, %r43;
+fma.rn.f32 %w1, %r48, %r48, %w0;
+fma.rn.f32 %r51, %r2, %r2, %w1;
+mul.f32 %w0, %r47, 0f3F000000;
+mul.f32 %r52, %w0, %r51;
+ld.global.f32 %r53, [%r45];
+
+$DICE_BB2_50:
+sub.f32 %w0, %r53, %r52;
+mul.f32 %w1, %w0, 0f3ECCCCCC;
+mul.f32 %w0, %w1, 0f3FB33333;
+div.rn.f32 %w2, %w0, %r47;
+sqrt.rn.f32 %w0, %w2;
+fma.rn.f32 %r45, %r46, %r48, %w1;
+fma.rn.f32 %r52, %r49, %r43, %w1;
+fma.rn.f32 %r54, %r50, %r2, %w1;
+add.f32 %r55, %r53, %w1;
+sqrt.rn.f32 %w1, %r37;
+mul.f32 %w2, %w1, 0fBE4CCCCD;
+mul.f32 %w1, %w2, 0f3F000000;
+sqrt.rn.f32 %w2, %r51;
+add.f32 %w3, %r17, %w2;
+add.f32 %w2, %r16, %w3;
+add.f32 %w3, %w0, %w2;
+mul.f32 %r16, %w1, %w3;
+sub.f32 %w0, %r12, %r47;
+fma.rn.f32 %r12, %w0, %r16, %r39;
+sub.f32 %r17, %r19, %r53;
+
+$DICE_BB2_51:
+fma.rn.f32 %w0, %r17, %r16, %r34;
+sub.f32 %w1, %r11, %r46;
+fma.rn.f32 %w2, %w1, %r16, %r33;
+sub.f32 %w1, %r14, %r49;
+fma.rn.f32 %w3, %w1, %r16, %r36;
+sub.f32 %w1, %r15, %r50;
+fma.rn.f32 %r17, %w1, %r16, %r35;
+add.f32 %w1, %r11, %r46;
+mul.f32 %r11, %r0, 0f3F000000;
+fma.rn.f32 %r16, %r11, %w1, %r12;
+fma.rn.f32 %w1, %r48, %r55, %r25;
+fma.rn.f32 %r12, %r11, %w1, %w0;
+add.f32 %w0, %r18, %r45;
+fma.rn.f32 %r18, %r11, %w0, %w2;
+fma.rn.f32 %r19, %r48, %r49, %r20;
+fma.rn.f32 %r20, %r11, %r19, %w3;
+
+$DICE_BB2_52:
+fma.rn.f32 %r25, %r48, %r50, %r21;
+fma.rn.f32 %w0, %r11, %r25, %r17;
+add.f32 %w1, %r14, %r49;
+mul.f32 %w2, %r26, 0f3F000000;
+fma.rn.f32 %w3, %w2, %w1, %r16;
+fma.rn.f32 %w1, %r43, %r55, %r13;
+fma.rn.f32 %r11, %w2, %w1, %r12;
+fma.rn.f32 %r12, %w2, %r19, %r18;
+add.f32 %w1, %r22, %r52;
+fma.rn.f32 %r13, %w2, %w1, %r20;
+fma.rn.f32 %r14, %r43, %r50, %r23;
+fma.rn.f32 %r16, %w2, %r14, %w0;
+add.f32 %w0, %r15, %r50;
+mul.f32 %r15, %r44, 0f3F000000;
+fma.rn.f32 %r39, %r15, %w0, %w3;
+fma.rn.f32 %r17, %r2, %r55, %r7;
+
+$DICE_BB2_53:
+fma.rn.f32 %r34, %r15, %r17, %r11;
+fma.rn.f32 %r33, %r15, %r25, %r12;
+fma.rn.f32 %r36, %r15, %r14, %r13;
+add.f32 %w0, %r24, %r54;
+fma.rn.f32 %r35, %r15, %w0, %r16;
+
+$DICE_BB2_54:
+ld.param.u64 %c0, [_Z17cuda_compute_fluxiPiPfS0_S0__param_4];
+cvta.to.global.u64 %w0, %c0;
+shl.b64 %w1, %r1, 2;
+add.s64 %w2, %w0, %w1;
+st.global.f32 [%w2], %r39;
+add.s64 %w1, %w2, %r31;
+st.global.f32 [%w1], %r33;
+add.s64 %w1, %w2, %r6;
+st.global.f32 [%w1], %r36;
+add.s64 %w2, %w0, %r41;
+st.global.f32 [%w2], %r35;
+add.s64 %r1, %w1, %r6;
+
+$DICE_BB2_55:
+st.global.f32 [%r1], %r34;
+
+$DICE_BB2_56:
+ret;
+
+$DICE_BB2_57:
+cvt.u32.u64 %r1, %r27;
+setp.eq.s32 %p0, %r1, -1;
+@%p0 bra $DICE_BB2_69;
+
+$DICE_BB2_58:
+setp.ne.s32 %p0, %r1, -2;
+@%p0 bra $DICE_BB2_18;
+
+$DICE_BB2_59:
+bra $DICE_BB2_18;
+
+$DICE_BB2_60:
+cvt.u32.u64 %r1, %r4;
+setp.eq.s32 %p0, %r1, -1;
+@%p0 bra $DICE_BB2_70;
+
+$DICE_BB2_61:
+setp.ne.s32 %p0, %r1, -2;
+@%p0 bra $DICE_BB2_30;
+
+$DICE_BB2_62:
+bra $DICE_BB2_30;
+
+$DICE_BB2_63:
+cvt.u32.u64 %r1, %r5;
+setp.eq.s32 %p0, %r1, -1;
+@%p0 bra $DICE_BB2_71;
+
+$DICE_BB2_64:
+setp.ne.s32 %p0, %r1, -2;
+@%p0 bra $DICE_BB2_42;
+
+$DICE_BB2_65:
+bra $DICE_BB2_42;
+
+$DICE_BB2_66:
+cvt.u32.u64 %r1, %r8;
+setp.eq.s32 %p0, %r1, -1;
+@%p0 bra $DICE_BB2_72;
+
+$DICE_BB2_67:
+setp.ne.s32 %p0, %r1, -2;
+@%p0 bra $DICE_BB2_54;
+
+$DICE_BB2_68:
+bra $DICE_BB2_54;
+
+$DICE_BB2_69:
+fma.rn.f32 %r1, %r10, %r9, 0f00000000;
+fma.rn.f32 %r2, %r10, %r30, 0f00000000;
+fma.rn.f32 %r4, %r10, %r32, 0f00000000;
+bra $DICE_BB2_18;
+
+$DICE_BB2_70:
+fma.rn.f32 %r1, %r10, %r3, %r1;
+fma.rn.f32 %r2, %r10, %r28, %r2;
+fma.rn.f32 %r4, %r10, %r38, %r4;
+bra $DICE_BB2_30;
+
+$DICE_BB2_71:
+fma.rn.f32 %r1, %r10, %r29, %r1;
+fma.rn.f32 %r2, %r10, %r40, %r2;
+fma.rn.f32 %r4, %r10, %r42, %r4;
+bra $DICE_BB2_42;
+
+$DICE_BB2_72:
+fma.rn.f32 %r1, %r10, %r0, %r1;
+fma.rn.f32 %r2, %r10, %r26, %r2;
+fma.rn.f32 %r4, %r10, %r44, %r4;
+bra $DICE_BB2_54;
+
+}
+
+.visible .entry _Z14cuda_time_stepiiPfS_S_S_(
+.param .u32 _Z14cuda_time_stepiiPfS_S_S__param_0,
+.param .u32 _Z14cuda_time_stepiiPfS_S_S__param_1,
+.param .u64 _Z14cuda_time_stepiiPfS_S_S__param_2,
+.param .u64 _Z14cuda_time_stepiiPfS_S_S__param_3,
+.param .u64 _Z14cuda_time_stepiiPfS_S_S__param_4,
+.param .u64 _Z14cuda_time_stepiiPfS_S_S__param_5
+)
+{
+.reg .b16 %c<6>;
+.reg .b32 %r<11>;
+.reg .b32 %w<4>;
+
+
+$DICE_BB3_0:
+ld.param.u32 %c0, [_Z14cuda_time_stepiiPfS_S_S__param_0];
+ld.param.u32 %c1, [_Z14cuda_time_stepiiPfS_S_S__param_1];
+ld.param.u64 %c2, [_Z14cuda_time_stepiiPfS_S_S__param_2];
+ld.param.u64 %c3, [_Z14cuda_time_stepiiPfS_S_S__param_3];
+ld.param.u64 %c4, [_Z14cuda_time_stepiiPfS_S_S__param_4];
+ld.param.u64 %c5, [_Z14cuda_time_stepiiPfS_S_S__param_5];
+
+$DICE_BB3_1:
+cvta.to.global.u64 %r0, %c3;
+cvta.to.global.u64 %r1, %c5;
+cvta.to.global.u64 %r2, %c2;
+cvta.to.global.u64 %w0, %c4;
+mov.u32 %w1, %ntid.x;
+mov.u32 %w2, %ctaid.x;
+mov.u32 %w3, %tid.x;
+mad.lo.s32 %r5, %w1, %w2, %w3;
+mul.wide.s32 %r7, %r5, 4;
+add.s64 %w1, %w0, %r7;
+mov.u32 %w0, 4;
+sub.s32 %w2, %w0, %c0;
+cvt.rn.f32.s32 %r4, %w2;
+ld.global.f32 %r3, [%w1];
+
+$DICE_BB3_2:
+div.rn.f32 %r3, %r3, %r4;
+add.s64 %r6, %r2, %r7;
+ld.global.f32 %r8, [%r6];
+add.s64 %r4, %r1, %r7;
+ld.global.f32 %r9, [%r4];
+
+$DICE_BB3_3:
+fma.rn.f32 %w0, %r3, %r9, %r8;
+add.s64 %r7, %r0, %r7;
+st.global.f32 [%r7], %w0;
+shl.b32 %w0, %c1, 2;
+mul.wide.s32 %r8, %w0, 4;
+add.s64 %w0, %r6, %r8;
+ld.global.f32 %r9, [%w0];
+add.s64 %w0, %r4, %r8;
+ld.global.f32 %r10, [%w0];
+
+$DICE_BB3_4:
+fma.rn.f32 %w0, %r3, %r10, %r9;
+add.s64 %w1, %r7, %r8;
+st.global.f32 [%w1], %w0;
+add.s32 %r5, %r5, %c1;
+mul.wide.s32 %r8, %c1, 4;
+add.s64 %w0, %r6, %r8;
+ld.global.f32 %r6, [%w0];
+add.s64 %w0, %r4, %r8;
+ld.global.f32 %r4, [%w0];
+
+$DICE_BB3_5:
+fma.rn.f32 %w0, %r3, %r4, %r6;
+add.s64 %w1, %r7, %r8;
+st.global.f32 [%w1], %w0;
+add.s32 %r4, %r5, %c1;
+mul.wide.s32 %r5, %r4, 4;
+add.s64 %w0, %r2, %r5;
+ld.global.f32 %r6, [%w0];
+add.s64 %w0, %r1, %r5;
+ld.global.f32 %r7, [%w0];
+
+$DICE_BB3_6:
+fma.rn.f32 %w0, %r3, %r7, %r6;
+add.s64 %w1, %r0, %r5;
+st.global.f32 [%w1], %w0;
+add.s32 %w0, %r4, %c1;
+mul.wide.s32 %r4, %w0, 4;
+add.s64 %w0, %r2, %r4;
+ld.global.f32 %r2, [%w0];
+add.s64 %w0, %r1, %r4;
+ld.global.f32 %r1, [%w0];
+
+$DICE_BB3_7:
+fma.rn.f32 %w0, %r3, %r1, %r2;
+add.s64 %w1, %r0, %r4;
+st.global.f32 [%w1], %w0;
+
+$DICE_BB3_8:
+ret;
+
+}
+

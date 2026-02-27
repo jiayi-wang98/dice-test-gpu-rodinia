@@ -1,0 +1,39 @@
+// DICECompiler Metadata for: examples/rodinia/nn/nn.ptx
+FUNCTION = _Z6euclidP7latLongPfiff;
+
+DBB_ID = 0,
+BITSTREAM_ADDR = $DICE_BB0_0,
+BITSTREAM_LENGTH = 5,
+UNROLLING_FACTOR = 1,
+UNROLLING_STRATEGY = 0,
+LD_DEST_REGS = (%c0, %c1, %c2, %c3, %c4),
+IS_PARAMETER_LOAD;
+
+DBB_ID = 1,
+BITSTREAM_ADDR = $DICE_BB0_1,
+BITSTREAM_LENGTH = 7,
+UNROLLING_FACTOR = 4,
+UNROLLING_STRATEGY = 0,
+LAT = 8,
+IN_REGS = (%ctaid.x, %ctaid.y, %nctaid.x, %ntid.x, %c0, %c2, %tid.x),
+OUT_REGS = (%p0, %r5),
+LD_DEST_REGS = (%r6, %r7),
+BRANCH = 1,
+BRANCH_UNI = 0,
+BRANCH_PRED = (%p0),
+BRANCH_TARGET = 3,
+BRANCH_RECVPC = 3;
+
+DBB_ID = 2,
+BITSTREAM_ADDR = $DICE_BB0_2,
+BITSTREAM_LENGTH = 24,
+UNROLLING_FACTOR = 4,
+UNROLLING_STRATEGY = 0,
+LAT = 5,
+IN_REGS = (%p0, %c1, %c3, %c4, %r5, %r6, %r7),
+STORE = 1;
+
+DBB_ID = 3,
+BITSTREAM_ADDR = $DICE_BB0_3,
+RET;
+

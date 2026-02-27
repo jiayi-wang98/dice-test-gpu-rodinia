@@ -121,6 +121,8 @@ int main(int argc, char* argv[])
 	unsigned long maxThreads = usableDeviceMemory / 12; // 4 bytes in 3 vectors per thread
 	if ( numRecords > maxThreads )
 	{
+    printf ("numRecord = %d, maxThreads= %d",numRecords, maxThreads);
+    fflush(stdout);
 		fprintf( stderr, "Error: Input too large.\n" );
 		exit( 1 );
 	}

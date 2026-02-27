@@ -1,0 +1,62 @@
+{
+  "input_file": "/data/jwang710/dice-test-gpu-rodinia/cuda/kmeans/kmeans.1.sm_52.ptx",
+  "resource_limits": {
+    "pe_count": 16,
+    "sfu_count": 4,
+    "ldst_port_count": 4
+  },
+  "overall": {
+    "kernel_count": 2,
+    "total_pgraph_count": 44,
+    "total_non_mov_ops": 139,
+    "avg_pgraph_size_non_mov_ops": 3.159091,
+    "avg_pgraph_utilization": {
+      "pe": 0.396307,
+      "sfu": 0.0,
+      "ldst": 0.340909,
+      "total": 0.321023
+    }
+  },
+  "kernels": [
+    {
+      "function_id": 0,
+      "kernel_name": "_Z14invert_mappingPfS_ii",
+      "pgraph_count": 14,
+      "active_pgraph_count": 12,
+      "total_non_mov_ops": 45,
+      "avg_pgraph_size_non_mov_ops": 3.214286,
+      "avg_active_pgraph_size_non_mov_ops": 3.75,
+      "total_resource_ops": {
+        "pe": 35,
+        "sfu": 0,
+        "ldst": 10
+      },
+      "avg_pgraph_utilization": {
+        "pe": 0.455357,
+        "sfu": 0.0,
+        "ldst": 0.5,
+        "total": 0.386905
+      }
+    },
+    {
+      "function_id": 1,
+      "kernel_name": "_Z11kmeansPointPfiiiPiS_S_S0_",
+      "pgraph_count": 30,
+      "active_pgraph_count": 23,
+      "total_non_mov_ops": 94,
+      "avg_pgraph_size_non_mov_ops": 3.133333,
+      "avg_active_pgraph_size_non_mov_ops": 4.086957,
+      "total_resource_ops": {
+        "pe": 79,
+        "sfu": 0,
+        "ldst": 15
+      },
+      "avg_pgraph_utilization": {
+        "pe": 0.36875,
+        "sfu": 0.0,
+        "ldst": 0.266667,
+        "total": 0.290278
+      }
+    }
+  ]
+}

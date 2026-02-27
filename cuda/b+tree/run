@@ -1,1 +1,16 @@
+rm -f ./_app_*
+rm -f ./_cuobjdump_*
+rm -f ./gpgpusim_power_report__*
+
+if [ -f ./b+tree.1.sm_52.meta ]; then
+    cp ./b+tree.1.sm_52.meta ./b+tree.2.sm_52.meta
+    cp ./b+tree.1.sm_52.meta ./b+tree.3.sm_52.meta
+fi
+if [ -f ./b+tree.1.sm_52.pptx ]; then
+    cp ./b+tree.1.sm_52.pptx ./b+tree.2.sm_52.pptx
+    cp ./b+tree.1.sm_52.pptx ./b+tree.3.sm_52.pptx
+fi
+
+LD_PRELOAD=/usr/lib64/libasan.so.5 \
+ASAN_OPTIONS=detect_leaks=0:halt_on_error=0:abort_on_error=0 \
 ./b+tree.out file ../../data/b+tree/mil.txt command ../../data/b+tree/command.txt
