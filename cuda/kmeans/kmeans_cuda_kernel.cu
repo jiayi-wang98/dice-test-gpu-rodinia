@@ -11,15 +11,6 @@
 
 #define SDATA( index)      CUT_BANK_CHECKER(sdata, index)
 
-// t_features has the layout dim0[points 0-m-1]dim1[ points 0-m-1]...
-texture<float, 1, cudaReadModeElementType> t_features;
-// t_features_flipped has the layout point0[dim 0-n-1]point1[dim 0-n-1]
-texture<float, 1, cudaReadModeElementType> t_features_flipped;
-texture<float, 1, cudaReadModeElementType> t_clusters;
-
-
-__constant__ float c_clusters[ASSUMED_NR_CLUSTERS*34];		/* constant memory for cluster centers */
-
 /* ----------------- invert_mapping() --------------------- */
 /* inverts data array from row-major to column-major.
 
@@ -83,13 +74,12 @@ kmeansPoint(float  *features,			/* in: [npoints*nfeatures] */
 			int cluster_base_index = i*nfeatures;					/* base index of cluster centers for inverted array */			
 			float ans=0.0;												/* Euclidean distance sqaure */
 
-			for (j=0; j < nfeatures; j++)
-			{					
-				int addr = point_id + j*npoints;					/* appropriate index of data point */
-				float diff = (tex1Dfetch(t_features,addr) -
-							  c_clusters[cluster_base_index + j]);	/* distance between a data point to cluster centers */
-				ans += diff*diff;									/* sum of squares */
-			}
+				for (j=0; j < nfeatures; j++)
+				{					
+					int addr = point_id + j*npoints;					/* appropriate index of data point */
+					float diff = (features[addr] - clusters[cluster_base_index + j]);	/* distance between a data point to cluster centers */
+					ans += diff*diff;									/* sum of squares */
+				}
 			dist = ans;		
 
 			/* see if distance is smaller than previous ones:

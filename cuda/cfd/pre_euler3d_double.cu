@@ -19,7 +19,7 @@ struct double3
  * 
  */ 
 #define GAMMA 1.4
-#define iterations 2000
+#define iterations 1
 #ifndef block_length
 	#define block_length 128
 #endif

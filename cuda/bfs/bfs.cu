@@ -211,6 +211,8 @@ void BFSGraph(int argc, char** argv)
 
     bool* d_updating_graph_mask;
     cudaMalloc((void**) &d_updating_graph_mask, sizeof(bool)*no_of_nodes);
+
+
     cudaMemcpy(d_updating_graph_mask, h_updating_graph_mask, sizeof(bool)*no_of_nodes, cudaMemcpyHostToDevice);
 
     //Copy the Visited nodes array to device memory
@@ -263,6 +265,36 @@ void BFSGraph(int argc, char** argv)
 
         Kernel<<< grid, threads, 0 >>>(d_graph_nodes, d_graph_edges, d_graph_mask, 
                                       d_updating_graph_mask, d_graph_visited, d_cost, no_of_nodes);
+
+        cudaMemcpy(h_updating_graph_mask, d_updating_graph_mask, sizeof(bool)*no_of_nodes, cudaMemcpyDeviceToHost);
+        //calculate the sparsity of the graph.
+        unsigned int active_nodes = 0;
+        for (int i = 0; i < no_of_nodes; i++) {
+            if(h_updating_graph_mask[i]) {
+                active_nodes++;
+            }
+        }
+        float sparsity = (float)active_nodes / no_of_nodes;
+        printf("Active nodes for BFS Kernel 2: %u, Total Sparsity: %.2f%%\n", active_nodes, sparsity * 100.0);
+        //calculate effiective warp sparsity. If warp sparsity is 0, then do not count into the sparsity.
+        //total 128 blocks with 512 threads per block, 32 threads per warp. So total 2048 blocks.
+        unsigned int effective_warp = 0;
+        for (int i = 0; i < no_of_nodes; i += 32) {
+            unsigned int warp_active_nodes = 0;
+            for (int j = 0; j < 32 && (i + j) < no_of_nodes; j++) {
+                if(h_updating_graph_mask[i + j]) {
+                    effective_warp++;
+                    break;
+                }
+            }
+        }
+        float effective_warp_sparsity = (float)active_nodes/(effective_warp*32);
+        printf("Effective warp active nodes for BFS Kernel 2: %u, Effective warp sparsity: %.2f%%\n", 
+               effective_warp, effective_warp_sparsity * 100.0);
+
+        //calculate instrcutions overhead.
+        unsigned int total_instructions = active_nodes*28+ (no_of_nodes-active_nodes)*17;
+        printf("Total instructions should be executed for BFS Kernel 2: %u\n", total_instructions);
 
         Kernel2<<< grid, threads, 0 >>>(d_graph_mask, d_updating_graph_mask, 
                                        d_graph_visited, d_over, no_of_nodes);

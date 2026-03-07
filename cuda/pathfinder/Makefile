@@ -8,7 +8,7 @@ SRC = pathfinder.cu
 EXE = pathfinder
 
 release:
-	$(CC) $(SRC) -o $(EXE) -I$(INCLUDE) -L$(CUDA_LIB_DIR) 
+	$(CC) $(SRC) -o $(EXE) -I$(INCLUDE) -L$(CUDA_LIB_DIR) -cudart shared 
 
 clang: $(SRC)
 	clang++ $(SRC) -o $(EXE) -I../util --cuda-gpu-arch=sm_20 \

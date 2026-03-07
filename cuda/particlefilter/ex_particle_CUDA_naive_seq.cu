@@ -29,7 +29,7 @@ int A = 1103515245;
 */
 int C = 12345;
 
-const int threads_per_block = 128;
+const int threads_per_block = 256;
 
 /*****************************
 *GET_TIME

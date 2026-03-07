@@ -1,0 +1,21 @@
+ptxas info    : 272 bytes gmem
+ptxas info    : Compiling entry function '_Z17likelihood_kernelPdS_S_S_S_PiS0_S_PhS_S_iiiiiiS0_S_' for 'sm_52'
+ptxas info    : Function properties for _Z17likelihood_kernelPdS_S_S_S_PiS0_S_PhS_S_iiiiiiS0_S_
+    48 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
+ptxas info    : Used 42 registers, 4096 bytes smem, 448 bytes cmem[0], 384 bytes cmem[2]
+ptxas info    : Function properties for __internal_accurate_pow
+    0 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
+ptxas info    : Function properties for __internal_trig_reduction_slowpathd
+    0 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
+ptxas info    : Compiling entry function '_Z10sum_kernelPdi' for 'sm_52'
+ptxas info    : Function properties for _Z10sum_kernelPdi
+    0 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
+ptxas info    : Used 30 registers, 332 bytes cmem[0]
+ptxas info    : Compiling entry function '_Z24normalize_weights_kernelPdiS_S_S_Pi' for 'sm_52'
+ptxas info    : Function properties for _Z24normalize_weights_kernelPdiS_S_S_Pi
+    0 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
+ptxas info    : Used 26 registers, 16 bytes smem, 368 bytes cmem[0], 60 bytes cmem[2]
+ptxas info    : Compiling entry function '_Z17find_index_kernelPdS_S_S_S_S_S_i' for 'sm_52'
+ptxas info    : Function properties for _Z17find_index_kernelPdS_S_S_S_S_S_i
+    0 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
+ptxas info    : Used 10 registers, 380 bytes cmem[0]

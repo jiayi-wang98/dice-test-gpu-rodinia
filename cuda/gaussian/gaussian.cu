@@ -41,7 +41,7 @@
 #elif defined(RD_WG_SIZE)
         #define BLOCK_SIZE_XY RD_WG_SIZE
 #else
-        #define BLOCK_SIZE_XY 4
+        #define BLOCK_SIZE_XY 16
 #endif
 
 #ifdef TIMING
@@ -59,8 +59,9 @@ float init_time = 0, mem_alloc_time = 0, h2d_time = 0, kernel_time = 0,
 int Size;
 float *a, *b, *finalVec;
 float *m;
-static int max_iterations = 1;	// max iterations for cuda kernel call
+static int max_iterations = 10;	// max iterations for cuda kernel call
 static int cuda_kernel_called_times = 0;	// max iterations for cuda kernel call
+int t_step = 20;
 
 FILE *fp;
 
@@ -114,10 +115,11 @@ int main(int argc, char *argv[])
     int i, j;
     char flag;
     if (argc < 2) {
-        printf("Usage: gaussian -f filename / -s size [-q]\n\n");
+        printf("Usage: gaussian -f filename / -s size [-t step] [-q]\n\n");
         printf("-q (quiet) suppresses printing the matrix and result values.\n");
         printf("-f (filename) path of input file\n");
         printf("-s (size) size of matrix. Create matrix and rhs in this program \n");
+        printf("-t (step) loop increment for the Gaussian elimination outer loop (default: 20)\n");
         printf("The first line of the file contains the dimension of the matrix, n.");
         printf("The second line of the file is a newline.\n");
         printf("The next n lines contain n tab separated values for the matrix.");
@@ -169,9 +171,23 @@ int main(int argc, char *argv[])
             case 'q': // quiet
 	      verbose = 0;
               break;
+            case 't':
+              i++;
+              if (i >= argc) {
+                fprintf(stderr, "Missing value for -t\n");
+                exit(1);
+              }
+              t_step = atoi(argv[i]);
+              if (t_step <= 0) {
+                fprintf(stderr, "Invalid -t value %s; expected a positive integer\n", argv[i]);
+                exit(1);
+              }
+              break;
 	  }
       }
     }
+
+    printf("Using t_step = %d\n", t_step);
 
     //InitProblemOnce(filename);
     InitPerRun();
@@ -312,9 +328,9 @@ __global__ void Fan1(float *m_cuda, float *a_cuda, int Size, int t)
 {   
 	//if(threadIdx.x + blockIdx.x * blockDim.x >= Size-1-t) printf(".");
 	//printf("blockIDx.x:%d,threadIdx.x:%d,Size:%d,t:%d,Size-1-t:%d\n",blockIdx.x,threadIdx.x,Size,t,Size-1-t);
-
-	if(threadIdx.x + blockIdx.x * blockDim.x >= Size-1-t) return;
-	*(m_cuda+Size*(blockDim.x*blockIdx.x+threadIdx.x+t+1)+t) = *(a_cuda+Size*(blockDim.x*blockIdx.x+threadIdx.x+t+1)+t) / *(a_cuda+Size*t+t);
+	int tid= threadIdx.x + blockIdx.x * blockDim.x;
+	if(tid >= Size-1-t) return;
+	*(m_cuda+Size*(tid+t+1)+t) = *(a_cuda+Size*(tid+t+1)+t) / *(a_cuda+Size*t+t);
 }
 
 /*-------------------------------------------------------
@@ -395,7 +411,9 @@ void ForwardSub()
     // begin timing kernels
     struct timeval time_start;
     gettimeofday(&time_start, NULL);
-	for (t=0; t<(Size-1); t++) {
+	//for (t=0; t<(Size-1); t++) {
+	//to test performance for different size
+	for (t=0; t<(Size-1); t+=t_step) {
 		Fan1<<<dimGrid,dimBlock>>>(m_cuda,a_cuda,Size,t);
 		cudaThreadSynchronize();
 		Fan2<<<dimGridXY,dimBlockXY>>>(m_cuda,a_cuda,b_cuda,Size,Size-t,t);
@@ -424,7 +442,7 @@ void ForwardSub()
 
     // CPU Fan1 and Fan2
 	int iterations = 0;
-    for (t = 0; t < Size - 1; t++) {
+    for (t = 0; t < Size - 1; t+=t_step) {
         for (int i = t + 1; i < Size; ++i) {
             m_cpu[i * Size + t] = a_cpu[i * Size + t] / a_cpu[t * Size + t];
         }
@@ -582,4 +600,3 @@ void checkCUDAError(const char *msg)
         exit(EXIT_FAILURE);
     }                         
 }
-

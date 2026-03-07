@@ -1,6 +1,6 @@
 include ../../common/make.config
 
-ASAN_FLAGS := -fsanitize=address -fno-omit-frame-pointer -lstdc++
+ASAN_FLAGS := -lstdc++
 # C compiler
 CC = gcc
 CC_FLAGS = -g -fopenmp -O2 $(ASAN_FLAGS)
@@ -13,7 +13,7 @@ NVCC_FLAGS = -I$(CUDA_DIR)/include
 ifeq ($(dbg),1)
 	NVCC_FLAGS += -g -O0
 else
-	NVCC_FLAGS += -O2 -cudart shared -Xcompiler "-fsanitize=address -fno-omit-frame-pointer" 
+	NVCC_FLAGS += -O2 -cudart shared 
 endif
 
 # 'make emu=1' compiles the CUDA kernels for emulation

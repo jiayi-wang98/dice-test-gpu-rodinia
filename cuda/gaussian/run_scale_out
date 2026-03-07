@@ -1,0 +1,6 @@
+rm -f ./_app_*
+rm -f ./_cuobjdump_*
+rm -f ./gpgpusim_power_report__*
+T_STEP="${T_STEP:-30}"
+#./gaussian -f ../../data/gaussian/matrix208.txt -t "${T_STEP}"
+./gaussian -s 304 -t "${T_STEP}"

@@ -1832,6 +1832,135 @@ destroy_tree(node* root)
 	return NULL;
 }
 
+static int
+find_record_index_linear(const record *records, long records_elem, int key)
+{
+	long i;
+	for (i = 0; i < records_elem; i++) {
+		if (records[i].value == key) {
+			return (int)i;
+		}
+	}
+	return -1;
+}
+
+static int
+verify_findk_results(node *root, int count, const int *keys, const record *ans)
+{
+	int i;
+	int mismatch_count = 0;
+	int printed = 0;
+	const int max_print = 5;
+
+	for (i = 0; i < count; i++) {
+		record *cpu_record = find(root, keys[i], false);
+		int expected = (cpu_record != NULL) ? cpu_record->value : -1;
+		if (ans[i].value != expected) {
+			mismatch_count++;
+			if (printed < max_print) {
+				printf("[CPU-VERIFY][findK] mismatch q=%d key=%d gpu=%d cpu=%d\n",
+					   i, keys[i], ans[i].value, expected);
+				printed++;
+			}
+		}
+	}
+
+	return mismatch_count;
+}
+
+static int
+verify_findrangek_results(const record *records,
+						  long records_elem,
+						  int count,
+						  const int *start,
+						  const int *end,
+						  const int *recstart,
+						  const int *reclength)
+{
+	int i;
+	int mismatch_count = 0;
+	int printed = 0;
+	const int max_print = 5;
+
+	for (i = 0; i < count; i++) {
+		int s_idx = find_record_index_linear(records, records_elem, start[i]);
+		int e_idx = find_record_index_linear(records, records_elem, end[i]);
+		int expected_start = 0;
+		int expected_len = 0;
+		int ok = 1;
+		int j;
+
+		if (s_idx >= 0 && e_idx >= s_idx) {
+			expected_start = s_idx;
+			expected_len = e_idx - s_idx + 1;
+		}
+
+		if (recstart[i] != expected_start || reclength[i] != expected_len) {
+			ok = 0;
+		}
+
+		if (ok && expected_len > 0) {
+			if (recstart[i] < 0 || ((long)recstart[i] + (long)reclength[i]) > records_elem) {
+				ok = 0;
+			} else {
+				for (j = 0; j < expected_len; j++) {
+					if (records[recstart[i] + j].value != records[expected_start + j].value) {
+						ok = 0;
+						break;
+					}
+				}
+			}
+		}
+
+		if (!ok) {
+			mismatch_count++;
+			if (printed < max_print) {
+				printf("[CPU-VERIFY][findRangeK] mismatch q=%d range=[%d,%d] gpu_start=%d gpu_len=%d cpu_start=%d cpu_len=%d\n",
+					   i,
+					   start[i],
+					   end[i],
+					   recstart[i],
+					   reclength[i],
+					   expected_start,
+					   expected_len);
+				printed++;
+			}
+		}
+	}
+
+	return mismatch_count;
+}
+
+static void
+print_verify_ascii(int results_match)
+{
+	if (results_match) {
+		printf("CPU and GPU results match!\n");
+		printf("\n");
+		printf("       .-\"\"\"\"\"-.\n");
+		printf("     .'         '.\n");
+		printf("    :             :\n");
+		printf("   :    ^     ^    :\n");
+		printf("   :     .---.     :\n");
+		printf("    :   (     )   :\n");
+		printf("     '.  '---'  .'\n");
+		printf("       '-.....-'\n");
+		printf("\n");
+	} else {
+		printf("CPU and GPU results differ!\n");
+		printf("\n");
+		printf("**        **\n");
+		printf(" **      ** \n");
+		printf("  **    **  \n");
+		printf("   **  **   \n");
+		printf("   **  **   \n");
+		printf("  **    **  \n");
+		printf(" **      ** \n");
+		printf("**        **\n");
+		printf("\n");
+	}
+}
+
 //======================================================================================================================================================150
 //	END
 //======================================================================================================================================================150
@@ -1933,8 +2062,8 @@ main(	int argc,
      lSize = ftell (commandFile);
      rewind (commandFile);
 
-     // allocate memory to contain the whole file:
-     commandBuffer = (char*) malloc (sizeof(char)*lSize);
+     // allocate memory to contain the whole file plus a NUL terminator
+     commandBuffer = (char*) malloc (sizeof(char) * (lSize + 1));
      if (commandBuffer == NULL) {fputs ("Command Buffer memory error",stderr); exit (2);}
      
      // copy the file into the buffer:
@@ -1942,6 +2071,7 @@ main(	int argc,
      if (result != lSize) {fputs ("Command file reading error",stderr); exit (3);}
 
      /* the whole file is now loaded in the memory buffer. */
+     commandBuffer[lSize] = '\0';
 
   // terminate
      fclose (commandFile);
@@ -2024,10 +2154,13 @@ main(	int argc,
 	// process commands
 	// ------------------------------------------------------------60
 	char *commandPointer=commandBuffer;
+	int findk_run = 0;
+	int findrangek_run = 0;
 
 	printf("Waiting for command\n");
 	printf("> ");
-	while (sscanf(commandPointer, "%c", &instruction) != EOF) {
+	while (*commandPointer != '\0') {
+	  instruction = *commandPointer;
 	  commandPointer++;
 		switch (instruction) {
 			// ----------------------------------------40
@@ -2139,13 +2272,13 @@ main(	int argc,
 			// [GPU] find K (initK, findK)
 			// ----------------------------------------40
 
-			case 'k':
-			{
+				case 'k':
+				{
 
 				// get # of queries from user
 				int count;
 				sscanf(commandPointer, "%d", &count);
-				while(*commandPointer!=32 && commandPointer!='\n')
+				while(*commandPointer != 32 && *commandPointer != '\n' && *commandPointer != '\0')
 				  commandPointer++;
 
 				printf("\n ******command: k count=%d \n",count);
@@ -2195,20 +2328,33 @@ main(	int argc,
 				}
 
 				// CUDA kernel
-				kernel_gpu_cuda_wrapper(records,
-										records_mem,
-										knodes,
-										knodes_elem,
-										knodes_mem,
+					kernel_gpu_cuda_wrapper(records,
+											records_mem,
+											knodes,
+											knodes_elem,
+											knodes_mem,
 
 										order,
 										maxheight,
 										count,
 
 										currKnode,
-										offset,
-										keys,
-										ans);
+											offset,
+											keys,
+											ans);
+
+					findk_run++;
+					int findk_mismatch = verify_findk_results(root, count, keys, ans);
+					if (findk_mismatch == 0) {
+						printf("[CPU-VERIFY] findK run %d: PASS (%d/%d)\n", findk_run, count, count);
+						print_verify_ascii(1);
+					} else {
+						printf("[CPU-VERIFY] findK run %d: FAIL (%d/%d mismatches)\n",
+							   findk_run, findk_mismatch, count);
+						print_verify_ascii(0);
+						fprintf(stderr, "[CPU-VERIFY] ERROR: findK run %d failed; terminating.\n", findk_run);
+						exit(EXIT_FAILURE);
+					}
 
 				/* printf("ans: \n"); */
 				/* for(i = 0; i < count; i++){ */
@@ -2224,12 +2370,19 @@ main(	int argc,
 				    fputs ("Fail to open %s !\n",output);
 				  }
 				
-				fprintf(pFile,"\n ******command: k count=%d \n",count);
-				for(i = 0; i < count; i++){
-				  fprintf(pFile, "%d    %d\n",i, ans[i].value);
-				}
-				fprintf(pFile, " \n");
-                                fclose(pFile);
+					fprintf(pFile,"\n ******command: k count=%d \n",count);
+					for(i = 0; i < count; i++){
+					  fprintf(pFile, "%d    %d\n",i, ans[i].value);
+					}
+					if (findk_mismatch == 0) {
+						fprintf(pFile, "[CPU-VERIFY] findK run %d: PASS (%d/%d)\n",
+								findk_run, count, count);
+					} else {
+						fprintf(pFile, "[CPU-VERIFY] findK run %d: FAIL (%d/%d mismatches)\n",
+								findk_run, findk_mismatch, count);
+					}
+					fprintf(pFile, " \n");
+	                                fclose(pFile);
 				
 				// free memory
 				free(currKnode);
@@ -2269,25 +2422,28 @@ main(	int argc,
 			// [GPU] find Range K (initK, findRangeK)
 			// ----------------------------------------40
 
-			case 'j':
-			{
+				case 'j':
+				{
 
 				// get # of queries from user
 				int count;
 				sscanf(commandPointer, "%d", &count);
-				while(*commandPointer!=32 && commandPointer!='\n')
+				while(*commandPointer != 32 && *commandPointer != '\n' && *commandPointer != '\0')
 				  commandPointer++;
 
 				int rSize;
 				sscanf(commandPointer, "%d", &rSize);
-				while(*commandPointer!=32 && commandPointer!='\n')
+				while(*commandPointer != 32 && *commandPointer != '\n' && *commandPointer != '\0')
 				  commandPointer++;
 
-				printf("\n******command: j count=%d, rSize=%d \n",count, rSize);
-				if(rSize > size || rSize < 0) {
-				  printf("Search range size is larger than data set size %d.\n", (int)size);
-				  exit(0);
-				}
+					printf("\n******command: j count=%d, rSize=%d \n",count, rSize);
+					if(rSize > size || rSize < 0) {
+					  printf("Search range size is larger than data set size %d.\n", (int)size);
+					  exit(0);
+					}
+
+					record *records = (record *)mem;
+					long records_elem = (long)rootLoc / sizeof(record);
 
 				// INPUT: knodes CPU allocation (setting pointer in mem variable)
 				knode *knodes = (knode *)((long)mem + (long)rootLoc);
@@ -2347,9 +2503,9 @@ main(	int argc,
 				}
 
 				// CUDA kernel
-				kernel_gpu_cuda_wrapper_2(	knodes,
-											knodes_elem,
-											knodes_mem,
+					kernel_gpu_cuda_wrapper_2(	knodes,
+												knodes_elem,
+												knodes_mem,
 
 											order,
 											maxheight,
@@ -2360,9 +2516,29 @@ main(	int argc,
 											lastKnode,
 											offset_2,
 											start,
-											end,
-											recstart,
-											reclength);
+												end,
+												recstart,
+												reclength);
+
+					findrangek_run++;
+					int findrangek_mismatch = verify_findrangek_results(records,
+																 records_elem,
+																 count,
+																 start,
+																 end,
+																 recstart,
+																 reclength);
+					if (findrangek_mismatch == 0) {
+						printf("[CPU-VERIFY] findRangeK run %d: PASS (%d/%d)\n",
+							   findrangek_run, count, count);
+						print_verify_ascii(1);
+					} else {
+						printf("[CPU-VERIFY] findRangeK run %d: FAIL (%d/%d mismatches)\n",
+							   findrangek_run, findrangek_mismatch, count);
+						print_verify_ascii(0);
+						fprintf(stderr, "[CPU-VERIFY] ERROR: findRangeK run %d failed; terminating.\n", findrangek_run);
+						exit(EXIT_FAILURE);
+					}
 
 
 				pFile = fopen (output,"aw+");
@@ -2371,12 +2547,19 @@ main(	int argc,
 				    fputs ("Fail to open %s !\n",output);
 				  }
 
-				fprintf(pFile,"\n******command: j count=%d, rSize=%d \n",count, rSize);				
-				for(i = 0; i < count; i++){
-				  fprintf(pFile, "%d    %d    %d\n",i, recstart[i],reclength[i]);
-				}
-				fprintf(pFile, " \n");
-                                fclose(pFile);
+					fprintf(pFile,"\n******command: j count=%d, rSize=%d \n",count, rSize);				
+					for(i = 0; i < count; i++){
+					  fprintf(pFile, "%d    %d    %d\n",i, recstart[i],reclength[i]);
+					}
+					if (findrangek_mismatch == 0) {
+						fprintf(pFile, "[CPU-VERIFY] findRangeK run %d: PASS (%d/%d)\n",
+								findrangek_run, count, count);
+					} else {
+						fprintf(pFile, "[CPU-VERIFY] findRangeK run %d: FAIL (%d/%d mismatches)\n",
+								findrangek_run, findrangek_mismatch, count);
+					}
+					fprintf(pFile, " \n");
+	                                fclose(pFile);
 
 
 				// free memory

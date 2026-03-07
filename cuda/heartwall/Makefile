@@ -5,7 +5,7 @@ endif
 
 # link objects(binaries) together
 heartwall: main.o ./AVI/avilib.o ./AVI/avimod.o 
-	nvcc main.o ./AVI/avilib.o ./AVI/avimod.o -I/usr/local/cuda/include -lm -o heartwall
+	nvcc main.o ./AVI/avilib.o ./AVI/avimod.o -I/usr/local/cuda/include -lm -o heartwall -cudart shared
 
 # compile main function file into object (binary)
 main.o: main.cu kernel.cu define.c
