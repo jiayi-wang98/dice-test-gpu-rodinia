@@ -6,52 +6,77 @@ import matplotlib.colors as mcolors
 
 def parse_log_file(file_path):
     block_instances = []
-    
+
     patterns = {
         'FETCH_META': r'\[FETCH_(META_START|META_END)\]: Cycle (\d+), hw_cta=(\d+), Block=(\d+)',
         'FETCH_BITS': r'\[FETCH_(BITS_START|BITS_END)\]: Cycle (\d+), hw_cta=(\d+), Block=(\d+)',
         'DP_CGRA': r'\[(DISPATCH_START|CGRA_EXECU_END)\]: Cycle (\d+), hw_cta=(\d+), Block=(\d+)',
         'MEM_WRITEBACK': r'\[WRITEBACK_(START|END)\]: Cycle (\d+), hw_cta=(\d+), Block=(\d+), table_index=(\d+)'
     }
-    
+
     temp_stages = defaultdict(lambda: defaultdict(list))
-    
+
+    # Track most recent META_END per (hw_cta, block)
+    last_meta_end = {}
+
     try:
         with open(file_path, 'r') as file:
             for line in file:
                 for stage, pattern in patterns.items():
                     match = re.search(pattern, line)
-                    if match:
-                        event_type = match.group(1)
-                        cycle = int(match.group(2))
-                        hw_cta = int(match.group(3))
-                        block = int(match.group(4))
-                        table_index = int(match.group(5)) if stage == 'MEM_WRITEBACK' else None
-                        
-                        key = (hw_cta, block, table_index) if stage == 'MEM_WRITEBACK' else (hw_cta, block)
-                        
-                        if 'START' in event_type or event_type == 'DISPATCH_START':
-                            temp_stages[stage][key].append({'start': cycle})
-                        elif 'END' in event_type or event_type == 'CGRA_EXECU_END':
-                            for instance in reversed(temp_stages[stage][key]):
-                                if 'end' not in instance:
-                                    instance['end'] = cycle
-                                    block_instances.append({
-                                        'stage': stage,
-                                        'hw_cta': hw_cta,
-                                        'block': block,
-                                        'start': instance['start'],
-                                        'end': cycle,
-                                        'table_index': table_index if stage == 'MEM_WRITEBACK' else None
-                                    })
-                                    break
+                    if not match:
+                        continue
+
+                    event_type = match.group(1)
+                    cycle = int(match.group(2))
+                    hw_cta = int(match.group(3))
+                    block = int(match.group(4))
+                    table_index = int(match.group(5)) if stage == 'MEM_WRITEBACK' else None
+
+                    key = (hw_cta, block, table_index) if stage == 'MEM_WRITEBACK' else (hw_cta, block)
+
+                    # Record META_END cycle for fallback use
+                    if stage == 'FETCH_META' and event_type == 'META_END':
+                        last_meta_end[(hw_cta, block)] = cycle
+
+                    # START events
+                    if 'START' in event_type or event_type == 'DISPATCH_START':
+                        temp_stages[stage][key].append({'start': cycle})
+                        continue
+
+                    # END events
+                    if 'END' in event_type or event_type == 'CGRA_EXECU_END':
+
+                        # ---- Special case: BITS_END without BITS_START ----
+                        if stage == 'FETCH_BITS' and event_type == 'BITS_END':
+                            # Do we have any open start for this key?
+                            has_open_start = any('end' not in inst for inst in temp_stages[stage][key])
+                            if not has_open_start:
+                                # Synthesize start at META_END if available; otherwise at same cycle (0-length)
+                                synth_start = last_meta_end.get((hw_cta, block), cycle)
+                                temp_stages[stage][key].append({'start': synth_start})
+
+                        # Close the most recent open instance
+                        for instance in reversed(temp_stages[stage][key]):
+                            if 'end' not in instance:
+                                instance['end'] = cycle
+                                block_instances.append({
+                                    'stage': stage,
+                                    'hw_cta': hw_cta,
+                                    'block': block,
+                                    'start': instance['start'],
+                                    'end': cycle,
+                                    'table_index': table_index if stage == 'MEM_WRITEBACK' else None
+                                })
+                                break
+
     except FileNotFoundError:
         print(f"Error: File '{file_path}' not found")
         sys.exit(1)
     except Exception as e:
         print(f"Error reading file: {str(e)}")
         sys.exit(1)
-    
+
     return block_instances
 
 def extract_stats(file_path, output_file):

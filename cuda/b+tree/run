@@ -14,3 +14,4 @@ fi
 LD_PRELOAD=/usr/lib64/libasan.so.5 \
 ASAN_OPTIONS=detect_leaks=0:halt_on_error=0:abort_on_error=0 \
 ./b+tree.out file ../../data/b+tree/mil.txt command ../../data/b+tree/command.txt
+make

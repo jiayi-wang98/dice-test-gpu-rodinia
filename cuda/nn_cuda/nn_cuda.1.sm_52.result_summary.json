@@ -10,11 +10,16 @@
     "total_pgraph_count": 5,
     "total_non_mov_ops": 15,
     "avg_pgraph_size_non_mov_ops": 3.0,
+    "total_register_counts": {
+      "read": 9,
+      "write": 19,
+      "ld_dest": 7
+    },
     "avg_pgraph_utilization": {
-      "pe": 0.375,
-      "sfu": 0.2,
-      "ldst": 0.5,
-      "total": 0.366667
+      "pe": 0.458333,
+      "sfu": 0.166667,
+      "ldst": 0.666667,
+      "total": 0.444444
     }
   },
   "kernels": [
@@ -31,11 +36,16 @@
         "sfu": 1,
         "ldst": 3
       },
+      "total_register_counts": {
+        "read": 9,
+        "write": 19,
+        "ld_dest": 7
+      },
       "avg_pgraph_utilization": {
-        "pe": 0.375,
-        "sfu": 0.2,
-        "ldst": 0.5,
-        "total": 0.366667
+        "pe": 0.458333,
+        "sfu": 0.166667,
+        "ldst": 0.666667,
+        "total": 0.444444
       }
     }
   ]

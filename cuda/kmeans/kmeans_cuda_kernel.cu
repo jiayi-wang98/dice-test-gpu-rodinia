@@ -70,6 +70,7 @@ kmeansPoint(float  *features,			/* in: [npoints*nfeatures] */
 		float dist;													/* distance square between a point to cluster center */
 		
 		/* find the cluster center id with min distance to pt */
+		#pragma unroll 1
 		for (i=0; i<nclusters; i++) {
 			int cluster_base_index = i*nfeatures;					/* base index of cluster centers for inverted array */			
 			float ans=0.0;												/* Euclidean distance sqaure */
@@ -156,6 +157,7 @@ kmeansPoint(float  *features,			/* in: [npoints*nfeatures] */
 
 	if(threadIdx.x < nfeatures * nclusters) {
 		// accumulate over all the elements of this threadblock 
+		#pragma unroll 1
 		for(int i = 0; i< (THREADS_PER_BLOCK); i++) {
 			float val = tex1Dfetch(t_features_flipped,new_base_index+i*nfeatures);
 			if(new_center_ids[i] == center_id) 

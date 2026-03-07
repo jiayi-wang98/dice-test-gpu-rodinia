@@ -98,41 +98,46 @@ mad.lo.s32 %r2, %w2, %w1, %w0;
 sub.s32 %w3, %c3, %c4;
 setp.ge.u32 %p1, %r2, %w3;
 or.pred %p3, %p0, %p1;
+@%p3 bra $DICE_BB1_7;
+
+$DICE_BB1_2:
 cvta.to.global.u64 %w0, %c1;
 add.s32 %r3, %r1, 1;
 add.s32 %w1, %r3, %c4;
 mul.lo.s32 %w2, %w1, %c3;
 add.s32 %w3, %w2, %c4;
-@!%p3 mul.wide.s32 %w4, %w3, 4;
-@!%p3 add.s64 %w5, %r0, %w4;
+mul.wide.s32 %w4, %w3, 4;
+add.s64 %w5, %r0, %w4;
 add.s32 %w6, %r2, %c4;
 mad.lo.s32 %w7, %c4, %c3, %w6;
 mul.wide.s32 %w8, %w7, 4;
 add.s64 %w9, %w0, %w8;
-@!%p3 ld.global.f32 %r4, [%w9];
-@!%p3 ld.global.f32 %r5, [%w5];
+ld.global.f32 %r4, [%w9];
+ld.global.f32 %r5, [%w5];
 add.s32 %w10, %w2, %w6;
-@!%p3 cvt.s64.s32 %r6, %w10;
-@!%p3 mul.wide.s32 %w11, %w10, 4;
-@!%p3 add.s64 %r7, %w0, %w11;
-@!%p3 ld.global.f32 %r8, [%r7];
+cvt.s64.s32 %r6, %w10;
+mul.wide.s32 %w11, %w10, 4;
+add.s64 %r7, %w0, %w11;
+ld.global.f32 %r8, [%r7];
 setp.ne.s32 %p2, %r2, 0;
-@!%p2 shl.b64 %w0, %r6, 2;
-@!%p2 add.s64 %w1, %r0, %w0;
-@!%p2 cvta.to.global.u64 %w2, %c2;
-@!%p2 mul.wide.s32 %w3, %c4, 4;
-@!%p2 add.s64 %w4, %w2, %w3;
-@!%p2 ld.global.f32 %r1, [%w4];
-@!%p2 ld.global.f32 %r2, [%w1];
-@!%p2 mul.wide.s32 %w5, %r3, 4;
-@!%p2 add.s64 %r11, %w4, %w5;
-@!%p2 ld.global.f32 %r6, [%r11];
-@%p3 bra $DICE_BB1_7;
+@%p2 bra $DICE_BB1_6;
+
+$DICE_BB1_3:
+shl.b64 %w0, %r6, 2;
+add.s64 %w1, %r0, %w0;
+cvta.to.global.u64 %w2, %c2;
+mul.wide.s32 %w3, %c4, 4;
+add.s64 %w4, %w2, %w3;
+ld.global.f32 %r1, [%w4];
+ld.global.f32 %r2, [%w1];
+mul.wide.s32 %w5, %r3, 4;
+add.s64 %r11, %w4, %w5;
+ld.global.f32 %r6, [%r11];
 
 $DICE_BB1_6:
 mul.f32 %w0, %r5, %r4;
 sub.f32 %w1, %r8, %w0;
-@!%p3 st.global.f32 [%r7], %w1;
+st.global.f32 [%r7], %w1;
 mul.f32 %w0, %r2, %r1;
 sub.f32 %w1, %r6, %w0;
 @!%p2 st.global.f32 [%r11], %w1;

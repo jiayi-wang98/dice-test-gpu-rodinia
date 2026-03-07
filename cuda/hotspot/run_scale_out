@@ -1,0 +1,5 @@
+rm -f ./_app_*
+rm -f ./_cuobjdump_*
+rm -f ./gpgpusim_power_report__*
+#./hotspot 64 4 8 ../../data/hotspot/temp_64 ../../data/hotspot/power_64 output.out
+./hotspot 512 2 2 ../../data/hotspot/temp_512 ../../data/hotspot/power_512 output.out

@@ -15,21 +15,22 @@
 # -----------------------------
 app          ?= nn_cuda
 test         ?= test_dice     # or test_gpu
+RUN_SCRIPT   ?= run_scale_out
 
 BENCH_DIR    := ../$(app)
 CFG_DIR      := cfg
-SW_DIR       := sw_20pe
+SW_DIR       := sw_rtx3070
 SUMMARY_DIR  := result_summary/$(app)
 
 # DICE compiler (used to auto-generate missing app.N artifacts)
 DICE_ILP_DIR ?= /data/jwang710/dice-ilp
 DICE_TOOL    ?= $(DICE_ILP_DIR)/DICETool.py
 DICE_CFG     ?= $(DICE_ILP_DIR)/config/non_ilp_config.json
-# 1: regenerate per-slot pptx/meta from PTX via DICETool
+# 1: regenerate per-slot pptx/meta from PTX via DICETool (do not modify SW_DIR)
 
 
 # 0: copy-only from SW_DIR (no DICETool invocation)
-DICE_REGEN   ?= 1
+DICE_REGEN   ?= 0
 
 # How many apps to run in parallel (only used if you run without -j at top)
 JOBS ?= $(shell nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 8)
@@ -38,7 +39,11 @@ JOBS ?= $(shell nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 8)
 # Config files for each test type
 # -----------------------------
 CFG_gpu      := $(CFG_DIR)/gpgpusim_gpu.config
-CFG_dice     := $(CFG_DIR)/gpgpusim_dice_rtx2060s.config
+CFG_dice     := $(CFG_DIR)/gpgpusim_dice_rtx3070.config
+
+# Metadata & pptx (only for dice)
+META_SRC     := $(SW_DIR)/$(app).1.sm_52.meta
+PPTX_SRC     := $(SW_DIR)/$(app).1.sm_52.pptx
 
 # -----------------------------
 # Logs
@@ -168,37 +173,28 @@ endif
 # Copy metadata & pptx (only for dice)
 copy_meta:
 ifeq ($(test),test_dice)
+ifeq ($(DICE_REGEN),0)
+	@echo "==> Copying metadata and PPTX into $(BENCH_DIR)..."
+	@cp $(META_SRC) $(BENCH_DIR)/
+	@cp $(PPTX_SRC) $(BENCH_DIR)/
+else
 	@echo "==> Syncing metadata and PPTX into $(BENCH_DIR)..."
-	@mkdir -p $(SW_DIR)
 	@rm -f $(BENCH_DIR)/$(app).*.sm_52.meta $(BENCH_DIR)/$(app).*.sm_52.pptx
 	@ptx_files=$$(ls $(BENCH_DIR)/$(app).*.sm_52.ptx 2>/dev/null | sort -V); \
-	if [ "$(DICE_REGEN)" = "0" ]; then \
-		echo "    Copy-only mode: using pre-generated artifacts from $(SW_DIR)"; \
-		find $(SW_DIR) -maxdepth 1 -type f \( -name "$(app).*.sm_52.meta" -o -name "$(app).*.sm_52.pptx" \) -exec cp {} $(BENCH_DIR)/ \;; \
-	fi; \
 	src_stems=""; \
 	for ptx in $$ptx_files; do \
 		[ -f "$$ptx" ] || continue; \
 		stem=$${ptx##*/}; stem=$${stem%.ptx}; \
 		if ! grep -Eq '^[[:space:]]*([.]visible[[:space:]]+)?[.]entry[[:space:]]' "$$ptx"; then \
-			rm -f $(BENCH_DIR)/$$stem.meta $(BENCH_DIR)/$$stem.pptx $(SW_DIR)/$$stem.meta $(SW_DIR)/$$stem.pptx; \
+			rm -f $(BENCH_DIR)/$$stem.meta $(BENCH_DIR)/$$stem.pptx; \
 			continue; \
 		fi; \
-		if [ "$(DICE_REGEN)" = "0" ]; then \
-			if [ ! -f $(BENCH_DIR)/$$stem.meta ] || [ ! -f $(BENCH_DIR)/$$stem.pptx ]; then \
-				echo "[ERROR] Missing pre-generated $$stem.{pptx,meta} in $(SW_DIR)"; \
-				exit 1; \
-			fi; \
-		else \
-			echo "    Regenerating $$stem.{pptx,meta} from PTX"; \
-			ptx_abs=$$(realpath "$$ptx"); \
-			( cd $(DICE_ILP_DIR) && python3 $(DICE_TOOL) -opt -i "$$ptx_abs" --cfg_file $(DICE_CFG) ); \
-			if [ ! -f $(BENCH_DIR)/$$stem.meta ] || [ ! -f $(BENCH_DIR)/$$stem.pptx ]; then \
-				echo "[ERROR] DICE generation failed for $$stem"; \
-				exit 1; \
-			fi; \
-			cp $(BENCH_DIR)/$$stem.meta $(SW_DIR)/; \
-			cp $(BENCH_DIR)/$$stem.pptx $(SW_DIR)/; \
+		echo "    Regenerating $$stem.{pptx,meta} from PTX"; \
+		ptx_abs=$$(realpath "$$ptx"); \
+		( cd $(DICE_ILP_DIR) && python3 $(DICE_TOOL) -opt -i "$$ptx_abs" --cfg_file $(DICE_CFG) ); \
+		if [ ! -f $(BENCH_DIR)/$$stem.meta ] || [ ! -f $(BENCH_DIR)/$$stem.pptx ]; then \
+			echo "[ERROR] DICE generation failed for $$stem"; \
+			exit 1; \
 		fi; \
 		src_stems="$$src_stems $$stem"; \
 	done; \
@@ -206,11 +202,9 @@ ifeq ($(test),test_dice)
 		for ptx in $$ptx_files; do \
 			[ -f "$$ptx" ] || continue; \
 			stem=$${ptx##*/}; stem=$${stem%.ptx}; \
-			rm -f $(BENCH_DIR)/$$stem.meta $(BENCH_DIR)/$$stem.pptx $(SW_DIR)/$$stem.meta $(SW_DIR)/$$stem.pptx; \
+			rm -f $(BENCH_DIR)/$$stem.meta $(BENCH_DIR)/$$stem.pptx; \
 		done; \
 		echo "    Pruned stale slots (no kernel entry PTX found)"; \
-	elif [ "$(DICE_REGEN)" = "0" ]; then \
-		echo "    Using pre-generated slot artifacts from $(SW_DIR) (no regeneration/combine)"; \
 	else \
 		set -- $$src_stems; first_src_stem=$$1; \
 		combined_stem=$(app).all.sm_52; \
@@ -242,12 +236,11 @@ ifeq ($(test),test_dice)
 			stem=$${ptx##*/}; stem=$${stem%.ptx}; \
 			cp $$combined_meta $(BENCH_DIR)/$$stem.meta; \
 			cp $$combined_pptx $(BENCH_DIR)/$$stem.pptx; \
-			cp $(BENCH_DIR)/$$stem.meta $(SW_DIR)/; \
-			cp $(BENCH_DIR)/$$stem.pptx $(SW_DIR)/; \
 		done; \
 		rm -f $$combined_meta $$combined_pptx; \
 		echo "    Duplicated combined metadata/PPTX to all slots for $(app)"; \
 	fi
+endif
 else
 	@echo "==> Skipping metadata/pptx for GPU test"
 endif
@@ -261,7 +254,11 @@ build:
 # Run the benchmark
 run:
 	@echo "==> Running $(app) ($(test))..."
-	-@cd $(BENCH_DIR) && . ./run >$(STD_LOGFILE) 2>$(ASAN_LOGFILE)
+	@if [ ! -f "$(BENCH_DIR)/$(RUN_SCRIPT)" ]; then \
+		echo "[ERROR] Missing run script: $(BENCH_DIR)/$(RUN_SCRIPT)"; \
+		exit 1; \
+	fi
+	-@cd $(BENCH_DIR) && . ./$(RUN_SCRIPT) >$(STD_LOGFILE) 2>$(ASAN_LOGFILE)
 	@echo "    Stdout log: $(BENCH_DIR)/$(STD_LOGFILE)"
 	@echo "    ASan   log: $(BENCH_DIR)/$(ASAN_LOGFILE)"
 	@mkdir -p $(SUMMARY_DIR)
@@ -274,13 +271,16 @@ collect:
 	@python3 collect_data.py $(SUMMARY_DIR)/$(STD_LOGFILE) $(SUMMARY_DIR) --$(test)
 
 timeline:
-	@echo "==> Generating timeline for $(app)..."
-	@log_file=$$(find $(SUMMARY_DIR) -type f -name "test_dice_*.log" ! -name "*_asan.log" | head -n 1); \
-	if [ -z "$$log_file" ]; then \
-		echo "No suitable log file found for test_dice."; \
-	else \
-		echo "Using log file: $$log_file"; \
-		python3 create_timeline.py $$log_file; \
+	@echo "==> Generating timelines from logs in $(SUMMARY_DIR)..."
+	@set -e; \
+	found=0; \
+	for log_file in $$(find "$(SUMMARY_DIR)" -type f -name "test_dice_*.log" ! -name "*_asan.log" | sort); do \
+		found=1; \
+		echo "  $$log_file"; \
+		python3 create_timeline.py "$$log_file"; \
+	done; \
+	if [ $$found -eq 0 ]; then \
+		echo "No suitable log files found under $(SUMMARY_DIR)."; \
 	fi
 
 # Clean up configs, logs, builds, and summary dir for the given app
@@ -304,7 +304,18 @@ clean_all:
 # Full sequences (single app)
 # -----------------------------
 test_dice:
-	$(MAKE) test=test_dice copy_config copy_meta build run collect
+	@stamp=$$(date +%Y%m%d_%H%M%S); \
+	log_suffix=test_dice_$$stamp; \
+	$(MAKE) test=test_dice LOG_SUFFIX=$$log_suffix copy_config; \
+	$(MAKE) test=test_dice LOG_SUFFIX=$$log_suffix copy_meta; \
+	$(MAKE) test=test_dice LOG_SUFFIX=$$log_suffix build; \
+	$(MAKE) test=test_dice LOG_SUFFIX=$$log_suffix run; \
+	$(MAKE) test=test_dice LOG_SUFFIX=$$log_suffix collect
 
 test_gpu:
-	$(MAKE) test=test_gpu copy_config build run collect
+	@stamp=$$(date +%Y%m%d_%H%M%S); \
+	log_suffix=test_gpu_$$stamp; \
+	$(MAKE) test=test_gpu LOG_SUFFIX=$$log_suffix copy_config; \
+	$(MAKE) test=test_gpu LOG_SUFFIX=$$log_suffix build; \
+	$(MAKE) test=test_gpu LOG_SUFFIX=$$log_suffix run; \
+	$(MAKE) test=test_gpu LOG_SUFFIX=$$log_suffix collect

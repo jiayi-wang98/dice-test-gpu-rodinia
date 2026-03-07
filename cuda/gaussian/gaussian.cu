@@ -61,7 +61,7 @@ float *a, *b, *finalVec;
 float *m;
 static int max_iterations = 10;	// max iterations for cuda kernel call
 static int cuda_kernel_called_times = 0;	// max iterations for cuda kernel call
-int t_step = 30;
+int t_step = 20;
 
 FILE *fp;
 
@@ -115,10 +115,11 @@ int main(int argc, char *argv[])
     int i, j;
     char flag;
     if (argc < 2) {
-        printf("Usage: gaussian -f filename / -s size [-q]\n\n");
+        printf("Usage: gaussian -f filename / -s size [-t step] [-q]\n\n");
         printf("-q (quiet) suppresses printing the matrix and result values.\n");
         printf("-f (filename) path of input file\n");
         printf("-s (size) size of matrix. Create matrix and rhs in this program \n");
+        printf("-t (step) loop increment for the Gaussian elimination outer loop (default: 20)\n");
         printf("The first line of the file contains the dimension of the matrix, n.");
         printf("The second line of the file is a newline.\n");
         printf("The next n lines contain n tab separated values for the matrix.");
@@ -170,9 +171,23 @@ int main(int argc, char *argv[])
             case 'q': // quiet
 	      verbose = 0;
               break;
+            case 't':
+              i++;
+              if (i >= argc) {
+                fprintf(stderr, "Missing value for -t\n");
+                exit(1);
+              }
+              t_step = atoi(argv[i]);
+              if (t_step <= 0) {
+                fprintf(stderr, "Invalid -t value %s; expected a positive integer\n", argv[i]);
+                exit(1);
+              }
+              break;
 	  }
       }
     }
+
+    printf("Using t_step = %d\n", t_step);
 
     //InitProblemOnce(filename);
     InitPerRun();
@@ -585,4 +600,3 @@ void checkCUDAError(const char *msg)
         exit(EXIT_FAILURE);
     }                         
 }
-

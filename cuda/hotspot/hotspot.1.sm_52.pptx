@@ -65,29 +65,25 @@ mov.u32 %w5, %ctaid.x;
 mul.lo.s32 %w6, %w2, %w5;
 sub.s32 %r1, %w6, %c6;
 mov.u32 %r2, %tid.y;
-add.s32 %r11, %r0, %r2;
+add.s32 %w7, %r0, %r2;
 mov.u32 %r3, %tid.x;
-add.s32 %r12, %r1, %r3;
-mad.lo.s32 %r4, %r11, %c4, %r12;
-shl.b32 %w5, %r2, 6;
+add.s32 %w8, %r1, %r3;
+mad.lo.s32 %r4, %w7, %c4, %w8;
+setp.gt.s32 %p0, %w7, -1;
+setp.lt.s32 %p1, %w7, %c5;
+and.pred %p2, %p0, %p1;
+setp.gt.s32 %p3, %w8, -1;
+setp.lt.s32 %p4, %w8, %c4;
+and.pred %p5, %p3, %p4;
+and.pred %p6, %p5, %p2;
+shl.b32 %r5, %r2, 6;
 mov.u32 %r6, _ZZ14calculate_tempiPfS_S_iiiiffffffE12temp_on_cuda;
-add.s32 %r7, %r6, %w5;
+add.s32 %r7, %r6, %r5;
 shl.b32 %r8, %r3, 2;
 add.s32 %r9, %r7, %r8;
 mov.u32 %w9, _ZZ14calculate_tempiPfS_S_iiiiffffffE13power_on_cuda;
-add.s32 %w10, %w9, %w5;
+add.s32 %w10, %w9, %r5;
 add.s32 %r10, %w10, %r8;
-setp.lt.s32 %p8, %c0, 1;
-@%p8 bra $DICE_BB0_19;
-
-$DICE_BB0_2:
-setp.gt.s32 %p0, %r11, -1;
-setp.lt.s32 %p1, %r11, %c5;
-and.pred %p2, %p0, %p1;
-setp.gt.s32 %p3, %r12, -1;
-setp.lt.s32 %p4, %r12, %c4;
-and.pred %p5, %p3, %p4;
-and.pred %p6, %p5, %p2;
 not.pred %p7, %p6, %p6;
 rcp.rn.f32 %w15, %c10;
 rcp.rn.f32 %w18, %c9;
@@ -101,51 +97,51 @@ add.s64 %w2, %w0, %w1;
 cvta.to.global.u64 %w3, %c1;
 add.s64 %w4, %w3, %w1;
 @!%p7 ld.global.f32 %r12, [%w4]; 
+//mov.u32 %w0, _ZZ14calculate_tempiPfS_S_iiiiffffffE6temp_t;
+//add.s32 %w1, %w0, %r5;
+//add.s32 %r11, %w1, %r8;
 setp.lt.s32 %p8, %c0, 1;
 
-$DICE_BB0_3:
+$DICE_BB0_5:
 @!%p7 st.shared.f32 [%r9], %r13;
 @!%p7 st.shared.f32 [%r10], %r12;
 mov.u16 %r31, 0;
 mov.u32 %r5, 0;
 neg.s32 %w0, %r0;
 shr.s32 %w1, %r0, 31;
-and.b32 %r11, %w1, %w0;
+and.b32 %w2, %w1, %w0;
 add.s32 %w31, %r0, 15;
 setp.lt.s32 %p31, %w31, %c5;
 mov.u32 %w3, -15;
 sub.s32 %w4, %w3, %r0;
 add.s32 %w5, %c5, %w4;
 add.s32 %w6, %w5, 14;
-selp.b32 %r12, 15, %w6, %p31;
-
-$DICE_BB0_4:
+selp.b32 %w7, 15, %w6, %p31;
 neg.s32 %w8, %r1;
 shr.s32 %w9, %r1, 31;
 and.b32 %r26, %w9, %w8;
 add.s32 %w30, %r1, 15;
 setp.lt.s32 %p30, %w30, %c4;
-mov.u32 %w3, -15;
 sub.s32 %w11, %w3, %r1;
 add.s32 %w12, %c4, %w11;
 add.s32 %w13, %w12, 14;
 selp.b32 %r22, 15, %w13, %p30;
-
-$DICE_BB0_5:
 add.s32 %w15, %r2, -1;
 add.s32 %w16, %r2, 1;
 setp.lt.s32 %p9, %r3, %r26;
-min.s32 %w19, %w16, %r12;
+min.s32 %w19, %w16, %w7;
 shl.b32 %w20, %w19, 6;
 add.s32 %r13, %r6, %w20;
-max.s32 %w21, %w15, %r11;
+max.s32 %w21, %w15, %w2;
 shl.b32 %w22, %w21, 6;
 add.s32 %r14, %r6, %w22;
 setp.gt.s32 %p10, %r3, %r22;
 or.pred %p11, %p10, %p9;
-setp.gt.s32 %p12, %r2, %r12;
-setp.lt.s32 %p13, %r2, %r11;
+setp.gt.s32 %p12, %r2, %w7;
+setp.lt.s32 %p13, %r2, %w2;
 or.pred %p14, %p12, %p13;
+@%p8 bra $DICE_BB0_19;
+
 
 $DICE_BB0_6:
 add.s32 %w17, %r3, -1;
@@ -179,7 +175,7 @@ or.pred %p22, %p21, %p17;
 @!%p22 ld.shared.f32 %r18, [%r10];
 @!%p22 ld.shared.f32 %r7, [%r24];
 @!%p22 ld.shared.f32 %r8, [%r23];
-@%p22 bra $DICE_BB0_11;
+@%p22 bra $DICE_BB0_10;
 
 $DICE_BB0_9:
 cvt.f64.f32 %w0, %r0;
@@ -204,15 +200,12 @@ cvt.f64.f32 %w13, %w12;
 add.f64 %w14, %w10, %w13;
 fma.rn.f64 %w15, %w14, %r6, %w0;
 cvt.rn.f32.f64 %r11, %w15;
-
-$DICE_BB0_11:
 @!%p22 mov.u16 %r31, 1;
 
 setp.eq.s32 %p23, %r28, -1;
 not.pred %p26, %p23;
-//setp.eq.s16 %p24, %r31, 0;
-//or.pred %p27, %p24, %p23;
-or.pred %p27, %p22, %p23;
+setp.eq.s16 %p24, %r31, 0;
+or.pred %p27, %p24, %p23;
 
 @!%p27 st.shared.f32 [%r9], %r11;
 add.s32 %r28, %r28, 1;

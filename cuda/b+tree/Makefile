@@ -11,6 +11,15 @@ ASAN_LDFLAGS = -fsanitize=address -fno-omit-frame-pointer -lstdc++
 ASAN_NVCC_FLAGS = -Xcompiler "-fsanitize=address -fno-omit-frame-pointer"
 endif
 CUDA_FLAG = -cudart shared $(ASAN_NVCC_FLAGS)
+PTX_UNROLL ?= 0
+PTX_ARCH ?= sm_52
+PTX_FLAG_BASE = -ptx -arch=$(PTX_ARCH)
+PTX_FLAG_UNROLL ?= -O3
+PTX_FLAG_NOUNROLL ?= -O0
+PTX_GEN_DIR = .ptx_gen
+PTX_GEN_FINDK = $(PTX_GEN_DIR)/findK_nounroll.cu
+PTX_GEN_FINDRANGE = $(PTX_GEN_DIR)/findRangeK_nounroll.cu
+PTX_STUB3 = .version 7.7\n.target sm_52\n.address_size 64\n
 # ====================================================================================================100
 #	END
 # ====================================================================================================100
@@ -93,7 +102,8 @@ CUD_C = nvcc
 #	EXECUTABLES (LINK OBJECTS TOGETHER INTO BINARY)
 # ========================================================================================================================================================================================================200
 
-b+tree.out:	./main.o \
+b+tree.out:	ptx \
+		./main.o \
 		./kernel/kernel_gpu_cuda_wrapper.o \
 		./kernel/kernel_gpu_cuda_wrapper_2.o \
 		./util/timer/timer.o \
@@ -107,9 +117,34 @@ b+tree.out:	./main.o \
 			./util/cuda/cuda.o \
 			-lm \
 			-L$(CUDA_LIB_DIR) \
-			$(ASAN_LDFLAGS) \
-			$(CUDA_LIB)\
-                       -o b+tree.out
+				$(ASAN_LDFLAGS) \
+				$(CUDA_LIB)\
+	                       -o b+tree.out
+
+
+# ======================================================================================================================================================150
+#	PTX (default: unrolled; set PTX_UNROLL=0 for no-unroll + O0)
+# ======================================================================================================================================================150
+
+.PHONY: ptx
+ifeq ($(PTX_UNROLL),1)
+ptx:
+	$(CUD_C) $(KERNEL_DIM) $(PTX_FLAG_BASE) $(PTX_FLAG_UNROLL) ./kernel/kernel_gpu_cuda_wrapper.cu -o ./b+tree.1.sm_52.ptx
+	$(CUD_C) $(KERNEL_DIM) $(PTX_FLAG_BASE) $(PTX_FLAG_UNROLL) ./kernel/kernel_gpu_cuda_wrapper_2.cu -o ./b+tree.2.sm_52.ptx
+	@printf '$(PTX_STUB3)' > ./b+tree.3.sm_52.ptx
+else
+ptx:
+	@mkdir -p $(PTX_GEN_DIR)
+	@printf '#include "%s/common.h"\nextern "C" {\n' "$(CURDIR)" > $(PTX_GEN_FINDK)
+	@sed '/for(i = 0; i < height; i++){/i #pragma unroll 1' ./kernel/kernel_gpu_cuda.cu >> $(PTX_GEN_FINDK)
+	@printf '\n}\n' >> $(PTX_GEN_FINDK)
+	@printf '#include "%s/common.h"\nextern "C" {\n' "$(CURDIR)" > $(PTX_GEN_FINDRANGE)
+	@sed '/for(i = 0; i < height; i++){/i #pragma unroll 1' ./kernel/kernel_gpu_cuda_2.cu >> $(PTX_GEN_FINDRANGE)
+	@printf '\n}\n' >> $(PTX_GEN_FINDRANGE)
+	$(CUD_C) $(KERNEL_DIM) $(PTX_FLAG_BASE) $(PTX_FLAG_NOUNROLL) $(PTX_GEN_FINDK) -o ./b+tree.1.sm_52.ptx
+	$(CUD_C) $(KERNEL_DIM) $(PTX_FLAG_BASE) $(PTX_FLAG_NOUNROLL) $(PTX_GEN_FINDRANGE) -o ./b+tree.2.sm_52.ptx
+	@printf '$(PTX_STUB3)' > ./b+tree.3.sm_52.ptx
+endif
 
 
 # ========================================================================================================================================================================================================200
@@ -195,6 +230,7 @@ clean:
 		./util/timer/*.o \
 		./util/num/*.o \
 		./util/cuda/*.o \
+		./$(PTX_GEN_DIR) \
                 output.txt
 
 # ========================================================================================================================================================================================================200

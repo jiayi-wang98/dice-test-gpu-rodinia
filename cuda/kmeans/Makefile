@@ -1,36 +1,67 @@
 include ../../common/make.config
 
 ASAN_FLAGS := -fsanitize=address -fno-omit-frame-pointer -lstdc++
+
 # C compiler
 CC = gcc
-CC_FLAGS = -g -fopenmp -O2 $(ASAN_FLAGS)
+CC_FLAGS = -g -fopenmp $(ASAN_FLAGS)
+
 # CUDA compiler
 NVCC = $(CUDA_DIR)/bin/nvcc
-NVCC_FLAGS = -I$(CUDA_DIR)/include 
+NVCC_INC = -I$(CUDA_DIR)/include
 
 # 'make dbg=1' enables NVCC debugging
+NVCC_FLAGS = $(NVCC_INC)
 ifeq ($(dbg),1)
 	NVCC_FLAGS += -g -O0 -cudart shared -Xcompiler "-fsanitize=address -fno-omit-frame-pointer"
 else
 	NVCC_FLAGS += -O2 -cudart shared -Xcompiler "-fsanitize=address -fno-omit-frame-pointer"
 endif
 
-# 'make emu=1' compiles the CUDA kernels for emulation
+# 'make emu=1' compiles the CUDA kernels for emulation (deprecated on modern CUDA)
 ifeq ($(emu),1)
-	NVCC_FLAGS += -deviceemu 
+	NVCC_FLAGS += -deviceemu
 endif
 
-kmeans: cluster.o getopt.o kmeans.o kmeans_clustering.o kmeans_cuda.o rmse.o
-	$(CC) $(CC_FLAGS) cluster.o getopt.o kmeans.o kmeans_clustering.o kmeans_cuda.o rmse.o -o kmeans -L$(CUDA_LIB_DIR) -lcuda -lcudart -lm
+# -----------------------------
+# PTX generation
+# -----------------------------
+# Usage:
+#   make ptx
+#   make ptx PTX_ARCH=sm_80
+#   make ptx PTX_ARCH=sm_75
+PTX_ARCH ?= sm_75
 
-kmeans.o:
-	$(CC) $(CC_FLAGS) kmeans.c kmeans.h -c
+# Disable loop unrolling in ptxas (best-effort)
+# (You can also add -O0 if you want: PTX_FLAGS := -ptx -O0 ...)
+PTX_FLAGS := -ptx -arch=$(PTX_ARCH) -Xptxas --disable-optimizer-unroll
+
+# For PTX, avoid host sanitizer flags; only keep include paths
+PTX_NVCC_FLAGS := $(NVCC_INC)
+
+# -----------------------------
+# Targets
+# -----------------------------
+all: kmeans
+
+kmeans: cluster.o getopt.o kmeans.o kmeans_clustering.o kmeans_cuda.o rmse.o
+	$(CC) $(CC_FLAGS) cluster.o getopt.o kmeans.o kmeans_clustering.o kmeans_cuda.o rmse.o \
+		-o kmeans -L$(CUDA_LIB_DIR) -lcuda -lcudart -lm
+
+# Build PTX
+ptx: kmeans_cuda.ptx
+
+kmeans_cuda.ptx: kmeans_cuda.cu
+	$(NVCC) $(PTX_NVCC_FLAGS) $(PTX_FLAGS) $< -o $@
+
+kmeans.o: kmeans.c kmeans.h
+	$(CC) $(CC_FLAGS) -c kmeans.c
 
 %.o: %.[ch]
-	$(CC) $(CC_FLAGS) $< -c
+	$(CC) $(CC_FLAGS) -c $<
 
-kmeans_cuda.o: kmeans_cuda.cu 
-	$(NVCC) $(NVCC_FLAGS) -c kmeans_cuda.cu
+kmeans_cuda.o: kmeans_cuda.cu
+	$(NVCC) $(NVCC_FLAGS) -c $< -o $@
 
 clean:
-	rm -f *.o *~ kmeans kmeans_cuda.linkinfo
+	rm -f *.o *~ kmeans kmeans_cuda.linkinfo kmeans_cuda.ptx

@@ -1,0 +1,42 @@
+{
+  "input_file": "/data/jwang710/dice-test-gpu-rodinia/cuda/hotspot/hotspot.1.sm_52.ptx",
+  "resource_limits": {
+    "pe_count": 16,
+    "sfu_count": 4,
+    "ldst_port_count": 4
+  },
+  "overall": {
+    "kernel_count": 1,
+    "total_pgraph_count": 18,
+    "total_non_mov_ops": 120,
+    "avg_pgraph_size_non_mov_ops": 6.666667,
+    "avg_pgraph_utilization": {
+      "pe": 0.609375,
+      "sfu": 0.0625,
+      "ldst": 0.453125,
+      "total": 0.492187
+    }
+  },
+  "kernels": [
+    {
+      "function_id": 0,
+      "kernel_name": "_Z14calculate_tempiPfS_S_iiiiffffff",
+      "pgraph_count": 18,
+      "active_pgraph_count": 16,
+      "total_non_mov_ops": 120,
+      "avg_pgraph_size_non_mov_ops": 6.666667,
+      "avg_active_pgraph_size_non_mov_ops": 7.5,
+      "total_resource_ops": {
+        "pe": 104,
+        "sfu": 4,
+        "ldst": 12
+      },
+      "avg_pgraph_utilization": {
+        "pe": 0.609375,
+        "sfu": 0.0625,
+        "ldst": 0.453125,
+        "total": 0.492187
+      }
+    }
+  ]
+}

@@ -1,5 +1,0 @@
-ptxas info    : 0 bytes gmem
-ptxas info    : Compiling entry function 'findRangeK' for 'sm_52'
-ptxas info    : Function properties for findRangeK
-    0 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
-ptxas info    : Used 32 registers, 408 bytes cmem[0]
