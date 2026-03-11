@@ -33,23 +33,59 @@ def parse_log(log_path):
 
     entries = []
     current = None
+    pending_pushes = {}
+
+    def enqueue_push(kernel_name, grid_dim, block_dim):
+        pending_pushes.setdefault(kernel_name, []).append(
+            {
+                'gridDim': grid_dim,
+                'BlockDim': block_dim,
+            }
+        )
+
+    def dequeue_push(kernel_name):
+        queued = pending_pushes.get(kernel_name)
+        if not queued:
+            return None
+        push = queued.pop(0)
+        if not queued:
+            pending_pushes.pop(kernel_name, None)
+        return push
+
+    def finalize_current():
+        nonlocal current
+        if not current:
+            return
+        if 'gridDim' not in current or 'BlockDim' not in current:
+            push = dequeue_push(current['kernel_name'])
+            if push:
+                current.setdefault('gridDim', push['gridDim'])
+                current.setdefault('BlockDim', push['BlockDim'])
+        if 'kernel_launch_uid' in current:
+            entries.append(current)
+        current = None
 
     with open(log_path) as f:
         for line in f:
             m = patterns['kernel_push'].search(line)
             if m:
-                if current:
-                    entries.append(current)
+                enqueue_push(m.group('kernel'), m.group('grid'), m.group('block'))
+                continue
+            m = patterns['kernel_name'].search(line)
+            if m:
+                finalize_current()
                 current = {
-                    'kernel_name': m.group('kernel'),
-                    'gridDim': m.group('grid'),
-                    'BlockDim': m.group('block')
+                    'kernel_name': m.group('kernel_name'),
                 }
+                push = dequeue_push(current['kernel_name'])
+                if push:
+                    current['gridDim'] = push['gridDim']
+                    current['BlockDim'] = push['BlockDim']
                 continue
             if not current:
                 continue
             for key, pat in patterns.items():
-                if key == 'kernel_push':
+                if key in ('kernel_push', 'kernel_name'):
                     continue
                 m = pat.search(line)
                 if m:
@@ -59,8 +95,7 @@ def parse_log(log_path):
                         val = m.group(1)
                     current[key if key != 'kernel_name' else 'kernel_name'] = val
                     break
-        if current:
-            entries.append(current)
+        finalize_current()
     return entries
 
 

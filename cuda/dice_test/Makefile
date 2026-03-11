@@ -15,11 +15,11 @@
 # -----------------------------
 app          ?= nn_cuda
 test         ?= test_dice     # or test_gpu
-RUN_SCRIPT   ?= run_scale_out
+RUN_SCRIPT   ?= run
 
 BENCH_DIR    := ../$(app)
 CFG_DIR      := cfg
-SW_DIR       := sw_rtx3070
+SW_DIR       ?= sw_20pe
 SUMMARY_DIR  := result_summary/$(app)
 
 # DICE compiler (used to auto-generate missing app.N artifacts)
@@ -38,8 +38,8 @@ JOBS ?= $(shell nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 8)
 # -----------------------------
 # Config files for each test type
 # -----------------------------
-CFG_gpu      := $(CFG_DIR)/gpgpusim_gpu.config
-CFG_dice     := $(CFG_DIR)/gpgpusim_dice_rtx3070.config
+CFG_gpu      := $(CFG_DIR)/gpgpusim_gpu_rtx2060s.config
+CFG_dice     := $(CFG_DIR)/gpgpusim_dice_rtx2060s.config
 
 # Metadata & pptx (only for dice)
 META_SRC     := $(SW_DIR)/$(app).1.sm_52.meta
@@ -175,6 +175,9 @@ copy_meta:
 ifeq ($(test),test_dice)
 ifeq ($(DICE_REGEN),0)
 	@echo "==> Copying metadata and PPTX into $(BENCH_DIR)..."
+	@test -d "$(SW_DIR)" || { echo "[ERROR] Missing SW_DIR: $(SW_DIR)"; exit 1; }
+	@test -f "$(META_SRC)" || { echo "[ERROR] Missing metadata source: $(META_SRC)"; exit 1; }
+	@test -f "$(PPTX_SRC)" || { echo "[ERROR] Missing PPTX source: $(PPTX_SRC)"; exit 1; }
 	@cp $(META_SRC) $(BENCH_DIR)/
 	@cp $(PPTX_SRC) $(BENCH_DIR)/
 else
