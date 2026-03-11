@@ -1,5 +1,23 @@
 data/*
 !data/.gitkeep
+!data/bfs/
+data/bfs/*
+!data/bfs/graph65536.txt
+!data/bfs/graph128k.txt
+!data/gaussian/
+data/gaussian/*
+!data/gaussian/matrix208.txt
+!data/hotspot/
+data/hotspot/*
+!data/hotspot/temp_512
+!data/hotspot/power_512
+!data/nn/
+data/nn/*
+!data/nn/inputGen/
+data/nn/inputGen/*
+!data/nn/inputGen/cane512k.db
+!data/pathfinder/
+!data/pathfinder/.gitkeep
 
 *.o
 *.orig
