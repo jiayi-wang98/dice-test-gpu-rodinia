@@ -1,5 +1,6 @@
 include ../../common/make.config
 
+SHELL := /bin/bash
 LOCAL_CC = gcc -g -O3 -Wall
 CC := $(CUDA_DIR)/bin/nvcc
 GPGPU_SIM_ROOT ?= $(abspath ../../../gpgpu-sim_distribution)
