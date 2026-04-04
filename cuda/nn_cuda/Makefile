@@ -2,6 +2,8 @@ include ../../common/make.config
 
 LOCAL_CC = gcc -g -O3 -Wall
 CC := $(CUDA_DIR)/bin/nvcc
+GPGPU_SIM_ROOT ?= $(abspath ../../../gpgpu-sim_distribution)
+GPGPU_SIM_SETUP_ENV ?= $(GPGPU_SIM_ROOT)/setup_environment
 
 all : nn hurricane_gen
 
@@ -9,7 +11,7 @@ clean :
 	rm -rf *.o nn_cuda hurricane_gen
 
 nn : nn_cuda.cu
-	. /data/jwang710/gpgpu-sim_distribution/setup_environment && \
+	. $(GPGPU_SIM_SETUP_ENV) && \
 	$(CC) -o nn_cuda nn_cuda.cu -cudart shared 
 
 clang: $(SRC)
