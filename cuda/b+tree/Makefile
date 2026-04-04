@@ -1,16 +1,7 @@
 include ../../common/make.config
 
 CUDA_LIB =	-lcuda -lcudart
-ASAN ?= 0
-ASAN_CFLAGS =
-ASAN_LDFLAGS =
-ASAN_NVCC_FLAGS =
-ifeq ($(ASAN),1)
-ASAN_CFLAGS = -fsanitize=address -fno-omit-frame-pointer
-ASAN_LDFLAGS = -fsanitize=address -fno-omit-frame-pointer -lstdc++
-ASAN_NVCC_FLAGS = -Xcompiler "-fsanitize=address -fno-omit-frame-pointer"
-endif
-CUDA_FLAG = -cudart shared $(ASAN_NVCC_FLAGS)
+CUDA_FLAG = -cudart shared
 PTX_UNROLL ?= 0
 PTX_ARCH ?= sm_52
 PTX_FLAG_BASE = -ptx -arch=$(PTX_ARCH)
@@ -116,9 +107,7 @@ b+tree.out:	ptx \
 			./util/num/num.o \
 			./util/cuda/cuda.o \
 			-lm \
-			-L$(CUDA_LIB_DIR) \
-				$(ASAN_LDFLAGS) \
-				$(CUDA_LIB)\
+			-L$(CUDA_LIB_DIR) \				$(CUDA_LIB)\
 	                       -o b+tree.out
 
 
@@ -162,7 +151,6 @@ main.o:	./common.h \
 			-c \
 			-o ./main.o \
 			-O3 \
-			$(ASAN_CFLAGS)
 # ======================================================================================================================================================150
 #	KERNELS
 # ======================================================================================================================================================150
@@ -196,7 +184,6 @@ main.o:	./common.h \
 			-c \
 			-o ./util/timer/timer.o \
 			-O3 \
-			$(ASAN_CFLAGS)
 
 ./util/num/num.o:	./common.h \
 					./util/num/num.h \
@@ -205,7 +192,6 @@ main.o:	./common.h \
 			-c \
 			-o ./util/num/num.o \
 			-O3 \
-			$(ASAN_CFLAGS)
 
 ./util/cuda/cuda.o:	./common.h \
 					./util/cuda/cuda.h \

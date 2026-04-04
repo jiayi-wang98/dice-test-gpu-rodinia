@@ -5,12 +5,6 @@ LOCAL_CC = gcc -g -O3 -Wall
 CC := $(CUDA_DIR)/bin/nvcc
 DICE_GPGPU_SIM_ROOT ?= $(abspath ../../../dice_gpgpu-sim)
 DICE_SETUP_ENV ?= $(DICE_GPGPU_SIM_ROOT)/setup_environment
-ASAN ?= 0
-ASAN_NVCC_FLAGS =
-ifeq ($(ASAN),1)
-	ASAN_NVCC_FLAGS = -Xcompiler "-fsanitize=address -fno-omit-frame-pointer"
-endif
-
 all : nn hurricane_gen
 
 clean :
@@ -18,8 +12,8 @@ clean :
 
 nn : nn_cuda.cu
 	. $(DICE_SETUP_ENV) debug && \
-	$(CC) -cuda nn_cuda.cu -cudart shared $(ASAN_NVCC_FLAGS)
-	$(CC) -o nn nn_cuda.cu -cudart shared $(ASAN_NVCC_FLAGS)
+	$(CC) -cuda nn_cuda.cu -cudart shared
+	$(CC) -o nn nn_cuda.cu -cudart shared
 
 clang: $(SRC)
 	clang++ nn_cuda.cu -o nn -I../util --cuda-gpu-arch=sm_20 \

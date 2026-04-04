@@ -1,18 +1,8 @@
 include ../../common/make.config
 
-ASAN ?= 0
-ASAN_CFLAGS =
-ASAN_LDFLAGS =
-ASAN_NVCC_FLAGS =
-ifeq ($(ASAN),1)
-	ASAN_CFLAGS = -fsanitize=address -fno-omit-frame-pointer
-	ASAN_LDFLAGS = -fsanitize=address -fno-omit-frame-pointer -lstdc++
-	ASAN_NVCC_FLAGS = -Xcompiler "-fsanitize=address -fno-omit-frame-pointer"
-endif
-
 # C compiler
 CC = gcc
-CC_FLAGS = -g -fopenmp -O2 $(ASAN_CFLAGS)
+CC_FLAGS = -g -fopenmp -O2
 
 # CUDA compiler
 NVCC = $(CUDA_DIR)/bin/nvcc
@@ -22,7 +12,7 @@ NVCC_FLAGS = -I$(CUDA_DIR)/include
 ifeq ($(dbg),1)
 	NVCC_FLAGS += -g -O0
 else
-	NVCC_FLAGS += -O2 -cudart shared $(ASAN_NVCC_FLAGS)
+	NVCC_FLAGS += -O2 -cudart shared
 endif
 
 # 'make emu=1' compiles the CUDA kernels for emulation
@@ -32,7 +22,7 @@ endif
 
 
 backprop: backprop.o facetrain.o imagenet.o backprop_cuda.o 
-	$(CC) $(CC_FLAGS) backprop.o facetrain.o imagenet.o backprop_cuda.o -o backprop -L$(CUDA_LIB_DIR) -lcuda -lcudart $(ASAN_LDFLAGS) -lm
+	$(CC) $(CC_FLAGS) backprop.o facetrain.o imagenet.o backprop_cuda.o -o backprop -L$(CUDA_LIB_DIR) -lcuda -lcudart -lm
 
 %.o: %.[ch]
 	$(CC) $(CC_FLAGS) $< -c

@@ -1,11 +1,5 @@
 include ../../common/make.config
 
-ASAN ?= 0
-ASAN_NVCC_FLAGS =
-ifeq ($(ASAN),1)
-	ASAN_NVCC_FLAGS = -Xcompiler "-fsanitize=address -fno-omit-frame-pointer"
-endif
-
 NVCC = $(CUDA_DIR)/bin/nvcc
 
 NVCC_FLAGS = -I$(CUDA_DIR)/include
@@ -15,9 +9,9 @@ TARGET_G = streamcluster
 
 # make dbg=1 tells nvcc to add debugging symbols to the binary
 ifeq ($(dbg),1)
-	NVCC_FLAGS += -g -O0 -cudart shared $(ASAN_NVCC_FLAGS)
+	NVCC_FLAGS += -g -O0 -cudart shared
 else
-	NVCC_FLAGS += -O3 -cudart shared $(ASAN_NVCC_FLAGS)
+	NVCC_FLAGS += -O3 -cudart shared
 endif
 
 # make emu=1 compiles the CUDA kernels for emulation
