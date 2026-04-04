@@ -1,9 +1,8 @@
 include ../../common/make.config
 
-ASAN_FLAGS := -lstdc++
 # C compiler
 CC = gcc
-CC_FLAGS = -g -fopenmp -O2 $(ASAN_FLAGS)
+CC_FLAGS = -g -fopenmp -O2
 
 # CUDA compiler
 NVCC = $(CUDA_DIR)/bin/nvcc

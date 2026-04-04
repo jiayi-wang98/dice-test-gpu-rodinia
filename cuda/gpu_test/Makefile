@@ -30,7 +30,7 @@ NOW          := $(shell date +%Y%m%d_%H%M%S)
 LOG_SUFFIX   := $(strip $(test))_$(NOW)
 
 STD_LOGFILE  := $(LOG_SUFFIX).log
-ASAN_LOGFILE := $(LOG_SUFFIX)_asan.log
+STDERR_LOGFILE := $(LOG_SUFFIX)_stderr.log
 
 POWER_LOG_NAME := accelwattch_power_report.log
 POWER_SRC      := $(BENCH_DIR)/$(POWER_LOG_NAME)
@@ -79,12 +79,12 @@ run:
 		echo "[ERROR] Missing run script: $(BENCH_DIR)/$(RUN_SCRIPT)"; \
 		exit 1; \
 	fi
-	-@cd $(BENCH_DIR) && . ./$(RUN_SCRIPT) >$(STD_LOGFILE) 2>$(ASAN_LOGFILE)
+	-@cd $(BENCH_DIR) && . ./$(RUN_SCRIPT) >$(STD_LOGFILE) 2>$(STDERR_LOGFILE)
 	@echo "    Stdout log: $(BENCH_DIR)/$(STD_LOGFILE)"
-	@echo "    ASan   log: $(BENCH_DIR)/$(ASAN_LOGFILE)"
+	@echo "    Stderr log: $(BENCH_DIR)/$(STDERR_LOGFILE)"
 	@mkdir -p $(SUMMARY_DIR)
 	@cp $(BENCH_DIR)/$(STD_LOGFILE) $(SUMMARY_DIR)/$(STD_LOGFILE)
-	@cp $(BENCH_DIR)/$(ASAN_LOGFILE) $(SUMMARY_DIR)/$(ASAN_LOGFILE)
+	@cp $(BENCH_DIR)/$(STDERR_LOGFILE) $(SUMMARY_DIR)/$(STDERR_LOGFILE)
 
 # Collect data from the copied log
 collect:
@@ -109,7 +109,7 @@ power_all:
 
 timeline:
 	@echo "==> Generating timeline for $(app)..."
-	@log_file=$$(find $(SUMMARY_DIR) -type f -name "test_dice_*.log" ! -name "*_asan.log" | head -n 1); \
+	@log_file=$$(find $(SUMMARY_DIR) -type f -name "test_dice_*.log" ! -name "*_stderr.log" | head -n 1); \
 	if [ -z "$$log_file" ]; then \
 		echo "No suitable log file found for test_dice."; \
 	else \

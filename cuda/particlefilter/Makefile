@@ -9,10 +9,10 @@ INCLUDE := $(CUDA_DIR)/include
 all: naive float
 
 naive: ex_particle_CUDA_naive_seq.cu
-	$(CC) -I$(INCLUDE) -L$(CUDA_LIB_DIR) -lcuda -g -lm -O3 -use_fast_math ex_particle_CUDA_naive_seq.cu -o particlefilter_naive -cudart shared -Xcompiler "-fsanitize=address -fno-omit-frame-pointer"
+	$(CC) -I$(INCLUDE) -L$(CUDA_LIB_DIR) -lcuda -g -lm -O3 -use_fast_math ex_particle_CUDA_naive_seq.cu -o particlefilter_naive -cudart shared
 	
 float: ex_particle_CUDA_float_seq.cu
-	$(CC) -I$(INCLUDE) -L$(CUDA_LIB_DIR) -lcuda -g -lm -O3 -use_fast_math ex_particle_CUDA_float_seq.cu -o particlefilter_float -cudart shared -Xcompiler "-fsanitize=address -fno-omit-frame-pointer"
+	$(CC) -I$(INCLUDE) -L$(CUDA_LIB_DIR) -lcuda -g -lm -O3 -use_fast_math ex_particle_CUDA_float_seq.cu -o particlefilter_float -cudart shared
 
 clean:
 	rm particlefilter_naive particlefilter_float
