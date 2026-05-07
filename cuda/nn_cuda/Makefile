@@ -5,15 +5,15 @@ LOCAL_CC = gcc -g -O3 -Wall
 CC := $(CUDA_DIR)/bin/nvcc
 DICE_GPGPU_SIM_ROOT ?= $(abspath ../../../dice_gpgpu-sim)
 DICE_SETUP_ENV ?= $(DICE_GPGPU_SIM_ROOT)/setup_environment
-all : nn hurricane_gen
+all : nn_cuda hurricane_gen
 
 clean :
-	rm -rf *.o nn hurricane_gen
+	rm -rf *.o nn nn_cuda hurricane_gen
 
-nn : nn_cuda.cu
+nn_cuda : nn_cuda.cu
 	. $(DICE_SETUP_ENV) debug && \
 	$(CC) -cuda nn_cuda.cu -cudart shared
-	$(CC) -o nn nn_cuda.cu -cudart shared
+	$(CC) -o nn_cuda nn_cuda.cu -cudart shared
 
 clang: $(SRC)
 	clang++ nn_cuda.cu -o nn -I../util --cuda-gpu-arch=sm_20 \
