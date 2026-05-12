@@ -84,28 +84,44 @@ and.pred %p6, %p2, %p5;            // in-range OOB predicate
 // optstep2 (#3): split off index-calc + ld.global to DBB 11 (PE budget).
 
 $DICE_BB0_2:
-// optstep9 (#4): simplified validY/validX using max/min imms; DBB 3 fused in.
-// Index calc + ld.global (carried over from optstep6 fuse of DBB 11).
-mad.lo.s32 %r7, %r5, %c4, %r6;
-cvta.to.global.u64 %w0, %c2;
-mul.wide.s32 %w1, %r7, 4;
-add.s64 %r8, %w0, %w1;
-cvta.to.global.u64 %w2, %c1;
-add.s64 %r9, %w2, %w1;
+// optstep6 (#3): DBB 11 (index+ld.global) merged here.  Load issues
+// early; %r10/%r11 consumed in DBB 7 (later) → load-to-use respected.
+mad.lo.s32 %r7, %r5, %c4, %r6;     // global index
+cvta.to.global.u64 %w6, %c2;
+mul.wide.s32 %w7, %r7, 4;
+add.s64 %r8, %w6, %w7;             // &temp_src[index]
+cvta.to.global.u64 %w8, %c1;
+add.s64 %r9, %w8, %w7;             // &power[index]
 @%p6 ld.global.f32 %r10, [%r8];
 @%p6 ld.global.f32 %r11, [%r9];
-// validYmin = max(-blkY, 0);  validYmax = min(15, cols-blkY-1).
-neg.s32 %w3, %r1;
-max.s32 %r12, %w3, 0;            // validYmin
-sub.s32 %w4, %c5, %r1;
-add.s32 %w5, %w4, -1;
-min.s32 %r13, %w5, 15;            // validYmax
-// validXmin = max(-blkX, 0);  validXmax = min(15, cols-blkX-1).
-neg.s32 %w6, %r2;
-max.s32 %r14, %w6, 0;             // validXmin
-sub.s32 %w7, %c4, %r2;
-add.s32 %w8, %w7, -1;
-min.s32 %r15, %w8, 15;            // validXmax
+
+
+// validYmin = (blkY<0)?-blkY:0;  validYmax computed similarly.
+neg.s32 %w0, %r1;
+shr.s32 %w1, %r1, 31;
+and.b32 %r12, %w0, %w1;            // validYmin = max(-blkY, 0)
+add.s32 %w2, %r1, 15;
+setp.lt.s32 %p7, %w2, %c5;
+mov.u32 %w3, -15;
+sub.s32 %w4, %w3, %r1;
+add.s32 %w5, %c5, %w4;
+add.s32 %w6, %w5, 14;
+selp.b32 %r13, 15, %w6, %p7;       // validYmax
+
+$DICE_BB0_3:
+// validXmin, validXmax, isValid (intersected with %p6 from DBB 1).
+neg.s32 %w0, %r2;
+shr.s32 %w1, %r2, 31;
+and.b32 %r14, %w0, %w1;            // validXmin
+add.s32 %w2, %r2, 15;
+setp.lt.s32 %p8, %w2, %c4;
+mov.u32 %w3, -15;
+sub.s32 %w4, %w3, %r2;
+add.s32 %w5, %c4, %w4;
+add.s32 %w6, %w5, 14;
+selp.b32 %r15, 15, %w6, %p8;       // validXmax
+// optstep3 (#3): split off isValid combine + early-exit branch to DBB 12.
+
 $DICE_BB0_12:
 setp.ge.s32 %p9, %r3, %r12;
 setp.le.s32 %p10, %r3, %r13;
@@ -207,8 +223,10 @@ cvt.rn.f32.f64 %w19, %w18;
 
 $DICE_BB0_8:
 // Publish %r10 = %r25 (predicated on computed AND not-last-iter); counter++; branch.
-// optstep10 (#4): dropped not-last-iter gate; harmless to publish on last iter.
-@%p20 mov.b32 %r10, %r25;
+add.s32 %w0, %r24, 1;
+setp.lt.s32 %p23, %w0, %c0;        // i+1 < iter
+and.pred %p24, %p23, %p20;
+@%p24 mov.b32 %r10, %r25;
 add.s32 %r24, %r24, 1;
 setp.lt.s32 %p25, %r24, %c0;       // i < iter
 @%p25 bra $DICE_BB0_6;

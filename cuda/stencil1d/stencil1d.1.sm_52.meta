@@ -1,0 +1,60 @@
+// DICECompiler Metadata for: stencil1d (RF-unified v7, real-addr SRF)
+// 5 live DBBs (0,1,2,3,4). ld.srf is in DBB 3 alongside its selp
+// consumer so the %w wire feeds directly into the fabric compute path.
+// SRF address layout (word units): bits [4:0]=reg_idx, bits[14:5]=tid.
+// SRF_PUBLICATION_REGS metadata is deprecated/removed -- the address
+// itself names the producer register directly.
+FUNCTION = _Z16stencil1d_kernelPKiPii;
+
+DBB_ID = 0,
+BITSTREAM_ADDR = $DICE_BB0_0,
+BITSTREAM_LENGTH = 3,
+UNROLLING_FACTOR = 1,
+UNROLLING_STRATEGY = 0,
+LAT = 1,
+LD_DEST_REGS = (%c0, %c1, %c2),
+IS_PARAMETER_LOAD;
+
+DBB_ID = 1,
+BITSTREAM_ADDR = $DICE_BB0_1,
+BITSTREAM_LENGTH = 13,
+UNROLLING_FACTOR = 2,
+UNROLLING_STRATEGY = 0,
+LAT = 6,
+IN_REGS = (%c0, %c2),
+OUT_REGS = (%p0, %p1, %p2, %r0, %r1, %r2, %r3, %r5),
+LD_DEST_REGS = (%r4),
+BRANCH = 1,
+BRANCH_PRED = (%p0),
+BRANCH_TARGET = 4,
+BRANCH_RECVPC = 4;
+
+DBB_ID = 2,
+BITSTREAM_ADDR = $DICE_BB0_2,
+BITSTREAM_LENGTH = 10,
+UNROLLING_FACTOR = 2,
+UNROLLING_STRATEGY = 0,
+LAT = 5,
+IN_REGS = (%c2, %r0, %r1, %r3, %r5),
+OUT_REGS = (%p3, %p4, %r5),
+LD_DEST_REGS = (%r9, %r10);
+
+DBB_ID = 3,
+BITSTREAM_ADDR = $DICE_BB0_3,
+BITSTREAM_LENGTH = 13,
+UNROLLING_FACTOR = 1,
+UNROLLING_STRATEGY = 0,
+LAT = 7,
+// SRF pipeline gap k = 2 cycles from operand fetch to ld.srf issue
+// (cycle 0: operand fetch %r0,%r2,%r4,%r5,%r9,%r10 -> banks T+{0,2,4,5,9,10};
+//  cycle 1: compute %w1 = %r5 + %r6, %w2 = %r5 + %w0 (wire only, no RF);
+//  cycle 2: ld.srf reads neighbor's %r4 -> banks {T-2-1+4,T-2+1+4} = T+{1,3}).
+// Combined banks T+{0,1,2,3,4,5,9,10} are 8 distinct banks => II = 1 holds
+// under single-port-per-bank RF with bank = (tid + reg_idx) mod 32 swizzle.
+IN_REGS = (%c1, %p1, %p2, %p3, %p4, %r0, %r2, %r4, %r5, %r9, %r10),
+STORE = 1,
+BARRIER;
+
+DBB_ID = 4,
+BITSTREAM_ADDR = $DICE_BB0_4,
+RET;

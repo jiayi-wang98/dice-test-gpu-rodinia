@@ -1,0 +1,164 @@
+// DICECompiler PPTX for: stencil3d (RF-unified v7, real-addr SRF)
+// 8x8x4 CTA = 256 threads.  Publication reg = %r10.  SRF addr = tid*32 + 10.
+// Linear tid = tz*64 + ty*8 + tx.  Neighbor SRF offsets (in addr units):
+//   E/W (tx±1) = ±32         -> banks (tid+9), (tid+11)  distinct  II=1
+//   N/S (ty±1) = ±256        -> banks (tid+2), (tid+18) distinct  II=1
+//   T/B (tz±1) = ±2048       -> banks both (tid+10) mod 32 -- COLLISION II=2
+// ld.srf dests are %w; consumer selp lives in same DBB.
+//
+.version 7.7
+.target sm_52
+.address_size 64
+.visible .entry _Z16stencil3d_kernelPKiPiiii(
+.param .u64 _Z16stencil3d_kernelPKiPiiii_param_0,
+.param .u64 _Z16stencil3d_kernelPKiPiiii_param_1,
+.param .u32 _Z16stencil3d_kernelPKiPiiii_param_2,
+.param .u32 _Z16stencil3d_kernelPKiPiiii_param_3,
+.param .u32 _Z16stencil3d_kernelPKiPiiii_param_4
+)
+{
+.reg .b64 %c<5>;
+.reg .b32 %r<32>;
+.reg .pred %p<16>;
+.reg .b64 %w<5>;
+
+$DICE_BB0_0:
+ld.param.u64 %c0, [_Z16stencil3d_kernelPKiPiiii_param_0];
+ld.param.u64 %c1, [_Z16stencil3d_kernelPKiPiiii_param_1];
+ld.param.u32 %c2, [_Z16stencil3d_kernelPKiPiiii_param_2];
+ld.param.u32 %c3, [_Z16stencil3d_kernelPKiPiiii_param_3];
+ld.param.u32 %c4, [_Z16stencil3d_kernelPKiPiiii_param_4];
+
+$DICE_BB0_1:
+mov.u32 %w0, %ctaid.x;
+shl.b32 %w1, %w0, 3;
+mov.u32 %r0, %tid.x;
+add.s32 %r1, %w1, %r0;
+mov.u32 %w0, %ctaid.y;
+shl.b32 %w1, %w0, 3;
+mov.u32 %r2, %tid.y;
+add.s32 %r3, %w1, %r2;
+mov.u32 %w0, %ctaid.z;
+shl.b32 %w1, %w0, 2;
+mov.u32 %r4, %tid.z;
+add.s32 %r5, %w1, %r4;
+setp.ge.s32 %p0, %r1, %c2;
+setp.ge.s32 %p1, %r3, %c3;
+setp.ge.s32 %p2, %r5, %c4;
+or.pred %p3, %p0, %p1;
+or.pred %p3, %p3, %p2;
+mad.lo.s32 %w0, %r5, %c3, %r3;
+mad.lo.s32 %w1, %w0, %c2, %r1;
+cvta.to.global.u64 %r6, %c0;
+mul.wide.s32 %r9, %w1, 4;
+add.s64 %r7, %r6, %r9;
+ld.global.u32 %r10, [%r7];
+@%p3 bra $DICE_BB0_11;
+
+$DICE_BB0_2:
+// SRF base (tid*32 + 10) + interior predicates.
+mad.lo.s32 %r8, %r4, 8, %r2;
+mad.lo.s32 %r8, %r8, 8, %r0;
+shl.b32 %r8, %r8, 5;
+add.s32 %r8, %r8, 10;
+setp.eq.s32 %p4, %r0, 0;
+setp.eq.s32 %p5, %r0, 7;
+setp.eq.s32 %p6, %r2, 0;
+setp.eq.s32 %p7, %r2, 7;
+setp.eq.s32 %p8, %r4, 0;
+setp.eq.s32 %p9, %r4, 3;
+
+$DICE_BB0_3:
+// E/W boundary predicates + boundary ld.global.
+setp.gt.s32 %p10, %r1, 0;
+add.s32 %w0, %c2, -1;
+setp.lt.s32 %p11, %r1, %w0;
+and.pred %p10, %p4, %p10;
+and.pred %p11, %p5, %p11;
+@%p10 ld.global.u32 %r11, [%r7+-4];
+@%p11 ld.global.u32 %r12, [%r7+4];
+
+$DICE_BB0_4:
+// E/W ld.srf + selp consume.  II=1.
+selp.b32 %r20, 0, -32, %p4;
+selp.b32 %w0, 0, 32, %p5;
+add.s32 %w1, %r8, %r20;
+add.s32 %w2, %r8, %w0;
+// ld.srf reads %r10 from tid-1 (west)
+ld.srf.u32 %w3, [%w1];
+// ld.srf reads %r10 from tid+1 (east)
+ld.srf.u32 %w4, [%w2];
+selp.b32 %r13, %r11, %w3, %p10;
+selp.b32 %r24, %r12, %w4, %p11;
+
+$DICE_BB0_5:
+// N/S boundary predicates + boundary ld.global (stride = W bytes).
+setp.gt.s32 %p12, %r3, 0;
+add.s32 %w0, %c3, -1;
+setp.lt.s32 %p13, %r3, %w0;
+and.pred %p12, %p6, %p12;
+and.pred %p13, %p7, %p13;
+shl.b32 %w0, %c2, 2;
+cvt.s64.s32 %w1, %w0;
+sub.s64 %w0, %r7, %w1;
+add.s64 %w1, %r7, %w1;
+@%p12 ld.global.u32 %r15, [%w0];
+@%p13 ld.global.u32 %r22, [%w1];
+
+$DICE_BB0_6:
+// N/S ld.srf + selp consume.  II=1.
+selp.b32 %r20, 0, -256, %p6;
+selp.b32 %w0, 0, 256, %p7;
+add.s32 %w1, %r8, %r20;
+add.s32 %w2, %r8, %w0;
+// ld.srf reads %r10 from tid-8 (south)
+ld.srf.u32 %w3, [%w1];
+// ld.srf reads %r10 from tid+8 (north)
+ld.srf.u32 %w4, [%w2];
+selp.b32 %r27, %r15, %w3, %p12;
+selp.b32 %r28, %r22, %w4, %p13;
+
+$DICE_BB0_7:
+// T/B boundary predicates + boundary ld.global (stride = W*H bytes).
+setp.gt.s32 %p14, %r5, 0;
+add.s32 %w0, %c4, -1;
+setp.lt.s32 %p15, %r5, %w0;
+and.pred %p14, %p8, %p14;
+and.pred %p15, %p9, %p15;
+mul.lo.s32 %w0, %c2, %c3;
+shl.b32 %w0, %w0, 2;
+cvt.s64.s32 %w1, %w0;
+sub.s64 %w0, %r7, %w1;
+add.s64 %w1, %r7, %w1;
+@%p14 ld.global.u32 %r6, [%w0];
+@%p15 ld.global.u32 %r19, [%w1];
+
+$DICE_BB0_8:
+// T/B ld.srf + selp consume.  II=2 (banks BOTH (tid+10) mod 32 -- collision).
+selp.b32 %r20, 0, -2048, %p8;
+selp.b32 %w0, 0, 2048, %p9;
+add.s32 %w1, %r8, %r20;
+add.s32 %w2, %r8, %w0;
+// ld.srf reads %r10 from tid-64 (bottom)
+ld.srf.u32 %w3, [%w1];
+// ld.srf reads %r10 from tid+64 (top)
+ld.srf.u32 %w4, [%w2];
+selp.b32 %r6, %r6, %w3, %p14;
+selp.b32 %r23, %r19, %w4, %p15;
+
+$DICE_BB0_9:
+// Final sum: center(%r10) + E(%r13) + W(%r14) + N(%r17) + S(%r18) + T(%r6) + B(%r21)
+add.s32 %w0, %r10, %r13;
+add.s32 %w1, %w0, %r24;
+add.s32 %w0, %w1, %r27;
+add.s32 %w1, %w0, %r28;
+add.s32 %w0, %w1, %r6;
+add.s32 %w1, %w0, %r23;
+cvta.to.global.u64 %w0, %c1;
+add.s64 %w2, %w0, %r9;
+st.global.u32 [%w2], %w1;
+
+$DICE_BB0_11:
+ret;
+
+}

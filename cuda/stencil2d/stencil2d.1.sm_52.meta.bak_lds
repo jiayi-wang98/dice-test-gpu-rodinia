@@ -1,0 +1,101 @@
+// DICECompiler Metadata for: /data2/jwang710/DICE-RFSMEM/DICE_ISCA_Eval/dice-test-gpu-rodinia/cuda/stencil2d/stencil2d.1.sm_52.ptx
+// Hand-optimized: 27 DBBs collapsed to 10 via if-conversion + branch-free
+// fallback (selp on smem offsets, predicated cross-block GMEM loads).
+// Center reuses %r7 from initial gmem load (preserved across BAR).
+FUNCTION = _Z16stencil2d_kernelPKiPiii;
+
+DBB_ID = 0,
+BITSTREAM_ADDR = $DICE_BB0_0,
+BITSTREAM_LENGTH = 4,
+UNROLLING_FACTOR = 1,
+UNROLLING_STRATEGY = 0,
+LAT = 1,
+LD_DEST_REGS = (%c0, %c1, %c2, %c3),
+IS_PARAMETER_LOAD;
+
+DBB_ID = 1,
+BITSTREAM_ADDR = $DICE_BB0_1,
+BITSTREAM_LENGTH = 16,
+UNROLLING_FACTOR = 2,
+UNROLLING_STRATEGY = 0,
+LAT = 8,
+IN_REGS = (%c0, %c2, %c3),
+OUT_REGS = (%p0, %p1, %p2, %r0, %r1, %r2, %r3, %r4, %r5, %r6),
+LD_DEST_REGS = (%r7);
+
+DBB_ID = 2,
+BITSTREAM_ADDR = $DICE_BB0_2,
+BITSTREAM_LENGTH = 6,
+UNROLLING_FACTOR = 2,
+UNROLLING_STRATEGY = 0,
+LAT = 4,
+IN_REGS = (%r0, %r2, %r7),
+OUT_REGS = (%r8),
+STORE = 1;
+
+DBB_ID = 3,
+BITSTREAM_ADDR = $DICE_BB0_3,
+BITSTREAM_LENGTH = 2,
+UNROLLING_FACTOR = 4,
+UNROLLING_STRATEGY = 0,
+LAT = 1,
+IN_REGS = (%p2),
+BRANCH = 1,
+BARRIER,
+BRANCH_PRED = (%p2),
+BRANCH_TARGET = 9,
+BRANCH_RECVPC = 9;
+
+DBB_ID = 4,
+BITSTREAM_ADDR = $DICE_BB0_4,
+BITSTREAM_LENGTH = 8,
+UNROLLING_FACTOR = 2,
+UNROLLING_STRATEGY = 0,
+LAT = 4,
+IN_REGS = (%r2, %r8),
+OUT_REGS = (%p0, %p1),
+LD_DEST_REGS = (%r9, %r2);
+
+DBB_ID = 5,
+BITSTREAM_ADDR = $DICE_BB0_5,
+BITSTREAM_LENGTH = 11,
+UNROLLING_FACTOR = 2,
+UNROLLING_STRATEGY = 0,
+LAT = 6,
+IN_REGS = (%c2, %c3, %r3, %r6, %p0, %p1),
+OUT_REGS = (%p5, %p6),
+LD_DEST_REGS = (%r10, %r11);
+
+DBB_ID = 6,
+BITSTREAM_ADDR = $DICE_BB0_6,
+BITSTREAM_LENGTH = 8,
+UNROLLING_FACTOR = 2,
+UNROLLING_STRATEGY = 0,
+LAT = 4,
+IN_REGS = (%r0, %r8),
+OUT_REGS = (%p3, %p4),
+LD_DEST_REGS = (%r3, %r0);
+
+DBB_ID = 7,
+BITSTREAM_ADDR = $DICE_BB0_7,
+BITSTREAM_LENGTH = 7,
+UNROLLING_FACTOR = 2,
+UNROLLING_STRATEGY = 0,
+LAT = 5,
+IN_REGS = (%c2, %r1, %r6, %p3, %p4),
+OUT_REGS = (%p7, %p8),
+LD_DEST_REGS = (%r12, %r13);
+
+DBB_ID = 8,
+BITSTREAM_ADDR = $DICE_BB0_8,
+BITSTREAM_LENGTH = 12,
+UNROLLING_FACTOR = 2,
+UNROLLING_STRATEGY = 0,
+LAT = 6,
+IN_REGS = (%c1, %r0, %r2, %r3, %r5, %r7, %r9, %r10, %r11, %r12, %r13, %p5, %p6, %p7, %p8),
+STORE = 1;
+
+DBB_ID = 9,
+BITSTREAM_ADDR = $DICE_BB0_9,
+RET;
+

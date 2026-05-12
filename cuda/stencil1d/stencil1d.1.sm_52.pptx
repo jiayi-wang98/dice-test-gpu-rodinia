@@ -1,0 +1,87 @@
+// DICECompiler PPTX for: stencil1d (RF-unified v6, ld.srf in consumer DBB)
+// Rules followed:
+//   - ld.srf is placed in the consumer DBB so the %w wire flows
+//     directly into selp without an intermediate mov/RF write.
+//   - ld.global dest is %r (Rule 6); load-to-use split across DBBs.
+//   - BARRIER attached as metadata flag on the consumer DBB
+//     (the one that issues ld.srf), no bar.sync in pptx.
+//   - DBB 1 pre-computes per-thread compares (%p1, %p2) and the SRF
+//     base addr (%r5) so the SRF-issuing DBB stays under PE budget.
+//
+.version 7.7
+.target sm_52
+.address_size 64
+.visible .entry _Z16stencil1d_kernelPKiPii(
+.param .u64 _Z16stencil1d_kernelPKiPii_param_0,
+.param .u64 _Z16stencil1d_kernelPKiPii_param_1,
+.param .u32 _Z16stencil1d_kernelPKiPii_param_2
+)
+{
+.reg .b64 %c<3>;
+.reg .b32 %r<13>;
+.reg .pred %p<7>;
+.reg .b64 %w<5>;
+
+$DICE_BB0_0:
+ld.param.u64 %c0, [_Z16stencil1d_kernelPKiPii_param_0];
+ld.param.u64 %c1, [_Z16stencil1d_kernelPKiPii_param_1];
+ld.param.u32 %c2, [_Z16stencil1d_kernelPKiPii_param_2];
+
+$DICE_BB0_1:
+mov.u32 %w0, %ctaid.x;
+shl.b32 %w1, %w0, 8;
+mov.u32 %r0, %tid.x;
+add.s32 %r1, %w1, %r0;
+setp.ge.s32 %p0, %r1, %c2;
+setp.gt.s32 %p1, %r0, 0;
+setp.lt.s32 %p2, %r0, 255;
+// SRF self-address (high part): tid << 5 = tid * 32.  The +4 (reg_idx of
+// publication reg %r4) is added in DBB 2 to keep DBB 1's PE count <= 16/UF.
+shl.b32 %r5, %r0, 5;
+cvta.to.global.u64 %w0, %c0;
+mul.wide.s32 %r2, %r1, 4;
+add.s64 %r3, %w0, %r2;
+ld.global.u32 %r4, [%r3];
+@%p0 bra $DICE_BB0_4;
+
+$DICE_BB0_2:
+add.s32 %r5, %r5, 4;
+setp.eq.s32 %p5, %r0, 0;
+setp.eq.s32 %p6, %r0, 255;
+setp.gt.s32 %p3, %r1, 0;
+add.s32 %w2, %c2, -1;
+setp.lt.s32 %p4, %r1, %w2;
+and.pred %p3, %p5, %p3;
+and.pred %p4, %p6, %p4;
+@%p3 ld.global.u32 %r9, [%r3+-4];
+@%p4 ld.global.u32 %r10, [%r3+4];
+
+$DICE_BB0_3:
+// Cycle 0: operand fetch (IN_REGS %r{0,2,4,5,9,10}) hits banks T+{0,2,4,5,9,10}.
+// Cycle 1: compute SRF addresses %w1, %w2 below (wire only).
+// Cycle 2: ld.srf fires.  Pipeline gap k = 2.
+// Neighbor offset in reg-address units: ±32 (one full %r slice per thread).
+selp.b32 %r6, -32, 0, %p1;
+selp.b32 %w0, 32, 0, %p2;
+add.s32 %w1, %r5, %r6;
+add.s32 %w2, %r5, %w0;
+// ld.srf reads %r4 from tid-1 (left neighbor) -> bank (T-1+4) mod 32 = T+3.
+ld.srf.u32 %w3, [%w1];
+// ld.srf reads %r4 from tid+1 (right neighbor) -> bank (T+1+4) mod 32 = T+5.
+// (At steady-state cycle N, the SRF reads are issued by the thread that was
+//  dispatched 2 cycles earlier, so the banks viewed from "current dispatch
+//  thread T" are T+{1,3} -- disjoint from the T+{0,2,4,5,9,10} operand-fetch
+//  set, hence DISPATCH_II = 1.)
+ld.srf.u32 %w4, [%w2];
+selp.b32 %r11, %r9, %w3, %p3;
+selp.b32 %r12, %r10, %w4, %p4;
+add.s32 %w0, %r11, %r4;
+add.s32 %w1, %w0, %r12;
+cvta.to.global.u64 %w0, %c1;
+add.s64 %w2, %w0, %r2;
+st.global.u32 [%w2], %w1;
+
+$DICE_BB0_4:
+ret;
+
+}

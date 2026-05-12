@@ -1,0 +1,127 @@
+// DICECompiler PPTX for: stencil2d (RF-unified v7, real-addr SRF)
+// 16x16 CTA.  Publication reg = %r7.  SRF addr = tid*32 + 7.
+// Neighbor SRF offsets in addr units:  N/S = ±512,  E/W = ±32.
+// 9 live DBBs:
+//   DBB 4 (BARRIER): N/S ld.srf + N/S selp consume.  II=2 (bank collision
+//                    (tid-16+7) ≡ (tid+16+7) mod 32).
+//   DBB 6         : E/W ld.srf + E/W selp consume.  II=1.
+//   DBB 7         : sum and store.
+// ld.srf dests are %w; %r13 renamed to %r19 to avoid the (%r5, %r13)
+// distance-8 bank collision in DBB 7's operand fetch under UF=2 stride 8.
+//
+.version 7.7
+.target sm_52
+.address_size 64
+.visible .entry _Z16stencil2d_kernelPKiPiii(
+.param .u64 _Z16stencil2d_kernelPKiPiii_param_0,
+.param .u64 _Z16stencil2d_kernelPKiPiii_param_1,
+.param .u32 _Z16stencil2d_kernelPKiPiii_param_2,
+.param .u32 _Z16stencil2d_kernelPKiPiii_param_3
+)
+{
+.reg .b64 %c<4>;
+.reg .b32 %r<20>;
+.reg .pred %p<11>;
+.reg .b64 %w<5>;
+
+$DICE_BB0_0:
+ld.param.u64 %c0, [_Z16stencil2d_kernelPKiPiii_param_0];
+ld.param.u64 %c1, [_Z16stencil2d_kernelPKiPiii_param_1];
+ld.param.u32 %c2, [_Z16stencil2d_kernelPKiPiii_param_2];
+ld.param.u32 %c3, [_Z16stencil2d_kernelPKiPiii_param_3];
+
+$DICE_BB0_1:
+mov.u32 %w0, %ctaid.x;
+shl.b32 %w1, %w0, 4;
+mov.u32 %r0, %tid.x;
+add.s32 %r1, %w1, %r0;
+mov.u32 %w0, %ctaid.y;
+shl.b32 %w1, %w0, 4;
+mov.u32 %r2, %tid.y;
+add.s32 %r3, %w1, %r2;
+setp.ge.s32 %p0, %r1, %c2;
+setp.ge.s32 %p1, %r3, %c3;
+mad.lo.s32 %w0, %r3, %c2, %r1;
+cvta.to.global.u64 %r4, %c0;
+mul.wide.s32 %r5, %w0, 4;
+add.s64 %r6, %r4, %r5;
+or.pred %p2, %p0, %p1;
+ld.global.u32 %r7, [%r6];
+@%p2 bra $DICE_BB0_8;
+
+$DICE_BB0_2:
+// SRF base (tid*32 + 7) + interior predicates.
+mad.lo.s32 %r8, %r2, 16, %r0;
+shl.b32 %r8, %r8, 5;
+add.s32 %r8, %r8, 7;
+setp.eq.s32 %p3, %r2, 0;
+setp.eq.s32 %p4, %r2, 15;
+setp.eq.s32 %p5, %r0, 0;
+setp.eq.s32 %p6, %r0, 15;
+
+$DICE_BB0_3:
+// N/S boundary predicates + boundary ld.global.
+setp.gt.s32 %p7, %r3, 0;
+add.s32 %w0, %c3, -1;
+setp.lt.s32 %p8, %r3, %w0;
+and.pred %p7, %p3, %p7;
+and.pred %p8, %p4, %p8;
+shl.b32 %w0, %c2, 2;
+cvt.s64.s32 %w1, %w0;
+sub.s64 %w0, %r6, %w1;
+add.s64 %w1, %r6, %w1;
+@%p7 ld.global.u32 %r10, [%w0];
+@%p8 ld.global.u32 %r11, [%w1];
+
+$DICE_BB0_4:
+// Cycle 0: operand fetch IN_REGS.%r = {8,10,11} -> banks T+{8,10,11}.
+// Cycle 2: ld.srf reads %r7 at tid offsets ±16
+//   -> banks (target+7) mod 32: both (tid+23) mod 32 -> COLLISION -> II=2.
+selp.b32 %r9, 0, -512, %p3;
+selp.b32 %w0, 0, 512, %p4;
+add.s32 %w1, %r8, %r9;
+add.s32 %w2, %r8, %w0;
+// ld.srf reads %r7 from tid-16 (up neighbor)
+ld.srf.u32 %w3, [%w1];
+// ld.srf reads %r7 from tid+16 (down neighbor)
+ld.srf.u32 %w4, [%w2];
+selp.b32 %r12, %r10, %w3, %p7;
+selp.b32 %r19, %r11, %w4, %p8;
+
+$DICE_BB0_5:
+// E/W boundary predicates + boundary ld.global.
+setp.gt.s32 %p9, %r1, 0;
+add.s32 %w0, %c2, -1;
+setp.lt.s32 %p10, %r1, %w0;
+and.pred %p9, %p5, %p9;
+and.pred %p10, %p6, %p10;
+@%p9 ld.global.u32 %r14, [%r6+-4];
+@%p10 ld.global.u32 %r15, [%r6+4];
+
+$DICE_BB0_6:
+// E/W ld.srf + selp consume.  II=1 (banks (tid+6),(tid+8) distinct).
+selp.b32 %r16, 0, -32, %p5;
+selp.b32 %w0, 0, 32, %p6;
+add.s32 %w1, %r8, %r16;
+add.s32 %w2, %r8, %w0;
+// ld.srf reads %r7 from tid-1 (left neighbor)
+ld.srf.u32 %w3, [%w1];
+// ld.srf reads %r7 from tid+1 (right neighbor)
+ld.srf.u32 %w4, [%w2];
+selp.b32 %r17, %r14, %w3, %p9;
+selp.b32 %r18, %r15, %w4, %p10;
+
+$DICE_BB0_7:
+// Final sum: %r12 + %r19 + %r17 + %r18 + %r7 (center), then store.
+add.s32 %w0, %r12, %r7;
+add.s32 %w1, %w0, %r19;
+add.s32 %w0, %w1, %r17;
+add.s32 %w1, %w0, %r18;
+cvta.to.global.u64 %w0, %c1;
+add.s64 %w2, %w0, %r5;
+st.global.u32 [%w2], %w1;
+
+$DICE_BB0_8:
+ret;
+
+}

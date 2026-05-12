@@ -1,0 +1,95 @@
+// DICECompiler Metadata for: hotspot (RF-unified, conservative)
+// All STS dropped, 6 LDS per iter replaced (2 self-LDS → register read,
+// 4 neighbor LDS → ld.srf).  Initial 2 STS (in DBB 5) replaced with mov.
+FUNCTION = _Z14calculate_tempiPfS_S_iiiiffffff;
+
+DBB_ID = 0,
+BITSTREAM_ADDR = $DICE_BB0_0,
+BITSTREAM_LENGTH = 13,
+UNROLLING_STRATEGY = 0,
+LD_DEST_REGS = (%c0, %c1, %c10, %c11, %c12, %c2, %c3, %c4, %c5, %c6, %c7, %c8, %c9),
+IS_PARAMETER_LOAD;
+
+DBB_ID = 1,
+BITSTREAM_ADDR = $DICE_BB0_1,
+BITSTREAM_LENGTH = 33,
+UNROLLING_FACTOR = 1,
+UNROLLING_STRATEGY = 0,
+LAT = 15,
+IN_REGS = (%c0,%c1, %c2, %c4, %c5, %c6, %c7, %c9, %c10, %c11),
+OUT_REGS = (%p7, %p8, %r0, %r1, %r10, %r12, %r25, %r30, %r19, %r2, %r3, %r4, %r6, %r7, %r8, %r9),
+LD_DEST_REGS = (%r13, %r12);
+
+DBB_ID = 5,
+BITSTREAM_ADDR = $DICE_BB0_5,
+BITSTREAM_LENGTH = 32,
+UNROLLING_FACTOR = 1,
+UNROLLING_STRATEGY = 0,
+LAT = 7,
+IN_REGS = (%c4, %c5, %r0, %r1, %r2, %r3, %r6, %r7, %r13, %r12, %r9, %r10, %p7, %p8),
+OUT_REGS = (%p11, %p14, %r29, %r20, %r13, %r14, %r5, %r22, %r26, %r31),
+BRANCH = 1,
+BRANCH_PRED = (%p8),
+BRANCH_TARGET = 19,
+BRANCH_RECVPC = 19;
+
+DBB_ID = 6,
+BITSTREAM_ADDR = $DICE_BB0_6,
+BITSTREAM_LENGTH = 14,
+UNROLLING_FACTOR = 1,
+UNROLLING_STRATEGY = 0,
+LAT = 4,
+IN_REGS = (%c0, %c8, %c12, %r3, %r13, %r14, %r7, %r8, %r22, %r26, %p11, %p14),
+OUT_REGS = (%r23, %r24, %r26, %r28, %r6, %r17, %p27);
+
+DBB_ID = 7,
+BITSTREAM_ADDR = $DICE_BB0_7,
+BITSTREAM_LENGTH = 9,
+UNROLLING_FACTOR = 2,
+UNROLLING_STRATEGY = 0,
+LAT = 4,
+IN_REGS = (%p27, %r2, %r3, %r5, %r23, %r24),
+OUT_REGS = (%r31, %p22),
+DISPATCH_II = 2,
+BRANCH = 1,
+BRANCH_PRED = (%p22),
+BRANCH_TARGET = 10,
+BRANCH_RECVPC = 10,
+BARRIER;
+
+DBB_ID = 9,
+BITSTREAM_ADDR = $DICE_BB0_9,
+BITSTREAM_LENGTH = 5,
+UNROLLING_FACTOR = 2,
+UNROLLING_STRATEGY = 0,
+LAT = 3,
+IN_REGS = (%r29, %r7, %r8, %r17, %r26, %r20),
+OUT_REGS = (%r15),
+DISPATCH_II = 1;
+
+DBB_ID = 10,
+BITSTREAM_ADDR = $DICE_BB0_10,
+BITSTREAM_LENGTH = 23,
+UNROLLING_FACTOR = 1,
+UNROLLING_STRATEGY = 0,
+LAT = 15,
+IN_REGS = (%c0, %r29, %r5, %r6, %r12, %r13, %r15, %r20, %r19, %r25, %r28, %r30),
+OUT_REGS = (%r29, %r11, %r31, %p28, %r28, %r5),
+BRANCH = 1,
+BRANCH_PRED = (%p28),
+BRANCH_TARGET = 7,
+BRANCH_RECVPC = 16;
+
+
+DBB_ID = 16,
+BITSTREAM_ADDR = $DICE_BB0_16,
+BITSTREAM_LENGTH = 4,
+UNROLLING_FACTOR = 4,
+UNROLLING_STRATEGY = 0,
+LAT = 2,
+IN_REGS = (%r31, %c3, %r11, %r4),
+STORE = 1;
+
+DBB_ID = 19,
+BITSTREAM_ADDR = $DICE_BB0_19,
+RET;

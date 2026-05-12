@@ -1,0 +1,132 @@
+// DICECompiler Metadata for: stencil3d (RF-unified v7, real-addr SRF)
+// 11 live DBBs (0,1,2,3,4,5,6,7,8,9,11).
+// Publication reg = %r10.  SRF addr = tid*32 + 10.
+// DBB 4: E/W ld.srf (BARRIER, II=1).
+// DBB 6: N/S ld.srf (II=1).
+// DBB 8: T/B ld.srf (II=2 -- ±64 tid offset collapses to same bank mod 32).
+FUNCTION = _Z16stencil3d_kernelPKiPiiii;
+
+DBB_ID = 0,
+BITSTREAM_ADDR = $DICE_BB0_0,
+BITSTREAM_LENGTH = 5,
+UNROLLING_FACTOR = 1,
+UNROLLING_STRATEGY = 0,
+LAT = 1,
+LD_DEST_REGS = (%c0, %c1, %c2, %c3, %c4),
+IS_PARAMETER_LOAD;
+
+DBB_ID = 1,
+BITSTREAM_ADDR = $DICE_BB0_1,
+BITSTREAM_LENGTH = 25,
+UNROLLING_FACTOR = 1,
+UNROLLING_STRATEGY = 0,
+LAT = 10,
+// optstep4 (#3+#4): mads replace shl+add; edge preds moved up from DBB 2;
+// byte-addr + ld.global moved out to DBB 2.  16 PE at UF=1 (at budget).
+IN_REGS = (%c2, %c3, %c4),
+OUT_REGS = (%p0, %p1, %p2, %p3, %p4, %p5, %p6, %p7, %p8, %p9, %r0, %r1, %r2, %r3, %r4, %r5, %r30),
+BRANCH = 1,
+BRANCH_PRED = (%p3),
+BRANCH_TARGET = 11,
+BRANCH_RECVPC = 11;
+
+DBB_ID = 2,
+BITSTREAM_ADDR = $DICE_BB0_2,
+BITSTREAM_LENGTH = 8,
+UNROLLING_FACTOR = 2,
+UNROLLING_STRATEGY = 0,
+LAT = 5,
+// optstep4: lighter DBB 2 (was 10 PE UF=1) -- 5 PE + 1 LD now, UF=2 OK.
+// IN_REGS %r cosets {r0=0, r2=2, r4=4, r30=6}: distances {2,4,6,2,4,2} all
+// outside {8,16,24} -> UF=2 OK.
+IN_REGS = (%c0, %r0, %r2, %r4, %r30),
+OUT_REGS = (%r6, %r7, %r8, %r9),
+LD_DEST_REGS = (%r10);
+
+DBB_ID = 3,
+BITSTREAM_ADDR = $DICE_BB0_3,
+BITSTREAM_LENGTH = 7,
+UNROLLING_FACTOR = 2,
+UNROLLING_STRATEGY = 0,
+LAT = 4,
+IN_REGS = (%c2, %r1, %r7, %p4, %p5),
+OUT_REGS = (%p10, %p11),
+LD_DEST_REGS = (%r11, %r12);
+
+DBB_ID = 4,
+BITSTREAM_ADDR = $DICE_BB0_4,
+BITSTREAM_LENGTH = 8,
+UNROLLING_FACTOR = 2,
+UNROLLING_STRATEGY = 0,
+LAT = 5,
+// SRF pipeline gap k = 2.  E/W targets at ±1 in tid -> banks (tid+9),(tid+11)
+// mod 32 -- distinct -> II=1.
+// optstep3 (#2): %r14 renamed to %r24 (different coset vs %r6) to unlock
+// DBB 9 store at UF=2.
+IN_REGS = (%p4, %p5, %p10, %p11, %r8, %r11, %r12),
+OUT_REGS = (%r13, %r24),
+BARRIER;
+
+DBB_ID = 5,
+BITSTREAM_ADDR = $DICE_BB0_5,
+BITSTREAM_LENGTH = 11,
+UNROLLING_FACTOR = 2,
+UNROLLING_STRATEGY = 0,
+LAT = 5,
+IN_REGS = (%c2, %c3, %r3, %r7, %p6, %p7),
+OUT_REGS = (%p12, %p13),
+// optstep2: %r16 renamed to %r22 to break distance-8 collision with %r8
+// in DBB 6 IN_REGS (enables UF=2 there).
+LD_DEST_REGS = (%r15, %r22);
+
+DBB_ID = 6,
+BITSTREAM_ADDR = $DICE_BB0_6,
+BITSTREAM_LENGTH = 8,
+UNROLLING_FACTOR = 2,
+UNROLLING_STRATEGY = 0,
+LAT = 5,
+// optstep2 (#2): renamed DBB-5-LD-dest %r16 to %r22 to break distance-8 vs
+// %r8.  Operand-fetch differences {r8,r15,r22}: {7,14,7} — none in {8,16,24}
+// → UF=2 OK.  N/S SRF banks distinct as before.
+IN_REGS = (%p6, %p7, %p12, %p13, %r8, %r15, %r22),
+// optstep3: %r17,%r18 renamed to %r27,%r28 for DBB 9 coset spreading.
+OUT_REGS = (%r27, %r28);
+
+DBB_ID = 7,
+BITSTREAM_ADDR = $DICE_BB0_7,
+BITSTREAM_LENGTH = 12,
+UNROLLING_FACTOR = 1,
+UNROLLING_STRATEGY = 0,
+LAT = 6,
+IN_REGS = (%c2, %c3, %c4, %r5, %r7, %p8, %p9),
+OUT_REGS = (%p14, %p15),
+LD_DEST_REGS = (%r6, %r19);
+
+DBB_ID = 8,
+BITSTREAM_ADDR = $DICE_BB0_8,
+BITSTREAM_LENGTH = 8,
+UNROLLING_FACTOR = 2,
+UNROLLING_STRATEGY = 0,
+LAT = 5,
+// T/B targets at ±64 in tid -> banks BOTH (tid+10) mod 32 -- 2-way bank
+// collision -> DISPATCH_II = 2.
+IN_REGS = (%p8, %p9, %p14, %p15, %r8, %r6, %r19),
+// optstep3: %r21 renamed to %r23 for DBB 9 coset spreading.
+OUT_REGS = (%r6, %r23),
+DISPATCH_II = 2;
+
+DBB_ID = 9,
+BITSTREAM_ADDR = $DICE_BB0_9,
+BITSTREAM_LENGTH = 9,
+UNROLLING_FACTOR = 2,
+UNROLLING_STRATEGY = 0,
+LAT = 7,
+// optstep3 (#2): renamed %r14→%r24, %r17→%r27, %r18→%r28, %r21→%r23 so the
+// 8 %r IN_REGS land in 8 distinct cosets mod 8 (cosets {6,1,2,5,0,3,4,7}),
+// breaking all distance-{8,16,24} collisions and enabling UF=2.
+IN_REGS = (%c1, %r6, %r9, %r10, %r13, %r23, %r24, %r27, %r28),
+STORE = 1;
+
+DBB_ID = 11,
+BITSTREAM_ADDR = $DICE_BB0_11,
+RET;

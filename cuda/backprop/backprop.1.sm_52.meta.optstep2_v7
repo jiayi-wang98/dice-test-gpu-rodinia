@@ -37,15 +37,15 @@ UNROLLING_FACTOR = 4,
 UNROLLING_STRATEGY = 0,
 LAT = 3,
 IN_REGS = (%r10, %r11),
-OUT_REGS = (%r13);
+OUT_REGS = (%r12);
 
 DBB_ID = 3,
 BITSTREAM_ADDR = $DICE_BB0_3,
 BITSTREAM_LENGTH = 6,
-UNROLLING_FACTOR = 2,  // optstep3 (#2): %r12->%r13 rename frees coset, UF=2 OK
+UNROLLING_FACTOR = 1,
 UNROLLING_STRATEGY = 0,
 LAT = 6,
-IN_REGS = (%r1, %r4, %r13),
+IN_REGS = (%r1, %r4, %r12),
 OUT_REGS = (%p1, %r15),
 BARRIER;
 
@@ -56,15 +56,15 @@ UNROLLING_FACTOR = 4,
 UNROLLING_STRATEGY = 0,
 LAT = 2,
 IN_REGS = (%p1, %r15),
-OUT_REGS = (%r13);
+OUT_REGS = (%r12);
 
 DBB_ID = 5,
 BITSTREAM_ADDR = $DICE_BB0_5,
 BITSTREAM_LENGTH = 6,
-UNROLLING_FACTOR = 2,  // optstep3 (#2): %r12->%r13 rename frees coset, UF=2 OK
+UNROLLING_FACTOR = 1,
 UNROLLING_STRATEGY = 0,
 LAT = 6,
-IN_REGS = (%r1, %r4, %r13),
+IN_REGS = (%r1, %r4, %r12),
 OUT_REGS = (%p2, %r15),
 BARRIER;
 
@@ -75,15 +75,15 @@ UNROLLING_FACTOR = 4,
 UNROLLING_STRATEGY = 0,
 LAT = 2,
 IN_REGS = (%p2, %r15),
-OUT_REGS = (%r13);
+OUT_REGS = (%r12);
 
 DBB_ID = 7,
 BITSTREAM_ADDR = $DICE_BB0_7,
 BITSTREAM_LENGTH = 6,
-UNROLLING_FACTOR = 2,  // optstep3 (#2): %r12->%r13 rename frees coset, UF=2 OK
+UNROLLING_FACTOR = 1,
 UNROLLING_STRATEGY = 0,
 LAT = 6,
-IN_REGS = (%r1, %r4, %r13),
+IN_REGS = (%r1, %r4, %r12),
 OUT_REGS = (%p3, %r15),
 BARRIER;
 
@@ -94,15 +94,15 @@ UNROLLING_FACTOR = 4,
 UNROLLING_STRATEGY = 0,
 LAT = 2,
 IN_REGS = (%p3, %r15),
-OUT_REGS = (%r13);
+OUT_REGS = (%r12);
 
 DBB_ID = 9,
 BITSTREAM_ADDR = $DICE_BB0_9,
 BITSTREAM_LENGTH = 6,
-UNROLLING_FACTOR = 2,  // optstep3 (#2): %r12->%r13 rename frees coset, UF=2 OK
+UNROLLING_FACTOR = 1,
 UNROLLING_STRATEGY = 0,
 LAT = 6,
-IN_REGS = (%r1, %r4, %r13),
+IN_REGS = (%r1, %r4, %r12),
 OUT_REGS = (%p4, %r15),
 BARRIER;
 
@@ -113,7 +113,7 @@ UNROLLING_FACTOR = 4,
 UNROLLING_STRATEGY = 0,
 LAT = 2,
 IN_REGS = (%p4, %r15),
-OUT_REGS = (%r13);
+OUT_REGS = (%r12);
 
 DBB_ID = 11,
 BITSTREAM_ADDR = $DICE_BB0_11,
@@ -121,7 +121,7 @@ BITSTREAM_LENGTH = 1,
 UNROLLING_FACTOR = 4,
 UNROLLING_STRATEGY = 0,
 LAT = 2,
-IN_REGS = (%r7, %r13),
+IN_REGS = (%r7, %r12),
 STORE = 1;
 
 DBB_ID = 12,

@@ -44,27 +44,15 @@ BRANCH_RECVPC = 7;
 
 DBB_ID = 3,
 BITSTREAM_ADDR = $DICE_BB0_3,
-BITSTREAM_LENGTH = 13,
+BITSTREAM_LENGTH = 21,
 UNROLLING_FACTOR = 1,
 UNROLLING_STRATEGY = 0,
-LAT = 6,
-// optstep13 (#3): split off the gpuWall-base / tx-bound precompute into a
-// new DBB 15 to keep PE ≤ 16 per DBB.  This half: W/E SRF addr + isValid +
-// counter init.  11 PE at UF=1 (within 16 budget).
-IN_REGS = (%r2, %r24, %r25),
-OUT_REGS = (%p6, %r4, %r8, %r9, %r15);
-
-DBB_ID = 15,
-BITSTREAM_ADDR = $DICE_BB0_15,
-BITSTREAM_LENGTH = 8,
-UNROLLING_FACTOR = 2,
-UNROLLING_STRATEGY = 0,
-LAT = 5,
-// optstep13 (#3) second half: gpuWall base+stride and tx-1/255-tx precompute.
-// 6 PE at UF=2 → 12 PE within budget.  Reg cosets {r2=2, r3=3} distance 1,
-// none in {8,16,24} → UF=2 OK.
-IN_REGS = (%c1, %c4, %c5, %r2, %r3),
-OUT_REGS = (%r10, %r11, %r13, %r14);
+LAT = 7,
+// optstep8 (#4): precompute gpuWall base ptr (%r10) and stride (%r11).
+// optstep12 (#4): also precompute %r13=tx-1 and %r14=255-tx so DBB 4
+// per-iter predicate drops to 4 PE ops and can run UF=4.
+IN_REGS = (%c1, %c4, %c5, %r2, %r3, %r24, %r25),
+OUT_REGS = (%p6, %r4, %r8, %r9, %r10, %r11, %r13, %r14, %r15);
 
 DBB_ID = 4,
 BITSTREAM_ADDR = $DICE_BB0_4,
@@ -93,15 +81,15 @@ LD_DEST_REGS = (%r20);
 DBB_ID = 6,
 BITSTREAM_ADDR = $DICE_BB0_6,
 BITSTREAM_LENGTH = 6,
-UNROLLING_FACTOR = 2,
+UNROLLING_FACTOR = 4,
 UNROLLING_STRATEGY = 0,
 LAT = 7,
-// optstep11 REVERTED: SRF port budget is 4 (not 8 as I'd assumed from
-// gpgpusim.config -dice_cgra_core_num_ld_ports 8; that flag does NOT raise
-// SRF ports).  At UF=4 we'd issue 8 ld.srf at cycle 2 → exceeds 4 SRF ports.
-// Back to UF=2 (4 ld.srf at cycle 2, fits budget).
-// PE=3 × 2 = 6.  Operand-fetch banks {T+7,T+8,T+9,T+20}∪{T+15,T+16,T+17,T+28}
-// 8 distinct.  SRF banks at cycle 2: 4 (W and E for T,T+8) distinct → II=1.
+// optstep11 (#2): UF 2 -> 4.  PE=3 (min/min/add), at UF=4 -> 12 PE within
+// budget.  Operand-fetch banks at UF=4 from regs {r7,r8,r9,r20} for T,T+8,
+// T+16,T+24 = 16 distinct banks (cosets 7,0,1,4 all distinct, all UF strides
+// land on different banks).  SRF read cycle 2: 8 reads (4 W + 4 E) to
+// distinct banks {T+0,T+6,T+8,T+14,T+16,T+22,T+24,T+30} mod 32 — fits the
+// 8 LD ports configured for the CGRA core.
 IN_REGS = (%p10, %r7, %r8, %r9, %r20),
 OUT_REGS = (%r15),
 BARRIER;

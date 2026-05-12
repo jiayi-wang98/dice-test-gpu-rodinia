@@ -53,7 +53,7 @@ mov.u32 %r2, %tid.x;
 shl.b32 %w0, %r1, 4;
 add.s32 %r3, %w0, %r2;             // my_tid
 shl.b32 %w1, %r3, 5;
-add.s32 %r4, %w1, 13;              // my_base_addr = my_tid*32 + 12
+add.s32 %r4, %w1, 12;              // my_base_addr = my_tid*32 + 12
 // index_in = HEIGHT*by + ty + 1     (offset by 1 to skip bias slot)
 shl.b32 %w2, %r0, 4;
 add.s32 %w3, %w2, %r1;             // by*16 + ty
@@ -76,8 +76,8 @@ add.s64 %r7, %w13, %w14;
 ld.global.f32 %r11, [%r7];         // weight_matrix[ty][tx]
 
 $DICE_BB0_2:
-// Initial scale: %r13 = weight * input_node.
-mul.f32 %r13, %r11, %r10;
+// Initial scale: %r12 = weight * input_node.
+mul.f32 %r12, %r11, %r10;
 
 $DICE_BB0_3:
 // Reduction iter 1: partner offset = 512, surv = (ty & 1) == 0.
@@ -85,12 +85,12 @@ and.b32 %w0, %r1, 1;
 setp.eq.s32 %p1, %w0, 0;
 add.s32 %w1, %r4, 512;
 @%p1 ld.srf.f32 %w2, [%w1];
-@%p1 add.f32 %w3, %r13, %w2;
+@%p1 add.f32 %w3, %r12, %w2;
 @%p1 mov.b32 %r15, %w3;
 
 $DICE_BB0_4:
 // Publish iter 1.
-@%p1 mov.b32 %r13, %r15;
+@%p1 mov.b32 %r12, %r15;
 
 $DICE_BB0_5:
 // Reduction iter 2: partner offset = 1024, surv = (ty & 3) == 0.
@@ -98,12 +98,12 @@ and.b32 %w0, %r1, 3;
 setp.eq.s32 %p2, %w0, 0;
 add.s32 %w1, %r4, 1024;
 @%p2 ld.srf.f32 %w2, [%w1];
-@%p2 add.f32 %w3, %r13, %w2;
+@%p2 add.f32 %w3, %r12, %w2;
 @%p2 mov.b32 %r15, %w3;
 
 $DICE_BB0_6:
 // Publish iter 2.
-@%p2 mov.b32 %r13, %r15;
+@%p2 mov.b32 %r12, %r15;
 
 $DICE_BB0_7:
 // Reduction iter 3: partner offset = 2048, surv = (ty & 7) == 0.
@@ -111,12 +111,12 @@ and.b32 %w0, %r1, 7;
 setp.eq.s32 %p3, %w0, 0;
 add.s32 %w1, %r4, 2048;
 @%p3 ld.srf.f32 %w2, [%w1];
-@%p3 add.f32 %w3, %r13, %w2;
+@%p3 add.f32 %w3, %r12, %w2;
 @%p3 mov.b32 %r15, %w3;
 
 $DICE_BB0_8:
 // Publish iter 3.
-@%p3 mov.b32 %r13, %r15;
+@%p3 mov.b32 %r12, %r15;
 
 $DICE_BB0_9:
 // Reduction iter 4: partner offset = 4096, surv = (ty & 15) == 0.
@@ -124,23 +124,23 @@ and.b32 %w0, %r1, 15;
 setp.eq.s32 %p4, %w0, 0;
 add.s32 %w1, %r4, 4096;
 @%p4 ld.srf.f32 %w2, [%w1];
-@%p4 add.f32 %w3, %r13, %w2;
+@%p4 add.f32 %w3, %r12, %w2;
 @%p4 mov.b32 %r15, %w3;
 
 $DICE_BB0_10:
 // Publish iter 4.
-@%p4 mov.b32 %r13, %r15;
+@%p4 mov.b32 %r12, %r15;
 
 $DICE_BB0_11:
-// Store input_hidden_cuda[index] = %r13 (all threads).
-st.global.f32 [%r7], %r13;
+// Store input_hidden_cuda[index] = %r12 (all threads).
+st.global.f32 [%r7], %r12;
 
 $DICE_BB0_12:
 // Tx==0 threads: hidden_partial_sum[by*hid + ty] = weight_matrix[0][ty]
-// (which is held in thread (ty=0, tx=ty)'s %r13).  SRF addr = ty*32 + 12.
+// (which is held in thread (ty=0, tx=ty)'s %r12).  SRF addr = ty*32 + 12.
 setp.eq.s32 %p5, %r2, 0;            // tx == 0
 shl.b32 %w0, %r1, 5;
-add.s32 %w1, %w0, 13;               // addr = ty*32 + 12
+add.s32 %w1, %w0, 12;               // addr = ty*32 + 12
 @%p5 ld.srf.f32 %w2, [%w1];
 mad.lo.s32 %w3, %r0, %c3, %r1;      // by*hid + ty
 cvta.to.global.u64 %w4, %c2;        // hidden_partial_sum base

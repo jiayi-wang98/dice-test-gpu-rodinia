@@ -92,37 +92,24 @@ setp.le.s32 %p5, %r2, %r25;
 and.pred %p6, %p4, %p5;
 mov.u32 %r4, 0;
 mov.u32 %r15, 0;
-// optstep8 (#4): precompute gpuWall base ptr (%r10) and stride (%r11)
-// so the loop body just needs an add.s64 to advance, not a full
-// mad/cvta/mul.wide/add chain per iter.
-
-$DICE_BB0_15:
-// optstep13 (#3): split DBB 3 to keep PE ≤ 16 per DBB.
-// This half precomputes gpuWall base ptr/stride and tx bounds.
-mad.lo.s32 %w0, %c5, %c4, %r3;
-cvta.to.global.u64 %w1, %c1;
-mul.wide.s32 %w2, %w0, 4;
-add.s64 %r10, %w1, %w2;
-mul.wide.s32 %r11, %c4, 4;
-// optstep12 (#4): hoist tx-bound prep for DBB 4 — saves 1 PE per iter.
-add.s32 %r13, %r2, -1;
-mov.u32 %w3, 255;
-sub.s32 %r14, %w3, %r2;
-
-
-$DICE_BB0_4:
-// Per-iter narrowing predicate: %p10 = isValid AND tx in [%r4+1, 254-%r4].
-// optstep12: tx-1 in %r13, 255-tx in %r14 precomputed in DBB 3.
-setp.ge.s32 %p8, %r13, %r4;
-setp.gt.s32 %p7, %r14, %r4;
-and.pred %p9, %p7, %p8;
-and.pred %p10, %p6, %p9;
-
-$DICE_BB0_5:
-// optstep8: now just the load (addr precomputed in DBB 3, incremented in DBB 8).
-@%p10 ld.global.u32 %r20, [%r10];
 
 $DICE_BB0_6:
+// optstep6 (#3): DBB 4 (per-iter narrowing predicate) fused into DBB 6.
+// Per-iter narrowing predicate: %p10 = isValid AND tx in [%r4+1, 254-%r4].
+mov.u32 %w0, 254;
+sub.s32 %w1, %w0, %r4;
+setp.le.s32 %p7, %r2, %w1;
+setp.gt.s32 %p8, %r2, %r4;
+and.pred %p9, %p7, %p8;
+and.pred %p10, %p6, %p9;
+// optstep5 (#3): DBB 5 (gpuWall load) fused into DBB 6.
+// gpuWall ptr per iter:  &gpuWall[(startStep + i)*cols + xidx]
+mad.lo.s32 %w0, %c5, %c4, %r3;
+mad.lo.s32 %w1, %r4, %c4, %w0;
+cvta.to.global.u64 %w2, %c1;
+mul.wide.s32 %w3, %w1, 4;
+add.s64 %w4, %w2, %w3;
+@%p10 ld.global.u32 %r20, [%w4];
 // BARRIER + ld.srf (read OLD neighbor %r7) + compute + capture into %r15.
 // No write to %r7 here -- defer to DBB 8 to avoid intra-DBB race.
 @%p10 ld.srf.u32 %w2, [%r8];
@@ -136,13 +123,10 @@ $DICE_BB0_8:
 // Publish %r7 = %r15 if (i+1 < iter) AND computed; counter++; branch.
 // Safe: no ld.srf here, and DBB 6 already finished for all threads before
 // any thread reaches DBB 8 (cgra_fabric_done ordering).
-// optstep7 (#4): dropped not-last-iter gate (harmless to publish on last iter).
 @%p10 mov.b32 %r7, %r15;
-// optstep8: advance gpuWall pointer by stride for next iter.
-add.s64 %r10, %r10, %r11;
 add.s32 %r4, %r4, 1;
 setp.lt.s32 %p14, %r4, %c0;
-@%p14 bra $DICE_BB0_4;
+@%p14 bra $DICE_BB0_6;
 
 $DICE_BB0_7:
 // Store gpuResult[xidx] = %r15 if isValid AND tx in [%c0, 255-%c0]

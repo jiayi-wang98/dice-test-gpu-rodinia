@@ -1,0 +1,112 @@
+// DICECompiler Metadata for: hotspot (RF-unified v7, real-addr SRF)
+// 256-thread 2D CTA (BLOCK_SIZE=16).  Publication reg = %r10 (center temp).
+// SRF addr = neighbor_tid * 32 + 10.
+// Loop body split: DBB 7 (compute, BARRIER, II=2) -> DBB 8 (publish, branch).
+FUNCTION = _Z14calculate_tempiPfS_S_iiiiffffff;
+
+DBB_ID = 0,
+BITSTREAM_ADDR = $DICE_BB0_0,
+BITSTREAM_LENGTH = 13,
+UNROLLING_FACTOR = 1,
+UNROLLING_STRATEGY = 0,
+LAT = 1,
+LD_DEST_REGS = (%c0, %c1, %c2, %c3, %c4, %c5, %c6, %c7, %c8, %c9, %c10, %c11, %c12),
+IS_PARAMETER_LOAD;
+
+DBB_ID = 1,
+BITSTREAM_ADDR = $DICE_BB0_1,
+BITSTREAM_LENGTH = 32,
+UNROLLING_FACTOR = 1,
+UNROLLING_STRATEGY = 0,
+LAT = 10,
+IN_REGS = (%c0, %c1, %c2, %c4, %c5, %c6, %c7),
+OUT_REGS = (%p6, %r0, %r1, %r2, %r3, %r4, %r5, %r6, %r7),
+LD_DEST_REGS = (%r10, %r11);
+
+DBB_ID = 2,
+BITSTREAM_ADDR = $DICE_BB0_2,
+BITSTREAM_LENGTH = 10,
+UNROLLING_FACTOR = 1,
+UNROLLING_STRATEGY = 0,
+LAT = 5,
+IN_REGS = (%c5, %r1),
+OUT_REGS = (%r12, %r13);
+
+DBB_ID = 3,
+BITSTREAM_ADDR = $DICE_BB0_3,
+BITSTREAM_LENGTH = 17,
+UNROLLING_FACTOR = 1,
+UNROLLING_STRATEGY = 0,
+LAT = 6,
+IN_REGS = (%c0, %c4, %p6, %r2, %r3, %r4, %r12, %r13),
+OUT_REGS = (%p6, %p15, %r14, %r15),
+BRANCH = 1,
+BRANCH_PRED = (%p15),
+BRANCH_TARGET = 19,
+BRANCH_RECVPC = 19;
+
+DBB_ID = 4,
+BITSTREAM_ADDR = $DICE_BB0_4,
+BITSTREAM_LENGTH = 8,
+UNROLLING_FACTOR = 2,
+UNROLLING_STRATEGY = 0,
+LAT = 6,
+IN_REGS = (%c8, %c9, %c10, %c11, %c12),
+OUT_REGS = (%r16, %r17, %r18, %r19);
+
+DBB_ID = 5,
+BITSTREAM_ADDR = $DICE_BB0_5,
+BITSTREAM_LENGTH = 21,
+UNROLLING_FACTOR = 1,
+UNROLLING_STRATEGY = 0,
+LAT = 6,
+IN_REGS = (%r3, %r4, %r12, %r13, %r14, %r15),
+OUT_REGS = (%r20, %r21, %r22, %r23, %r24);
+
+DBB_ID = 6,
+BITSTREAM_ADDR = $DICE_BB0_6,
+BITSTREAM_LENGTH = 9,
+UNROLLING_FACTOR = 2,
+UNROLLING_STRATEGY = 0,
+LAT = 4,
+IN_REGS = (%p6, %r3, %r4, %r24),
+OUT_REGS = (%p20);
+
+DBB_ID = 7,
+BITSTREAM_ADDR = $DICE_BB0_7,
+BITSTREAM_LENGTH = 21,
+UNROLLING_FACTOR = 1,
+UNROLLING_STRATEGY = 0,
+LAT = 12,
+// N/S share bank: (N_tid - S_tid) = 32 -> same (tid+10)%32 bank.
+// 4 ld.srf reads with one conflict -> DISPATCH_II = 2.
+IN_REGS = (%p20, %r10, %r11, %r16, %r17, %r18, %r19, %r20, %r21, %r22, %r23),
+OUT_REGS = (%r25),
+DISPATCH_II = 2,
+BARRIER;
+
+DBB_ID = 8,
+BITSTREAM_ADDR = $DICE_BB0_8,
+BITSTREAM_LENGTH = 7,
+UNROLLING_FACTOR = 2,
+UNROLLING_STRATEGY = 0,
+LAT = 3,
+IN_REGS = (%c0, %p20, %r24, %r25),
+OUT_REGS = (%p25, %r10, %r24),
+BRANCH = 1,
+BRANCH_PRED = (%p25),
+BRANCH_TARGET = 6,
+BRANCH_RECVPC = 16;
+
+DBB_ID = 16,
+BITSTREAM_ADDR = $DICE_BB0_16,
+BITSTREAM_LENGTH = 14,
+UNROLLING_FACTOR = 2,
+UNROLLING_STRATEGY = 0,
+LAT = 5,
+IN_REGS = (%c0, %c3, %p6, %r3, %r4, %r7, %r25),
+STORE = 1;
+
+DBB_ID = 19,
+BITSTREAM_ADDR = $DICE_BB0_19,
+RET;

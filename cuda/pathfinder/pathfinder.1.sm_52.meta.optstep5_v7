@@ -1,0 +1,109 @@
+// DICECompiler Metadata for: pathfinder (RF-unified v7, real-addr SRF)
+// 9 live DBBs (0,1,2,3,4,5,6,7,8,17).
+// Publication reg = %r7 (loop-carried "prev").  SRF addr = neighbor*32 + 7.
+// Loop body split to avoid intra-DBB %r7 race:
+//   DBB 4 : per-iter narrowing predicate
+//   DBB 5 : ld.global gpuWall (load-to-use split)
+//   DBB 6 : BARRIER + ld.srf OLD %r7 + min/min/add + capture %r15
+//   DBB 8 : publish %r7 = %r15 (predicated), counter++, branch -> DBB 4
+// cgra_fabric_done ensures all threads finish DBB 6 before any thread
+// dispatches DBB 8 -- so DBB 6 always reads pre-iter %r7 globally.
+FUNCTION = _Z14dynproc_kerneliPiS_S_iiii;
+
+DBB_ID = 0,
+BITSTREAM_ADDR = $DICE_BB0_0,
+BITSTREAM_LENGTH = 7,
+UNROLLING_FACTOR = 1,
+UNROLLING_STRATEGY = 0,
+LAT = 1,
+LD_DEST_REGS = (%c0, %c1, %c2, %c3, %c4, %c5, %c6),
+IS_PARAMETER_LOAD;
+
+DBB_ID = 1,
+BITSTREAM_ADDR = $DICE_BB0_1,
+BITSTREAM_LENGTH = 15,
+UNROLLING_FACTOR = 1,
+UNROLLING_STRATEGY = 0,
+LAT = 7,
+IN_REGS = (%c2, %c4, %c6),
+OUT_REGS = (%p0, %p1, %p2, %r0, %r1, %r2, %r3, %r6),
+LD_DEST_REGS = (%r7);
+
+DBB_ID = 2,
+BITSTREAM_ADDR = $DICE_BB0_2,
+BITSTREAM_LENGTH = 12,
+UNROLLING_FACTOR = 1,
+UNROLLING_STRATEGY = 0,
+LAT = 5,
+IN_REGS = (%c0, %c4, %r1),
+OUT_REGS = (%p3, %p31, %r24, %r25),
+BRANCH = 1,
+BRANCH_PRED = (%p3),
+BRANCH_TARGET = 7,
+BRANCH_RECVPC = 7;
+
+DBB_ID = 3,
+BITSTREAM_ADDR = $DICE_BB0_3,
+BITSTREAM_LENGTH = 13,
+UNROLLING_FACTOR = 1,
+UNROLLING_STRATEGY = 0,
+LAT = 6,
+IN_REGS = (%r2, %r24, %r25),
+OUT_REGS = (%p6, %r4, %r8, %r9, %r15);
+
+DBB_ID = 4,
+BITSTREAM_ADDR = $DICE_BB0_4,
+BITSTREAM_LENGTH = 6,
+UNROLLING_FACTOR = 2,
+UNROLLING_STRATEGY = 0,
+LAT = 3,
+IN_REGS = (%p6, %r2, %r4),
+OUT_REGS = (%p10);
+
+// optstep5 (#3): DBB 5 fused into DBB 6.  Reasoning: ld.global writes %r20
+// (own thread), ld.srf reads neighbor %r7 — different regs → programming-
+// model rule respected.  Saves one DBB-traversal per loop iter × 16 iters.
+
+DBB_ID = 6,
+BITSTREAM_ADDR = $DICE_BB0_6,
+BITSTREAM_LENGTH = 12,
+UNROLLING_FACTOR = 2,
+UNROLLING_STRATEGY = 0,
+LAT = 9,
+// optstep5: now also computes gpuWall addr + ld.global → %r20 first, then
+// ld.srf W/E + min/min/add + mov %r15.  Load-to-use latency for %r20: the
+// load issues at the start of compute (cycle 0-2 of the chain), result
+// expected by min/min/add (cycle 3-5).  The 3-cycle slot between
+// `add.s64 %w4` and `min.s32 %w5, %w4, %w3` (which uses %r20 via the add)
+// should be enough for DRAM round-trip in the simulator's idealized model.
+// Operand fetch + SRF banks unchanged from optstep1.
+IN_REGS = (%c1, %c4, %c5, %p10, %r3, %r4, %r7, %r8, %r9),
+OUT_REGS = (%r15),
+LD_DEST_REGS = (%r20),
+BARRIER;
+
+DBB_ID = 8,
+BITSTREAM_ADDR = $DICE_BB0_8,
+BITSTREAM_LENGTH = 7,
+UNROLLING_FACTOR = 2,
+UNROLLING_STRATEGY = 0,
+LAT = 3,
+IN_REGS = (%c0, %p10, %r4, %r15),
+OUT_REGS = (%p14, %r4, %r7),
+BRANCH = 1,
+BRANCH_PRED = (%p14),
+BRANCH_TARGET = 4,
+BRANCH_RECVPC = 7;
+
+DBB_ID = 7,
+BITSTREAM_ADDR = $DICE_BB0_7,
+BITSTREAM_LENGTH = 11,
+UNROLLING_FACTOR = 2,
+UNROLLING_STRATEGY = 0,
+LAT = 4,
+IN_REGS = (%c0, %c3, %p6, %r2, %r3, %r15),
+STORE = 1;
+
+DBB_ID = 17,
+BITSTREAM_ADDR = $DICE_BB0_17,
+RET;

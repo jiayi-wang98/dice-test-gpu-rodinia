@@ -1,0 +1,101 @@
+// DICECompiler Metadata for: pathfinder (RF-unified v7, real-addr SRF)
+// 9 live DBBs (0,1,2,3,4,5,6,7,8,17).
+// Publication reg = %r7 (loop-carried "prev").  SRF addr = neighbor*32 + 7.
+// Loop body split to avoid intra-DBB %r7 race:
+//   DBB 4 : per-iter narrowing predicate
+//   DBB 5 : ld.global gpuWall (load-to-use split)
+//   DBB 6 : BARRIER + ld.srf OLD %r7 + min/min/add + capture %r15
+//   DBB 8 : publish %r7 = %r15 (predicated), counter++, branch -> DBB 4
+// cgra_fabric_done ensures all threads finish DBB 6 before any thread
+// dispatches DBB 8 -- so DBB 6 always reads pre-iter %r7 globally.
+FUNCTION = _Z14dynproc_kerneliPiS_S_iiii;
+
+DBB_ID = 0,
+BITSTREAM_ADDR = $DICE_BB0_0,
+BITSTREAM_LENGTH = 7,
+UNROLLING_FACTOR = 1,
+UNROLLING_STRATEGY = 0,
+LAT = 1,
+LD_DEST_REGS = (%c0, %c1, %c2, %c3, %c4, %c5, %c6),
+IS_PARAMETER_LOAD;
+
+DBB_ID = 1,
+BITSTREAM_ADDR = $DICE_BB0_1,
+BITSTREAM_LENGTH = 15,
+UNROLLING_FACTOR = 1,
+UNROLLING_STRATEGY = 0,
+LAT = 7,
+IN_REGS = (%c2, %c4, %c6),
+OUT_REGS = (%p0, %p1, %p2, %r0, %r1, %r2, %r3, %r6),
+LD_DEST_REGS = (%r7);
+
+DBB_ID = 2,
+BITSTREAM_ADDR = $DICE_BB0_2,
+BITSTREAM_LENGTH = 12,
+UNROLLING_FACTOR = 1,
+UNROLLING_STRATEGY = 0,
+LAT = 5,
+IN_REGS = (%c0, %c4, %r1),
+OUT_REGS = (%p3, %p31, %r24, %r25),
+BRANCH = 1,
+BRANCH_PRED = (%p3),
+BRANCH_TARGET = 7,
+BRANCH_RECVPC = 7;
+
+DBB_ID = 3,
+BITSTREAM_ADDR = $DICE_BB0_3,
+BITSTREAM_LENGTH = 13,
+UNROLLING_FACTOR = 1,
+UNROLLING_STRATEGY = 0,
+LAT = 6,
+IN_REGS = (%r2, %r24, %r25),
+OUT_REGS = (%p6, %r4, %r8, %r9, %r15);
+
+// optstep5+6 (#3): DBB 4 (predicate) and DBB 5 (gpuWall load) both fused
+// into DBB 6.  No %r7 write in DBB 6 (still deferred to DBB 8), so the
+// programming-model rule is respected.  Loop body is now just DBB 6 →
+// DBB 8 → DBB 6 (2 DBBs per iter, down from 4).
+
+DBB_ID = 6,
+BITSTREAM_ADDR = $DICE_BB0_6,
+BITSTREAM_LENGTH = 18,
+UNROLLING_FACTOR = 1,
+UNROLLING_STRATEGY = 0,
+LAT = 10,
+// 18 ops; PE = 5(pred) + 4(load addr) + 3(min/min/add) = 12 PE at UF=1
+// (within 16 budget).  UF=2 would need 24 PE -> over budget, so UF=1.
+// Bank usage unchanged from optstep1 since same regs accessed; 4 ld.srf
+// + 1 ld.global at UF=1 fits 4 LD/4 SRF ports.
+IN_REGS = (%c1, %c4, %c5, %p6, %r2, %r3, %r4, %r7, %r8, %r9),
+OUT_REGS = (%p10, %r15),
+LD_DEST_REGS = (%r20),
+BARRIER;
+
+DBB_ID = 8,
+BITSTREAM_ADDR = $DICE_BB0_8,
+BITSTREAM_LENGTH = 4,
+UNROLLING_FACTOR = 2,
+UNROLLING_STRATEGY = 0,
+LAT = 2,
+// optstep7 (#4): dropped the not-last-iter predicate gate around the
+// publish — writing %r7 on the last iter is harmless (DBB 7 reads %r15,
+// not %r7).  Saves 3 ops and 1 setp/and PE pair per iter.
+IN_REGS = (%c0, %p10, %r4, %r15),
+OUT_REGS = (%p14, %r4, %r7),
+BRANCH = 1,
+BRANCH_PRED = (%p14),
+BRANCH_TARGET = 6,
+BRANCH_RECVPC = 7;
+
+DBB_ID = 7,
+BITSTREAM_ADDR = $DICE_BB0_7,
+BITSTREAM_LENGTH = 11,
+UNROLLING_FACTOR = 2,
+UNROLLING_STRATEGY = 0,
+LAT = 4,
+IN_REGS = (%c0, %c3, %p6, %r2, %r3, %r15),
+STORE = 1;
+
+DBB_ID = 17,
+BITSTREAM_ADDR = $DICE_BB0_17,
+RET;

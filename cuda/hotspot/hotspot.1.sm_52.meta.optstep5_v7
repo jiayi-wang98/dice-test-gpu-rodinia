@@ -24,18 +24,37 @@ LAT = 6,
 IN_REGS = (%c0, %c4, %c5, %c6, %c7),
 OUT_REGS = (%p6, %r0, %r1, %r2, %r3, %r4, %r5, %r6);
 
+DBB_ID = 11,
+BITSTREAM_ADDR = $DICE_BB0_11,
+BITSTREAM_LENGTH = 8,
+UNROLLING_FACTOR = 2,
+UNROLLING_STRATEGY = 0,
+LAT = 5,
+// optstep2 (#3): split off from DBB 1.  Index calc + ld.global temp/power.
+// 4 PE + 2 LD per thread; at UF=2 → 8 PE + 4 LD within budget.  IN_REGS:
+// %r5 (yidx), %r6 (xidx).  Cosets {r5=5, r6=6} distance 1.
+IN_REGS = (%c1, %c2, %c4, %p6, %r5, %r6),
+OUT_REGS = (%r7),
+LD_DEST_REGS = (%r10, %r11);
+
 DBB_ID = 2,
 BITSTREAM_ADDR = $DICE_BB0_2,
-BITSTREAM_LENGTH = 18,
+BITSTREAM_LENGTH = 10,
 UNROLLING_FACTOR = 1,
 UNROLLING_STRATEGY = 0,
-LAT = 7,
-// optstep9 (#4): simplified validY/validX with max/min imms (saved 6 PE);
-// fused DBB 3 into DBB 2.  Now: index+ld.global + validY + validX = 14 PE
-// + 2 LD at UF=1.
-IN_REGS = (%c1, %c2, %c4, %c5, %p6, %r1, %r2, %r5, %r6),
-OUT_REGS = (%r7, %r12, %r13, %r14, %r15),
-LD_DEST_REGS = (%r10, %r11);
+LAT = 5,
+IN_REGS = (%c5, %r1),
+OUT_REGS = (%r12, %r13);
+
+DBB_ID = 3,
+BITSTREAM_ADDR = $DICE_BB0_3,
+BITSTREAM_LENGTH = 10,
+UNROLLING_FACTOR = 1,
+UNROLLING_STRATEGY = 0,
+LAT = 5,
+// optstep3 (#3): split.  This half = validXmin/Xmax.  ~8 PE.
+IN_REGS = (%c4, %r2),
+OUT_REGS = (%r14, %r15);
 
 DBB_ID = 12,
 BITSTREAM_ADDR = $DICE_BB0_12,
@@ -52,16 +71,24 @@ BRANCH_PRED = (%p15),
 BRANCH_TARGET = 19,
 BRANCH_RECVPC = 19;
 
+DBB_ID = 4,
+BITSTREAM_ADDR = $DICE_BB0_4,
+BITSTREAM_LENGTH = 8,
+UNROLLING_FACTOR = 2,
+UNROLLING_STRATEGY = 0,
+LAT = 6,
+IN_REGS = (%c8, %c9, %c10, %c11, %c12),
+OUT_REGS = (%r16, %r17, %r18, %r19);
+
 DBB_ID = 5,
 BITSTREAM_ADDR = $DICE_BB0_5,
-BITSTREAM_LENGTH = 20,
+BITSTREAM_LENGTH = 12,
 UNROLLING_FACTOR = 1,
 UNROLLING_STRATEGY = 0,
-LAT = 7,
-// optstep7 (#3): DBB 4 (rcp/cvt for Rx_1/Ry_1/Rz_1/sdc) merged here.  16 PE
-// at UF=1 (12 from N/S addrs + 4 from rcp).  4 cvt are FREE.
-IN_REGS = (%c8, %c9, %c10, %c11, %c12, %r3, %r4, %r12, %r13),
-OUT_REGS = (%r16, %r17, %r18, %r19, %r20, %r21);
+LAT = 5,
+// optstep4 (#3): split.  This half = N/S clamps + N/S SRF addr calc.  12 PE.
+IN_REGS = (%r3, %r4, %r12, %r13),
+OUT_REGS = (%r20, %r21);
 
 DBB_ID = 13,
 BITSTREAM_ADDR = $DICE_BB0_13,
@@ -101,15 +128,10 @@ BARRIER;
 
 DBB_ID = 8,
 BITSTREAM_ADDR = $DICE_BB0_8,
-BITSTREAM_LENGTH = 4,
-UNROLLING_FACTOR = 4,
+BITSTREAM_LENGTH = 7,
+UNROLLING_FACTOR = 2,
 UNROLLING_STRATEGY = 0,
-LAT = 2,
-// optstep10 (#4): dropped not-last-iter gate (saves 3 PE).  Now 2 PE
-// (add.s32 counter, setp.lt) + branch.  UF=4 → 8 PE within budget.
-// Reg cosets {r10=2, r24=0, r25=1} distinct; distances {1,8,2} -- WAIT
-// r10 and r24 differ by 14 (10-24=-14), not 8.  All distances {14,15,1}
-// → no {8,16,24} → UF=4 OK.
+LAT = 3,
 IN_REGS = (%c0, %p20, %r24, %r25),
 OUT_REGS = (%p25, %r10, %r24),
 BRANCH = 1,
@@ -119,15 +141,13 @@ BRANCH_RECVPC = 16;
 
 DBB_ID = 16,
 BITSTREAM_ADDR = $DICE_BB0_16,
-BITSTREAM_LENGTH = 4,
-UNROLLING_FACTOR = 4,
+BITSTREAM_LENGTH = 15,
+UNROLLING_FACTOR = 1,
 UNROLLING_STRATEGY = 0,
-LAT = 3,
-// optstep8 (#4): reuse %p20 from the loop's last iter — same predicate
-// (isValid AND tx,ty in [iter, 15-iter]) needed for the store gate.  PE=2
-// (mul.wide + add.s64), at UF=4 → 8 PE within budget.  Reg cosets {r7=7,
-// r25=1}, distance 6 — UF=4 OK.
-IN_REGS = (%c3, %p20, %r7, %r25),
+LAT = 5,
+// optstep1: dropped UF=2 → UF=1.  PE=12 at UF=2 was 24 > 16 budget.
+// Post-loop store DBB; runs once per CTA, not hot.
+IN_REGS = (%c0, %c3, %p6, %r3, %r4, %r7, %r25),
 STORE = 1;
 
 DBB_ID = 19,

@@ -1,0 +1,121 @@
+// DICECompiler Metadata for: stencil3d (RF-unified v7, real-addr SRF)
+// 11 live DBBs (0,1,2,3,4,5,6,7,8,9,11).
+// Publication reg = %r10.  SRF addr = tid*32 + 10.
+// DBB 4: E/W ld.srf (BARRIER, II=1).
+// DBB 6: N/S ld.srf (II=1).
+// DBB 8: T/B ld.srf (II=2 -- ±64 tid offset collapses to same bank mod 32).
+FUNCTION = _Z16stencil3d_kernelPKiPiiii;
+
+DBB_ID = 0,
+BITSTREAM_ADDR = $DICE_BB0_0,
+BITSTREAM_LENGTH = 5,
+UNROLLING_FACTOR = 1,
+UNROLLING_STRATEGY = 0,
+LAT = 1,
+LD_DEST_REGS = (%c0, %c1, %c2, %c3, %c4),
+IS_PARAMETER_LOAD;
+
+DBB_ID = 1,
+BITSTREAM_ADDR = $DICE_BB0_1,
+BITSTREAM_LENGTH = 24,
+UNROLLING_FACTOR = 1,
+UNROLLING_STRATEGY = 0,
+LAT = 10,
+IN_REGS = (%c0, %c2, %c3, %c4),
+OUT_REGS = (%p0, %p1, %p2, %p3, %r0, %r1, %r2, %r3, %r4, %r5, %r6, %r7, %r9),
+LD_DEST_REGS = (%r10),
+BRANCH = 1,
+BRANCH_PRED = (%p3),
+BRANCH_TARGET = 11,
+BRANCH_RECVPC = 11;
+
+DBB_ID = 2,
+BITSTREAM_ADDR = $DICE_BB0_2,
+BITSTREAM_LENGTH = 10,
+UNROLLING_FACTOR = 1,
+UNROLLING_STRATEGY = 0,
+LAT = 5,
+// 10 PE ops -- cannot fit at UF=2 (10*2=20 > 16), use UF=1.
+IN_REGS = (%r0, %r2, %r4),
+OUT_REGS = (%p4, %p5, %p6, %p7, %p8, %p9, %r8);
+
+DBB_ID = 3,
+BITSTREAM_ADDR = $DICE_BB0_3,
+BITSTREAM_LENGTH = 7,
+UNROLLING_FACTOR = 2,
+UNROLLING_STRATEGY = 0,
+LAT = 4,
+IN_REGS = (%c2, %r1, %r7, %p4, %p5),
+OUT_REGS = (%p10, %p11),
+LD_DEST_REGS = (%r11, %r12);
+
+DBB_ID = 4,
+BITSTREAM_ADDR = $DICE_BB0_4,
+BITSTREAM_LENGTH = 8,
+UNROLLING_FACTOR = 2,
+UNROLLING_STRATEGY = 0,
+LAT = 5,
+// SRF pipeline gap k = 2.  E/W targets at ±1 in tid -> banks (tid+9),(tid+11)
+// mod 32 -- distinct -> II=1.
+IN_REGS = (%p4, %p5, %p10, %p11, %r8, %r11, %r12),
+OUT_REGS = (%r13, %r14),
+BARRIER;
+
+DBB_ID = 5,
+BITSTREAM_ADDR = $DICE_BB0_5,
+BITSTREAM_LENGTH = 11,
+UNROLLING_FACTOR = 2,
+UNROLLING_STRATEGY = 0,
+LAT = 5,
+IN_REGS = (%c2, %c3, %r3, %r7, %p6, %p7),
+OUT_REGS = (%p12, %p13),
+LD_DEST_REGS = (%r15, %r16);
+
+DBB_ID = 6,
+BITSTREAM_ADDR = $DICE_BB0_6,
+BITSTREAM_LENGTH = 8,
+UNROLLING_FACTOR = 1,
+UNROLLING_STRATEGY = 0,
+LAT = 5,
+// N/S SRF targets distinct banks BUT operand-fetch of (%r8, %r15, %r16)
+// has %r8 and %r16 at distance 8 -> bank conflict at UF=2.  Drop to UF=1
+// (rename would propagate through DBB 5 boundary load destination).
+IN_REGS = (%p6, %p7, %p12, %p13, %r8, %r15, %r16),
+OUT_REGS = (%r17, %r18);
+
+DBB_ID = 7,
+BITSTREAM_ADDR = $DICE_BB0_7,
+BITSTREAM_LENGTH = 12,
+UNROLLING_FACTOR = 1,
+UNROLLING_STRATEGY = 0,
+LAT = 6,
+IN_REGS = (%c2, %c3, %c4, %r5, %r7, %p8, %p9),
+OUT_REGS = (%p14, %p15),
+LD_DEST_REGS = (%r6, %r19);
+
+DBB_ID = 8,
+BITSTREAM_ADDR = $DICE_BB0_8,
+BITSTREAM_LENGTH = 8,
+UNROLLING_FACTOR = 2,
+UNROLLING_STRATEGY = 0,
+LAT = 5,
+// T/B targets at ±64 in tid -> banks BOTH (tid+10) mod 32 -- 2-way bank
+// collision -> DISPATCH_II = 2.
+IN_REGS = (%p8, %p9, %p14, %p15, %r8, %r6, %r19),
+OUT_REGS = (%r6, %r21),
+DISPATCH_II = 2;
+
+DBB_ID = 9,
+BITSTREAM_ADDR = $DICE_BB0_9,
+BITSTREAM_LENGTH = 9,
+UNROLLING_FACTOR = 1,
+UNROLLING_STRATEGY = 0,
+LAT = 7,
+// 8 %r IN_REGS contain multiple distance-8 pairs (%r6,%r14), (%r13,%r21).
+// Renaming all of them would cascade through 4 DBBs; accept UF=1 here.
+IN_REGS = (%c1, %r6, %r9, %r10, %r13, %r14, %r17, %r18, %r21),
+STORE = 1;
+
+DBB_ID = 11,
+BITSTREAM_ADDR = $DICE_BB0_11,
+RET;

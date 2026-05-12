@@ -95,26 +95,18 @@ mov.u32 %r15, 0;
 // optstep8 (#4): precompute gpuWall base ptr (%r10) and stride (%r11)
 // so the loop body just needs an add.s64 to advance, not a full
 // mad/cvta/mul.wide/add chain per iter.
-
-$DICE_BB0_15:
-// optstep13 (#3): split DBB 3 to keep PE ≤ 16 per DBB.
-// This half precomputes gpuWall base ptr/stride and tx bounds.
 mad.lo.s32 %w0, %c5, %c4, %r3;
 cvta.to.global.u64 %w1, %c1;
 mul.wide.s32 %w2, %w0, 4;
 add.s64 %r10, %w1, %w2;
 mul.wide.s32 %r11, %c4, 4;
-// optstep12 (#4): hoist tx-bound prep for DBB 4 — saves 1 PE per iter.
-add.s32 %r13, %r2, -1;
-mov.u32 %w3, 255;
-sub.s32 %r14, %w3, %r2;
-
 
 $DICE_BB0_4:
 // Per-iter narrowing predicate: %p10 = isValid AND tx in [%r4+1, 254-%r4].
-// optstep12: tx-1 in %r13, 255-tx in %r14 precomputed in DBB 3.
-setp.ge.s32 %p8, %r13, %r4;
-setp.gt.s32 %p7, %r14, %r4;
+mov.u32 %w0, 254;
+sub.s32 %w1, %w0, %r4;
+setp.le.s32 %p7, %r2, %w1;
+setp.gt.s32 %p8, %r2, %r4;
 and.pred %p9, %p7, %p8;
 and.pred %p10, %p6, %p9;
 
