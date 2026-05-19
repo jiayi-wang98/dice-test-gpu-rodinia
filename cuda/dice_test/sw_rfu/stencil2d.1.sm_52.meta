@@ -1,0 +1,88 @@
+// DICECompiler Metadata for: stencil2d (RF-unified v7, real-addr SRF)
+// 9 live DBBs.
+// Publication reg = %r7.  SRF addr = tid*32 + 7.
+// DBB 4 issues N/S ld.srf (BARRIER, II=2, bank collision at ±16 in tid).
+// DBB 6 issues E/W ld.srf (II=1).  DBB 7 does the sum and store.
+FUNCTION = _Z16stencil2d_kernelPKiPiii;
+
+DBB_ID = 0,
+BITSTREAM_ADDR = $DICE_BB0_0,
+BITSTREAM_LENGTH = 4,
+UNROLLING_FACTOR = 1,
+UNROLLING_STRATEGY = 0,
+LAT = 1,
+LD_DEST_REGS = (%c0, %c1, %c2, %c3),
+IS_PARAMETER_LOAD;
+
+DBB_ID = 1,
+BITSTREAM_ADDR = $DICE_BB0_1,
+BITSTREAM_LENGTH = 21,
+UNROLLING_FACTOR = 1,
+UNROLLING_STRATEGY = 0,
+LAT = 8,
+// optstep1 (#3+#4): merged DBB 2 in; replaced shl+add chains with mad.lo
+// (gx/gy and SRF_base).  14 PE at UF=1 (within 16 budget).  Saves one
+// whole DBB-traversal per CTA.
+IN_REGS = (%c0, %c2, %c3),
+OUT_REGS = (%p0, %p1, %p2, %p3, %p4, %p5, %p6, %r0, %r1, %r2, %r3, %r4, %r5, %r6, %r8),
+LD_DEST_REGS = (%r7),
+BRANCH = 1,
+BRANCH_PRED = (%p2),
+BRANCH_TARGET = 8,
+BRANCH_RECVPC = 8;
+
+DBB_ID = 3,
+BITSTREAM_ADDR = $DICE_BB0_3,
+BITSTREAM_LENGTH = 11,
+UNROLLING_FACTOR = 2,
+UNROLLING_STRATEGY = 0,
+LAT = 5,
+IN_REGS = (%c2, %c3, %r3, %r6, %p3, %p4),
+OUT_REGS = (%p7, %p8),
+LD_DEST_REGS = (%r10, %r11);
+
+DBB_ID = 4,
+BITSTREAM_ADDR = $DICE_BB0_4,
+BITSTREAM_LENGTH = 8,
+UNROLLING_FACTOR = 2,
+UNROLLING_STRATEGY = 0,
+LAT = 5,
+// SRF pipeline gap k = 2.  N/S targets at ±16 in tid hit bank (tid+23)
+// mod 32 from both reads -> 2-way collision -> DISPATCH_II = 2.
+IN_REGS = (%p3, %p4, %p7, %p8, %r8, %r10, %r11),
+OUT_REGS = (%r12, %r19),
+DISPATCH_II = 2,
+BARRIER;
+
+DBB_ID = 5,
+BITSTREAM_ADDR = $DICE_BB0_5,
+BITSTREAM_LENGTH = 7,
+UNROLLING_FACTOR = 2,
+UNROLLING_STRATEGY = 0,
+LAT = 4,
+IN_REGS = (%c2, %r1, %r6, %p5, %p6),
+OUT_REGS = (%p9, %p10),
+LD_DEST_REGS = (%r14, %r15);
+
+DBB_ID = 6,
+BITSTREAM_ADDR = $DICE_BB0_6,
+BITSTREAM_LENGTH = 8,
+UNROLLING_FACTOR = 2,
+UNROLLING_STRATEGY = 0,
+LAT = 5,
+// E/W targets at ±1 in tid -> banks (tid+6) and (tid+8) -- distinct -> II=1.
+IN_REGS = (%p5, %p6, %p9, %p10, %r8, %r14, %r15),
+OUT_REGS = (%r17, %r18);
+
+DBB_ID = 7,
+BITSTREAM_ADDR = $DICE_BB0_7,
+BITSTREAM_LENGTH = 7,
+UNROLLING_FACTOR = 2,
+UNROLLING_STRATEGY = 0,
+LAT = 5,
+IN_REGS = (%c1, %r5, %r7, %r12, %r17, %r18, %r19),
+STORE = 1;
+
+DBB_ID = 8,
+BITSTREAM_ADDR = $DICE_BB0_8,
+RET;
