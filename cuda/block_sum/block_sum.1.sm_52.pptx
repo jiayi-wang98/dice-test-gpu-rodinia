@@ -1,0 +1,86 @@
+// DICECompiler PPTX for: /data2/jwang710/DICE-RFSMEM/DICE_ISCA_Eval/dice-test-gpu-rodinia/cuda/block_sum/block_sum.1.sm_52.ptx
+//generation time: 2026-05-19T00:19:40-07:00
+.version 7.7
+.target sm_52
+.address_size 64
+.visible .entry _Z16block_sum_kernelPKiPii(
+.param .u64 _Z16block_sum_kernelPKiPii_param_0,
+.param .u64 _Z16block_sum_kernelPKiPii_param_1,
+.param .u32 _Z16block_sum_kernelPKiPii_param_2
+)
+{
+//use 3 constant registers, 6 general purpose registers and 6 predicate registers
+.reg .b64 %c<32>;
+.reg .b32 %r<32>;
+.reg .pred %p<6>;
+.reg .b64 %w<10>;
+
+.shared .align 4 .b8 _ZZ16block_sum_kernelPKiPiiE5sdata[1024];
+
+$DICE_BB0_0:
+ld.param.u64 %c0, [_Z16block_sum_kernelPKiPii_param_0];
+ld.param.u64 %c1, [_Z16block_sum_kernelPKiPii_param_1];
+ld.param.u32 %c2, [_Z16block_sum_kernelPKiPii_param_2];
+
+$DICE_BB0_1:
+mov.u32 %r0, %tid.x;
+setp.ge.s32 %p0, %r0, %c2;
+mov.u32 %r2, 0;
+mov.u32 %r1, %ntid.x;
+@!%p0 cvta.to.global.u64 %r3, %c0;
+@!%p0 mov.u32 %r4, %r0;
+@%p0 bra $DICE_BB0_4;
+
+$DICE_BB0_2:
+mul.wide.s32 %w0, %r4, 4;
+add.s64 %w1, %r3, %w0;
+ld.global.u32 %r5, [%w1];
+add.s32 %r4, %r4, %r1;
+setp.lt.s32 %p1, %r4, %c2;
+
+$DICE_BB0_3:
+add.s32 %r2, %r5, %r2;
+@%p1 bra $DICE_BB0_2;
+
+$DICE_BB0_4:
+shl.b32 %w2, %r0, 2;
+mov.u32 %w3, _ZZ16block_sum_kernelPKiPiiE5sdata;
+add.s32 %r3, %w3, %w2;
+st.shared.u32 [%r3], %r2;
+
+$DICE_BB0_5:
+bar.sync 0;
+shr.u32 %r2, %r1, 1;
+setp.eq.s32 %p2, %r2, 0;
+@%p2 bra $DICE_BB0_9;
+
+$DICE_BB0_6:
+setp.ge.s32 %p3, %r0, %r2;
+@!%p3 shl.b32 %w4, %r2, 2;
+@!%p3 add.s32 %w5, %r3, %w4;
+@!%p3 ld.shared.u32 %r1, [%r3];
+@!%p3 ld.shared.u32 %r4, [%w5];
+
+$DICE_BB0_7:
+@!%p3 add.s32 %w6, %r1, %r4;
+@!%p3 st.shared.u32 [%r3], %w6;
+
+$DICE_BB0_8:
+bar.sync 0;
+shr.s32 %w7, %r2, 1;
+setp.gt.s32 %p4, %r2, 1;
+mov.u32 %r2, %w7;
+@%p4 bra $DICE_BB0_6;
+
+$DICE_BB0_9:
+setp.ne.s32 %p5, %r0, 0;
+@!%p5 ld.shared.u32 %r1, [_ZZ16block_sum_kernelPKiPiiE5sdata];
+@!%p5 cvta.to.global.u64 %w8, %c1;
+@!%p5 atom.global.add.u32 %w9, [%w8], %r1;
+
+$DICE_BB0_10:
+ret;
+
+}
+
+
