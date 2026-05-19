@@ -1,0 +1,130 @@
+<?xml version="1.0" ?>
+<!-- DICEwattch overlay XML.
+
+     The XML has THREE sections:
+
+       1. DICE-specific structure energies — Bcache / SIMT-stack /
+          scoreboard / dispatcher / BCT / cta_scheduler. These are
+          unique to DICE and not present in AccelWattch.
+
+       2. AccelWattch-format scaling coefficients — names match the
+          <param> entries in any AccelWattch GPU XML (e.g.
+          accelwattch_ptx_sim.xml for RTX2060S). You can copy this
+          section VERBATIM from any baseline AccelWattch run for your
+          target GPU. The energy formula DICEwattch applies is:
+
+              E_component = raw_count * scaling_coeff * pipe_energy
+
+          which is identical to AccelWattch's internal accumulation.
+
+       3. DICEwattch per-pipe energy constants — one McPAT-derived
+          energy per pipeline (INT, FPU, DPU, SFU, ICACHE, DCACHE,
+          L2, DRAM, MCP, NOC, RF, etc.). Tune per GPU technology.
+  -->
+<component id="root" name="root">
+  <component id="dice_power" name="dice_power">
+
+    <!-- ================================================================
+         1. DICE-specific structure energies (nJ per access). Defaults
+            are 12 nm-scaled CACTI values from the 4subcore workbook
+            component sheets.
+         ================================================================ -->
+    <param name="DICE_BCACHE_READ_E"    value="0.019637"/>
+    <param name="DICE_BCACHE_WRITE_E"   value="0.019300"/>
+    <param name="DICE_SIMT_STACK_RD_E"  value="0.006707"/>
+    <param name="DICE_SIMT_STACK_WR_E"  value="0.005826"/>
+    <param name="DICE_SCOREBOARD_RD_E"  value="0.000438"/>
+    <param name="DICE_SCOREBOARD_WR_E"  value="0.000449"/>
+    <param name="DICE_DISPATCHER_TH_E"  value="0.000097"/>
+    <param name="DICE_BCT_PUSHPOP_E"    value="0.0001452"/>
+    <param name="DICE_BCT_DEC_E"        value="0.0000726"/>
+    <param name="DICE_ACTIVE_CTA_E"     value="0.0004840"/>
+    <param name="DICE_SCHED_EBLOCK_E"   value="0.0000968"/>
+
+    <!-- ================================================================
+         2. AccelWattch-format scaling coefficients (RTX2060S target,
+            copied verbatim from gpu-rodinia/.../accelwattch_ptx_sim.xml).
+            Drop in your own AccelWattch GPU XML <param> section here.
+         ================================================================ -->
+    <!-- TOT_INST omitted: DICE has no instruction buffer (IBP = 0). -->
+    <param name="FP_INT"         value="4.57"         />
+    <param name="IC_H"           value="11.44089762"  />
+    <param name="IC_M"           value="21.76302498"  />
+    <param name="DC_RH"          value="7.737353491"  />
+    <param name="DC_RM"          value="8.618027871"  />
+    <param name="DC_WH"          value="0.53469516"   />
+    <param name="DC_WM"          value="13.9055689"   />
+    <param name="CC_H"           value="0.65916315"   />
+    <param name="CC_M"           value="0.73418985"   />
+    <param name="TC_H"           value="0.01021"      />
+    <param name="TC_M"           value="0.02466"      />
+    <param name="SHRD_ACC"       value="1.313660815"  />
+    <param name="REG_RD"         value="0.053279375"  />
+    <param name="REG_WR"         value="0.079919063"  />
+    <param name="NON_REG_OPs"    value="0"            />
+    <param name="INT_ACC"        value="3.429666768"  />
+    <param name="FP_ACC"         value="0.711591276"  />
+    <param name="DP_ACC"         value="0.742812382"  />
+    <param name="INT_MUL24_ACC"  value="0.290770573"  />
+    <param name="INT_MUL32_ACC"  value="0.252598514"  />
+    <param name="INT_MUL_ACC"    value="0.148636575"  />
+    <param name="INT_DIV_ACC"    value="5.121706665"  />
+    <param name="FP_MUL_ACC"     value="0.212559571"  />
+    <param name="FP_DIV_ACC"     value="4.599926258"  />
+    <param name="FP_SQRT_ACC"    value="1.241271438"  />
+    <param name="FP_LG_ACC"      value="0.59034036"   />
+    <param name="FP_SIN_ACC"     value="0.212555149"  />
+    <param name="FP_EXP_ACC"     value="0.702043615"  />
+    <param name="DP_MUL_ACC"     value="0.282564496"  />
+    <param name="DP_DIV_ACC"     value="4.599926258"  />
+    <param name="TENSOR_ACC"     value="2.485"        />
+    <param name="TEX_ACC"        value="0.212559047"  />
+    <param name="MEM_RD"         value="0.02772"      />
+    <param name="MEM_WR"         value="0.0336"       />
+    <param name="MEM_PRE"        value="0.00924"      />
+    <param name="L2_RH"          value="1.046834662"  />
+    <param name="L2_RM"          value="2.670605032"  />
+    <param name="L2_WH"          value="3.269555394"  />
+    <param name="L2_WM"          value="2.18020968"   />
+    <param name="NOC_A"          value="83.18977901"  />
+    <param name="PIPE_A"         value="0.0257"       />
+    <param name="IDLE_CORE_N"    value="1.0"          />
+    <param name="constant_power" value="32.32522272"  />
+    <param name="idle_core_power" value="0.0121383"   />
+
+    <!-- ================================================================
+         3. DICEwattch per-pipe energy constants (nJ per scaled counter).
+            One per pipeline, per GPU technology. Defaults below are
+            back-derived from a RTX2060S AccelWattch nn_cuda run so that
+              power[component] = raw_count * scaling * pipe_E
+            reproduces the AccelWattch baseline.
+         ================================================================ -->
+    <!-- Each value is the NAKED McPAT/CACTI per-scaled-counter energy
+         (nJ/scaled-count). DICEwattch computes:
+            E_component = raw_count * scaling_coeff * pipe_E_naked
+         where scaling_coeff is from section 2 above. Back-derived from
+         the AccelWattch RTX2060S nn_cuda run so the result matches the
+         AccelWattch report apples-to-apples. -->
+    <param name="DICE_E_INT_PIPE"   value="0.000462"/>  <!-- INT base -->
+    <param name="DICE_E_FPU_PIPE"   value="0.018854"/>  <!-- FP base -->
+    <param name="DICE_E_DPU_PIPE"   value="0.018854"/>  <!-- DP base -->
+    <param name="DICE_E_SFU_PIPE"   value="0.038674"/>  <!-- SFU pipe -->
+    <param name="DICE_E_ICACHE"     value="0.018286"/>
+    <param name="DICE_E_CCACHE"     value="0.033562"/>
+    <param name="DICE_E_TCACHE"     value="0.0"/>
+    <param name="DICE_E_DCACHE"     value="0.029329"/>
+    <param name="DICE_E_SHMEM"      value="0.0015"/>   <!-- per-bank read energy at 12nm FinFET (CACTI ~1.0-1.5 pJ for 2KB single-port SRAM bank); DICE's pipelined dispatch hits one bank per pipe cycle, so the per-access energy should be per-bank, not per-warp-cycle as in AccelWattch (where 0.030448 nJ bundles 32 parallel banks per dispatch cycle). -->
+    <param name="DICE_E_L2"         value="0.034778"/>
+    <param name="DICE_E_DRAM"       value="70.346"/>
+    <param name="DICE_E_MCP"        value="8.388"/>
+    <param name="DICE_E_NOC"        value="0.002683"/>
+    <param name="DICE_E_RF_READ"    value="0.056525"/>
+    <param name="DICE_E_RF_WRITE"   value="0.056525"/>
+    <!-- DICE_E_IBP omitted: DICE has no instruction buffer. -->
+
+    <!-- Static power (mW) and core clock for converting nJ to mW. -->
+    <param name="DICE_STATIC_P_MW"      value="37.240"/>
+    <param name="DICE_CLOCK_FREQ_GHZ"   value="1.47"/>
+
+  </component>
+</component>

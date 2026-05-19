@@ -1,0 +1,73 @@
+// DICECompiler Metadata for: stencil1d (RF-Unified)
+// Hand-written for HPCA 2027 RF/SMEM unification microbench.
+//
+// Diff vs baseline:
+//   * DBB 4 (STS + BARRIER) removed.
+//   * DBB 1 unchanged — still a memory-load p-graph (ends on ld.global).
+//   * DBB 5 gains 2 XRF reads; new field XRF_PORTS records port count.
+//   * No new memory-side hardware; cross-thread reads consume RF read ports.
+//
+FUNCTION = _Z16stencil1d_kernelPKiPii;
+
+DBB_ID = 0,
+BITSTREAM_ADDR = $DICE_BB0_0,
+BITSTREAM_LENGTH = 3,
+UNROLLING_FACTOR = 1,
+UNROLLING_STRATEGY = 0,
+LD_DEST_REGS = (%c0, %c1, %c2),
+IS_PARAMETER_LOAD;
+
+DBB_ID = 1,
+BITSTREAM_ADDR = $DICE_BB0_1,
+BITSTREAM_LENGTH = 10,
+UNROLLING_FACTOR = 2,
+UNROLLING_STRATEGY = 0,
+LAT = 6,
+IN_REGS = (%c0, %c2),
+OUT_REGS = (%p1, %r0, %r1, %r2, %r4),
+LD_DEST_REGS = (%r4);
+
+// (no DBB 4 — STS / barrier elided.)
+
+DBB_ID = 5,
+BITSTREAM_ADDR = $DICE_BB0_5,
+BITSTREAM_LENGTH = 14,
+UNROLLING_FACTOR = 2,
+UNROLLING_STRATEGY = 0,
+LAT = 6,
+IN_REGS = (%r0, %r1, %r4),
+OUT_REGS = (%r8, %r9, %r10),
+XRF_PORTS = 2,
+XRF_BANKS = (%r4 @ T-1, %r4 @ T+1),
+XRF_NOTE = "lane-stride 1; banks (r+T-1), (r+T+1) mod 32 — no self-conflict";
+
+DBB_ID = 6,
+BITSTREAM_ADDR = $DICE_BB0_6,
+BITSTREAM_LENGTH = 4,
+UNROLLING_FACTOR = 4,
+UNROLLING_STRATEGY = 0,
+LAT = 4,
+IN_REGS = (%c2, %r1, %r2),
+OUT_REGS = (%r10),
+LD_DEST_REGS = (%r10),
+BRANCH = 1,
+BRANCH_PRED = (%p7),
+BRANCH_TARGET = 7,
+BRANCH_RECVPC = 7;
+
+DBB_ID = 7,
+BITSTREAM_ADDR = $DICE_BB0_7,
+BITSTREAM_LENGTH = 4,
+UNROLLING_FACTOR = 4,
+UNROLLING_STRATEGY = 0,
+LAT = 3,
+IN_REGS = (%p1, %c1, %r1, %r10),
+STORE = 1,
+BRANCH = 1,
+BRANCH_PRED = (%p1),
+BRANCH_TARGET = 17,
+BRANCH_RECVPC = 17;
+
+DBB_ID = 17,
+BITSTREAM_ADDR = $DICE_BB0_17,
+RET;

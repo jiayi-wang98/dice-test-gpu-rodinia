@@ -1,0 +1,91 @@
+
+
+
+
+
+
+
+
+.version 7.7
+.target sm_52
+.address_size 64
+
+
+
+
+.visible .entry _Z10min_kernelPKiPiii(
+.param .u64 _Z10min_kernelPKiPiii_param_0,
+.param .u64 _Z10min_kernelPKiPiii_param_1,
+.param .u32 _Z10min_kernelPKiPiii_param_2,
+.param .u32 _Z10min_kernelPKiPiii_param_3
+)
+{
+.reg .pred %p<8>;
+.reg .b32 %r<31>;
+.reg .b64 %rd<9>;
+
+	.shared .align 4 .b8 _ZZ10min_kernelPKiPiiiE4tile[1024];
+
+ld.param.u64 %rd1, [_Z10min_kernelPKiPiii_param_0];
+ld.param.u64 %rd2, [_Z10min_kernelPKiPiii_param_1];
+ld.param.u32 %r13, [_Z10min_kernelPKiPiii_param_2];
+ld.param.u32 %r15, [_Z10min_kernelPKiPiii_param_3];
+mov.u32 %r16, %ctaid.x;
+shl.b32 %r17, %r16, 4;
+mov.u32 %r1, %tid.x;
+add.s32 %r2, %r17, %r1;
+mov.u32 %r18, %ctaid.y;
+shl.b32 %r19, %r18, 4;
+mov.u32 %r3, %tid.y;
+add.s32 %r4, %r19, %r3;
+setp.lt.s32 %p2, %r2, %r13;
+setp.lt.s32 %p3, %r4, %r15;
+and.pred %p1, %p2, %p3;
+mov.u32 %r28, 0;
+not.pred %p4, %p1;
+@%p4 bra $L__BB0_2;
+
+cvta.to.global.u64 %rd3, %rd1;
+mad.lo.s32 %r20, %r4, %r13, %r2;
+mul.wide.s32 %rd4, %r20, 4;
+add.s64 %rd5, %rd3, %rd4;
+ld.global.u32 %r28, [%rd5];
+
+$L__BB0_2:
+shl.b32 %r21, %r3, 6;
+mov.u32 %r22, _ZZ10min_kernelPKiPiiiE4tile;
+add.s32 %r23, %r22, %r21;
+shl.b32 %r24, %r1, 2;
+add.s32 %r7, %r23, %r24;
+st.shared.u32 [%r7], %r28;
+bar.sync 0;
+@%p4 bra $L__BB0_8;
+
+ld.shared.u32 %r8, [%r7];
+setp.lt.s32 %p6, %r3, 1;
+mov.u32 %r29, %r8;
+@%p6 bra $L__BB0_5;
+
+ld.shared.u32 %r29, [%r7+-64];
+
+$L__BB0_5:
+setp.lt.s32 %p7, %r1, 1;
+mov.u32 %r30, %r8;
+@%p7 bra $L__BB0_7;
+
+ld.shared.u32 %r30, [%r7+-4];
+
+$L__BB0_7:
+add.s32 %r25, %r29, %r8;
+add.s32 %r26, %r25, %r30;
+mad.lo.s32 %r27, %r4, %r13, %r2;
+cvta.to.global.u64 %rd6, %rd2;
+mul.wide.s32 %rd7, %r27, 4;
+add.s64 %rd8, %rd6, %rd7;
+st.global.u32 [%rd8], %r26;
+
+$L__BB0_8:
+ret;
+
+}
+

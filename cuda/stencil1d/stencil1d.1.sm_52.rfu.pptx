@@ -1,0 +1,110 @@
+// DICECompiler PPTX for: examples/stencil1d/stencil1d.ptx (RF-Unified)
+// Hand-written for HPCA 2027 RF/SMEM unification.
+//
+// Key changes from baseline:
+//   * No .shared declaration  — tile[] elided.
+//   * No st.shared            — value stays in thread-private %r4.
+//   * No bar.sync             — p-graph RE boundary supplies write-visibility.
+//   * Three ld.shared replaced by two xrf.u32 (cross-thread RF read);
+//     center value reuses %r4 directly (zero-port read).
+//
+// xrf.u32  dest, %r<reg>, %w<lane> ;
+//   reads register %r<reg> of lane %w<lane> on this CP;
+//   bank = ((reg + lane) mod 32);  predicated by current p-graph predicate.
+//   Lane comes from a CGRA fabric wire — here the W/E bounded indices.
+//
+// Port budget: 4 cross-thread read ports per CP. This kernel uses 2.
+// Bank-conflict avoidance:
+//   The cross-thread reads target reg %r4 at lanes (T-1) and (T+1).
+//   Banks accessed in this cycle:
+//     port0 (cross, lane T-1) -> bank ((4 + T - 1) mod 32) = (T+3) mod 32
+//     port1 (cross, lane T+1) -> bank ((4 + T + 1) mod 32) = (T+5) mod 32
+//     local  (operand %r10, ignore — written next cycle)
+//   No collision in the bank set; compiler picked %r4 for the SMEM-resident
+//   datum and chose neighbour stride ±1, so all three banks are distinct.
+//
+.version 7.7
+.target sm_52
+.address_size 64
+// .globl _Z16stencil1d_kernelPKiPii
+.visible .entry _Z16stencil1d_kernelPKiPii(
+.param .u64 _Z16stencil1d_kernelPKiPii_param_0,
+.param .u64 _Z16stencil1d_kernelPKiPii_param_1,
+.param .u32 _Z16stencil1d_kernelPKiPii_param_2
+)
+{
+.reg .b32 %c<8>;
+.reg .b32 %r<16>;
+.reg .pred %p<8>;
+.reg .b32 %w<16>;
+
+// (no .shared)
+
+$DICE_BB0_0:
+ld.param.u64 %c0, [_Z16stencil1d_kernelPKiPii_param_0];
+ld.param.u64 %c1, [_Z16stencil1d_kernelPKiPii_param_1];
+ld.param.u32 %c2, [_Z16stencil1d_kernelPKiPii_param_2];
+
+$DICE_BB0_1:
+mov.u32 %w0, %ctaid.x;
+shl.b32 %w1, %w0, 8;
+mov.u32 %r0, %tid.x;                   // %r0 = tx
+add.s32 %r1, %w1, %r0;                 // %r1 = gx
+setp.ge.s32 %p1, %r1, %c2;
+cvta.to.global.u64 %w2, %c0;
+mul.wide.s32 %w3, %r1, 4;
+add.s64 %r2, %w2, %w3;
+mov.u32 %r4, 0;
+@!%p1 ld.global.u32 %r4, [%r2];        // %r4 = in[gx]; lives in this thread's RF.
+
+// $DICE_BB0_4 (STS+barrier) deleted.
+// p-graph boundary between BB1 and BB5 supplies write-visibility for %r4.
+
+$DICE_BB0_5:
+add.s32 %w0, %r0, -1;
+setp.eq.s32 %p2, %r0, 0;
+selp.b32 %w1, 0, %w0, %p2;             // %w1 = bounded lane W = (tx==0)?0:tx-1
+add.s32 %w2, %r0, 1;
+setp.eq.s32 %p3, %r0, 255;
+selp.b32 %w3, 255, %w2, %p3;           // %w3 = bounded lane E = (tx==255)?255:tx+1
+
+// Cross-thread RF reads. Lane index sourced from CGRA fabric wires.
+xrf.u32 %r8, %r4, %w1;                  // port0: %r8 = R[%r4] of lane %w1  (left)
+xrf.u32 %r9, %r4, %w3;                  // port1: %r9 = R[%r4] of lane %w3  (right)
+//                                        center reuses %r4 directly — no port.
+
+add.s32 %w7, %r4, %r8;
+add.s32 %r10, %w7, %r9;                 // %r10 = left + center + right
+
+// Boundary fix-up: gx == 0  (predicated; gmem load if needed)
+setp.ne.s32 %p4, %r1, 0;
+@%p4 bra $DICE_BB0_6;
+ld.global.u32 %w8, [%w2];
+ld.global.u32 %w9, [%w2+4];
+add.s32 %r10, %w8, %w9;
+
+$DICE_BB0_6:
+// Boundary fix-up: gx == N-1
+add.s32 %w10, %c2, -1;
+setp.ne.s32 %p5, %r1, %w10;
+setp.lt.s32 %p6, %c2, 2;
+or.pred %p7, %p5, %p6;
+@%p7 bra $DICE_BB0_7;
+add.s32 %w11, %c2, -2;
+mul.wide.s32 %w12, %w11, 4;
+add.s64 %w13, %w2, %w12;
+ld.global.u32 %w14, [%w13];
+ld.global.u32 %w15, [%r2];
+add.s32 %r10, %w14, %w15;
+
+$DICE_BB0_7:
+@%p1 bra $DICE_BB0_17;
+cvta.to.global.u64 %w0, %c1;
+mul.wide.s32 %w1, %r1, 4;
+add.s64 %r11, %w0, %w1;
+st.global.u32 [%r11], %r10;
+
+$DICE_BB0_17:
+ret;
+
+}

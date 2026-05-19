@@ -1,0 +1,42 @@
+{
+  "input_file": "/data2/jwang710/DICE-RFSMEM/DICE_ISCA_Eval/dice-test-gpu-rodinia/cuda/copy_only/copy_only.1.sm_52.ptx",
+  "resource_limits": {
+    "pe_count": 16,
+    "sfu_count": 4,
+    "ldst_port_count": 4
+  },
+  "overall": {
+    "kernel_count": 1,
+    "total_pgraph_count": 4,
+    "total_non_mov_ops": 8,
+    "avg_pgraph_size_non_mov_ops": 2.0,
+    "avg_pgraph_utilization": {
+      "pe": 0.75,
+      "sfu": 0.0,
+      "ldst": 1.0,
+      "total": 0.666667
+    }
+  },
+  "kernels": [
+    {
+      "function_id": 0,
+      "kernel_name": "_Z16copy_only_kernelPKiPii",
+      "pgraph_count": 4,
+      "active_pgraph_count": 2,
+      "total_non_mov_ops": 8,
+      "avg_pgraph_size_non_mov_ops": 2.0,
+      "avg_active_pgraph_size_non_mov_ops": 4.0,
+      "total_resource_ops": {
+        "pe": 6,
+        "sfu": 0,
+        "ldst": 2
+      },
+      "avg_pgraph_utilization": {
+        "pe": 0.75,
+        "sfu": 0.0,
+        "ldst": 1.0,
+        "total": 0.666667
+      }
+    }
+  ]
+}

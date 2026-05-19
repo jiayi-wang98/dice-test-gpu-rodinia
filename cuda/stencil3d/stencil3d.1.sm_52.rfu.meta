@@ -1,0 +1,70 @@
+// DICECompiler Metadata for: stencil3d (RF-Unified)
+// Hand-written for HPCA 2027.
+//
+// 7-point 3D stencil exceeds 4-port budget -> partition rule splits the
+// compute block into TWO p-graphs:
+//
+//    DBB 5 : E,W,N,S (4 XRF ports, saturated)
+//    DBB 6 : T,B + center (2 XRF ports, local read)
+//
+// The RE register exchange between DBB 5 and DBB 6 carries forward
+// %r20 (4-way partial) -- no SMEM, no barrier.
+//
+FUNCTION = _Z16stencil3d_kernelPKiPiiii;
+
+DBB_ID = 0,
+BITSTREAM_ADDR = $DICE_BB0_0,
+BITSTREAM_LENGTH = 5,
+UNROLLING_FACTOR = 1,
+UNROLLING_STRATEGY = 0,
+LD_DEST_REGS = (%c0, %c1, %c2, %c3, %c4),
+IS_PARAMETER_LOAD;
+
+DBB_ID = 1,
+BITSTREAM_ADDR = $DICE_BB0_1,
+BITSTREAM_LENGTH = 26,
+UNROLLING_FACTOR = 2,
+UNROLLING_STRATEGY = 0,
+LAT = 8,
+IN_REGS = (%c0, %c2, %c3, %c4),
+OUT_REGS = (%p2, %r0, %r1, %r2, %r3, %r4, %r5, %r6),
+LD_DEST_REGS = (%r4),
+RFU_REPLICATE = (%r4 -> %r5, %r4 -> %r6);
+
+DBB_ID = 5,
+BITSTREAM_ADDR = $DICE_BB0_5,
+BITSTREAM_LENGTH = 19,
+UNROLLING_FACTOR = 2,
+UNROLLING_STRATEGY = 0,
+LAT = 8,
+IN_REGS = (%p2, %r0, %r1, %r2, %r4),
+OUT_REGS = (%r10, %r11, %r12, %r13, %r20),
+XRF_PORTS = 4,
+XRF_BANKS = (%r4 @ T+1, %r4 @ T-1, %r4 @ T+8, %r4 @ T-8),
+XRF_NOTE = "horizontal pass; banks {T+5,T+3,T+12,T+28} mod 32 — distinct, conflict-free",
+BRANCH = 1,
+BRANCH_PRED = (%p2),
+BRANCH_TARGET = 17,
+BRANCH_RECVPC = 6;
+
+DBB_ID = 6,
+BITSTREAM_ADDR = $DICE_BB0_6,
+BITSTREAM_LENGTH = 13,
+UNROLLING_FACTOR = 2,
+UNROLLING_STRATEGY = 0,
+LAT = 6,
+IN_REGS = (%r2, %r4, %r5, %r6, %r20),
+OUT_REGS = (%r14, %r15, %r21),
+XRF_PORTS = 2,
+XRF_BANKS = (%r5 @ T+64, %r6 @ T-64),
+XRF_NOTE = "vertical pass; %r5/%r6 row-coloring breaks T+64==T-64 mod 32 alias; banks {T+5,T+6}",
+STORE = 1;
+
+DBB_ID = 17,
+BITSTREAM_ADDR = $DICE_BB0_17,
+RET;
+
+// Partition summary:
+//   Baseline 1 SMEM-compute block, 6 LDS, 1 BARRIER, 1 STS.
+//   RFU      2 compute blocks (split by 4-port rule), 0 LDS, 0 BARRIER,
+//            0 STS, 6 XRF total. RE boundary = write-visibility barrier.

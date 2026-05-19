@@ -1,0 +1,145 @@
+// DICECompiler PPTX for: stencil3d
+// RF-unified v2: 10 DBBs.  STS + dedicated bar+branch DBB dropped;
+// branch fused into DBB 1, BARRIER metadata on first SRF DBB.
+//
+.version 7.7
+.target sm_52
+.address_size 64
+.visible .entry _Z16stencil3d_kernelPKiPiiii(
+.param .u64 _Z16stencil3d_kernelPKiPiiii_param_0,
+.param .u64 _Z16stencil3d_kernelPKiPiiii_param_1,
+.param .u32 _Z16stencil3d_kernelPKiPiiii_param_2,
+.param .u32 _Z16stencil3d_kernelPKiPiiii_param_3,
+.param .u32 _Z16stencil3d_kernelPKiPiiii_param_4
+)
+{
+.reg .b64 %c<5>;
+.reg .b32 %r<21>;
+.reg .pred %p<13>;
+.reg .b64 %w<3>;
+
+$DICE_BB0_0:
+ld.param.u64 %c0, [_Z16stencil3d_kernelPKiPiiii_param_0];
+ld.param.u64 %c1, [_Z16stencil3d_kernelPKiPiiii_param_1];
+ld.param.u32 %c2, [_Z16stencil3d_kernelPKiPiiii_param_2];
+ld.param.u32 %c3, [_Z16stencil3d_kernelPKiPiiii_param_3];
+ld.param.u32 %c4, [_Z16stencil3d_kernelPKiPiiii_param_4];
+
+$DICE_BB0_1:
+mov.u32 %w0, %ctaid.x;
+shl.b32 %w1, %w0, 3;
+mov.u32 %r0, %tid.x;
+add.s32 %r1, %w1, %r0;
+mov.u32 %w0, %ctaid.y;
+shl.b32 %w1, %w0, 3;
+mov.u32 %r2, %tid.y;
+add.s32 %r3, %w1, %r2;
+mov.u32 %w0, %ctaid.z;
+shl.b32 %w1, %w0, 2;
+mov.u32 %r4, %tid.z;
+add.s32 %r5, %w1, %r4;
+setp.ge.s32 %p0, %r1, %c2;
+setp.ge.s32 %p1, %r3, %c3;
+or.pred %p2, %p0, %p1;
+setp.ge.s32 %p0, %r5, %c4;
+or.pred %p1, %p2, %p0;
+mad.lo.s32 %w0, %r5, %c3, %r3;
+mad.lo.s32 %w0, %w0, %c2, %r1;
+cvta.to.global.u64 %r7, %c0;
+mul.wide.s32 %r8, %w0, 4;
+add.s64 %r9, %r7, %r8;
+ld.global.u32 %r10, [%r9];
+@%p1 bra $DICE_BB0_9;
+
+$DICE_BB0_2:
+shl.b32 %w0, %r4, 8;
+shl.b32 %w1, %r2, 5;
+add.s32 %w0, %w0, %w1;
+shl.b32 %w1, %r0, 2;
+add.s32 %r11, %w0, %w1;
+setp.eq.s32 %p3, %r0, 0;
+setp.eq.s32 %p4, %r0, 7;
+selp.b32 %w0, 0, -4, %p3;
+selp.b32 %w1, 0, 4, %p4;
+add.s32 %w0, %r11, %w0;
+add.s32 %w1, %r11, %w1;
+ld.srf.u32 %r0, [%w0];
+ld.srf.u32 %r12, [%w1];
+
+$DICE_BB0_3:
+setp.gt.s32 %p5, %r1, 0;
+add.s32 %w0, %c2, -1;
+setp.lt.s32 %p6, %r1, %w0;
+and.pred %p7, %p3, %p5;
+and.pred %p8, %p4, %p6;
+@%p7 ld.global.u32 %r15, [%r9+-4];
+@%p8 ld.global.u32 %r16, [%r9+4];
+
+$DICE_BB0_4:
+setp.eq.s32 %p3, %r2, 0;
+setp.eq.s32 %p4, %r2, 7;
+selp.b32 %w0, 0, -32, %p3;
+selp.b32 %w1, 0, 32, %p4;
+add.s32 %w0, %r11, %w0;
+add.s32 %w1, %r11, %w1;
+ld.srf.u32 %r2, [%w0];
+ld.srf.u32 %r13, [%w1];
+
+$DICE_BB0_5:
+setp.gt.s32 %p5, %r3, 0;
+add.s32 %w0, %c3, -1;
+setp.lt.s32 %p6, %r3, %w0;
+and.pred %p9, %p3, %p5;
+and.pred %p10, %p4, %p6;
+shl.b32 %w0, %c2, 2;
+cvt.s64.s32 %w1, %w0;
+sub.s64 %w0, %r9, %w1;
+add.s64 %w1, %r9, %w1;
+@%p9 ld.global.u32 %r17, [%w0];
+@%p10 ld.global.u32 %r18, [%w1];
+
+$DICE_BB0_6:
+setp.eq.s32 %p3, %r4, 0;
+setp.eq.s32 %p4, %r4, 3;
+selp.b32 %w0, 0, -256, %p3;
+selp.b32 %w1, 0, 256, %p4;
+add.s32 %w0, %r11, %w0;
+add.s32 %w1, %r11, %w1;
+ld.srf.u32 %r4, [%w0];
+ld.srf.u32 %r14, [%w1];
+
+$DICE_BB0_7:
+setp.gt.s32 %p5, %r5, 0;
+add.s32 %w0, %c4, -1;
+setp.lt.s32 %p6, %r5, %w0;
+and.pred %p11, %p3, %p5;
+and.pred %p12, %p4, %p6;
+mul.lo.s32 %w0, %c2, %c3;
+shl.b32 %w0, %w0, 2;
+cvt.s64.s32 %w1, %w0;
+sub.s64 %w0, %r9, %w1;
+add.s64 %w1, %r9, %w1;
+@%p11 ld.global.u32 %r19, [%w0];
+@%p12 ld.global.u32 %r20, [%w1];
+
+$DICE_BB0_8:
+selp.b32 %r0, %r15, %r0, %p7;
+selp.b32 %r12, %r16, %r12, %p8;
+selp.b32 %r2, %r17, %r2, %p9;
+selp.b32 %r13, %r18, %r13, %p10;
+selp.b32 %r4, %r19, %r4, %p11;
+selp.b32 %r14, %r20, %r14, %p12;
+add.s32 %w0, %r0, %r10;
+add.s32 %w1, %w0, %r12;
+add.s32 %w0, %w1, %r2;
+add.s32 %w1, %w0, %r13;
+add.s32 %w0, %w1, %r4;
+add.s32 %w1, %w0, %r14;
+cvta.to.global.u64 %w0, %c1;
+add.s64 %w2, %w0, %r8;
+st.global.u32 [%w2], %w1;
+
+$DICE_BB0_9:
+ret;
+
+}

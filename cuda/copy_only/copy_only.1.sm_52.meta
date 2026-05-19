@@ -1,0 +1,39 @@
+// DICECompiler Metadata for: /data2/jwang710/DICE-RFSMEM/DICE_ISCA_Eval/dice-test-gpu-rodinia/cuda/copy_only/copy_only.1.sm_52.ptx
+FUNCTION = _Z16copy_only_kernelPKiPii;
+
+DBB_ID = 0,
+BITSTREAM_ADDR = $DICE_BB0_0,
+BITSTREAM_LENGTH = 3,
+UNROLLING_FACTOR = 1,
+UNROLLING_STRATEGY = 0,
+LAT = 1,
+LD_DEST_REGS = (%c0, %c1, %c2),
+IS_PARAMETER_LOAD;
+
+DBB_ID = 1,
+BITSTREAM_ADDR = $DICE_BB0_1,
+BITSTREAM_LENGTH = 10,
+UNROLLING_FACTOR = 4,
+UNROLLING_STRATEGY = 0,
+LAT = 8,
+IN_REGS = (%c0, %c2, %ctaid.x, %ntid.x, %tid.x),
+OUT_REGS = (%p0, %r0),
+LD_DEST_REGS = (%r1),
+BRANCH = 1,
+BRANCH_PRED = (%p0),
+BRANCH_TARGET = 3,
+BRANCH_RECVPC = 3;
+
+DBB_ID = 2,
+BITSTREAM_ADDR = $DICE_BB0_2,
+BITSTREAM_LENGTH = 4,
+UNROLLING_FACTOR = 4,
+UNROLLING_STRATEGY = 0,
+LAT = 3,
+IN_REGS = (%c1, %r0, %r1),
+STORE = 1;
+
+DBB_ID = 3,
+BITSTREAM_ADDR = $DICE_BB0_3,
+RET;
+

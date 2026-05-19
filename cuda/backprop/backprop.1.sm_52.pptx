@@ -1,26 +1,4 @@
-// DICECompiler PPTX for: backprop (RF-unified v7, real-addr SRF)
-// HEIGHT = WIDTH = 16, 2D 16x16 CTA, tid_in_cta = ty*16 + tx.
-//
-// Kernel 1 (layerforward): tree reduction along ty dimension.
-//   Publication reg = %r12 (per-thread "weight_matrix[ty][tx]" value).
-//   Each thread loads input_node[ty] directly from gpuSrc (broadcast within row).
-//   4 reduction iters (power_two = 2, 4, 8, 16), unrolled into 4 compute+publish
-//   DBB pairs.  Each compute DBB reads neighbor's %r12 via ld.srf at fixed
-//   address offset, then captures sum into %r15; the following publish DBB
-//   commits %r12 = %r15 for surviving threads.  Split-DBB pattern avoids the
-//   intra-DBB publication race (cgra_fabric_done forces all threads to finish
-//   compute DBB before any enters publish DBB).
-//
-//   Partner SRF address offsets (in word units):
-//     iter 1 (pow/2 = 1):  neighbor_tid = my_tid + 16   -> addr += 16*32 = 512
-//     iter 2 (pow/2 = 2):  neighbor_tid = my_tid + 32   -> addr += 1024
-//     iter 3 (pow/2 = 4):  neighbor_tid = my_tid + 64   -> addr += 2048
-//     iter 4 (pow/2 = 8):  neighbor_tid = my_tid + 128  -> addr += 4096
-//
-//   Final post-loop: each tx==0 thread writes hidden_partial_sum[by*hid + ty]
-//   = weight_matrix[0][ty], which is held in thread (0, ty)'s %r12.  We ld.srf
-//   from tid=ty (addr = ty*32 + 12).
-//
+// DICECompiler PPTX for: examples/rodinia/backprop/backprop.ptx
 .version 7.7
 .target sm_52
 .address_size 64
@@ -33,10 +11,13 @@
 .param .u32 _Z22bpnn_layerforward_CUDAPfS_S_S_ii_param_5
 )
 {
-.reg .b32 %c<8>;
+.reg .b32 %c<32>;
 .reg .b32 %r<32>;
 .reg .pred %p<32>;
-.reg .b32 %w<32>;
+.reg .b32 %w<9>;
+
+.shared .align 4 .b8 _ZZ22bpnn_layerforward_CUDAPfS_S_S_iiE10input_node[64];
+.shared .align 4 .b8 _ZZ22bpnn_layerforward_CUDAPfS_S_S_iiE13weight_matrix[1024];
 
 $DICE_BB0_0:
 ld.param.u64 %c0, [_Z22bpnn_layerforward_CUDAPfS_S_S_ii_param_0];
@@ -45,111 +26,82 @@ ld.param.u64 %c2, [_Z22bpnn_layerforward_CUDAPfS_S_S_ii_param_3];
 ld.param.u32 %c3, [_Z22bpnn_layerforward_CUDAPfS_S_S_ii_param_5];
 
 $DICE_BB0_1:
-// by, ty, tx, index, my_base_addr; ld.global input_node, weight.
 mov.u32 %r0, %ctaid.y;
 mov.u32 %r1, %tid.y;
 mov.u32 %r2, %tid.x;
-// my_tid_in_cta = ty*16 + tx
-shl.b32 %w0, %r1, 4;
-add.s32 %r3, %w0, %r2;             // my_tid
-shl.b32 %w1, %r3, 5;
-add.s32 %r4, %w1, 13;              // my_base_addr = my_tid*32 + 12
-// index_in = HEIGHT*by + ty + 1     (offset by 1 to skip bias slot)
-shl.b32 %w2, %r0, 4;
-add.s32 %w3, %w2, %r1;             // by*16 + ty
-add.s32 %w4, %w3, 1;               // + 1
-cvta.to.global.u64 %w5, %c0;       // gpuSrc base (input_cuda)
-mul.wide.s32 %w6, %w4, 4;
-add.s64 %r5, %w5, %w6;
-ld.global.f32 %r10, [%r5];         // input_node[ty]  (broadcast per row)
-// index = (hid+1)*HEIGHT*by + (hid+1)*(ty+1) + (tx+1)
-add.s32 %w7, %c3, 1;               // hid+1
-shl.b32 %w8, %w7, 4;               // (hid+1)*16 = (hid+1)*HEIGHT
-mad.lo.s32 %w9, %w8, %r0, 0;       // (hid+1)*16*by
-add.s32 %w10, %r1, 1;              // ty+1
-mad.lo.s32 %w11, %w7, %w10, %w9;   // + (hid+1)*(ty+1)
-add.s32 %w12, %w11, %r2;           // + tx
-add.s32 %r6, %w12, 1;              // + 1  -> index
-cvta.to.global.u64 %w13, %c1;      // input_hidden_cuda base
-mul.wide.s32 %w14, %r6, 4;
-add.s64 %r7, %w13, %w14;
-ld.global.f32 %r11, [%r7];         // weight_matrix[ty][tx]
+setp.ne.s32 %p0, %r2, 0;
+shl.b32 %r3, %r1, 2;
+mov.u32 %w0, _ZZ22bpnn_layerforward_CUDAPfS_S_S_iiE10input_node;
+add.s32 %r4, %w0, %r3;
+shl.b32 %w1, %r0, 4;
+add.s32 %w2, %r1, %w1;
+cvta.to.global.u64 %w3, %c0;
+mul.wide.s32 %w4, %w2, 4;
+add.s64 %w5, %w3, %w4;
+@!%p0 ld.global.f32 %r5, [%w5+4];
 
 $DICE_BB0_2:
-// Initial scale: %r13 = weight * input_node.
-mul.f32 %r13, %r11, %r10;
+@!%p0 st.shared.f32 [%r4], %r5;
+add.s32 %w0, %r2, %c3;
+add.s32 %w1, %c3, 1;
+mad.lo.s32 %w2, %w1, %r1, %w0;
+shl.b32 %w3, %c3, 4;
+add.s32 %w4, %w3, 16;
+mad.lo.s32 %r13, %w4, %r0, %w2;
 
 $DICE_BB0_3:
-// Reduction iter 1: partner offset = 512, surv = (ty & 1) == 0.
-and.b32 %w0, %r1, 1;
-setp.eq.s32 %p1, %w0, 0;
-add.s32 %w1, %r4, 512;
-@%p1 ld.srf.f32 %w2, [%w1];
-@%p1 add.f32 %w3, %r13, %w2;
-@%p1 mov.b32 %r15, %w3;
+cvta.to.global.u64 %w6, %c1;
+mul.wide.s32 %w7, %r13, 4;
+add.s64 %r5, %w6, %w7;
+ld.global.f32 %r9, [%r5+8];
+ld.shared.f32 %r6, [%r4];
+shl.b32 %w8, %r1, 6;
+mov.u32 %r7, _ZZ22bpnn_layerforward_CUDAPfS_S_S_iiE13weight_matrix;
+add.s32 %r8, %r7, %w8;
 
 $DICE_BB0_4:
-// Publish iter 1.
-@%p1 mov.b32 %r13, %r15;
+shl.b32 %w0, %r2, 2;
+add.s32 %r2, %r8, %w0;
+mul.f32 %r12, %r9, %r6;
+st.shared.f32 [%r2], %r12;
+mov.f32 %r11, 0f40000000;
 
 $DICE_BB0_5:
-// Reduction iter 2: partner offset = 1024, surv = (ty & 3) == 0.
-and.b32 %w0, %r1, 3;
-setp.eq.s32 %p2, %w0, 0;
-add.s32 %w1, %r4, 1024;
-@%p2 ld.srf.f32 %w2, [%w1];
-@%p2 add.f32 %w3, %r13, %w2;
-@%p2 mov.b32 %r15, %w3;
+cvt.rzi.s32.f32 %w1, %r11;
+mul.wide.f32 %r11, %r11, 0f40000000;
+rem.s32 %w2, %r1, %w1;
+setp.ne.s32 %p1, %w2, 0;
+shr.u32 %w3, %w1, 31;
+add.s32 %w4, %w1, %w3;
+shr.s32 %w5, %w4, 1;
+mad.lo.s32 %w6, %w5, 64, %r2;
+@!%p1 ld.shared.f32 %r6, [%w6];
 
 $DICE_BB0_6:
-// Publish iter 2.
-@%p2 mov.b32 %r13, %r15;
+add.f32 %r12, %r12, %r6;
+@!%p1 st.shared.f32 [%r2], %r12;
+cvt.rzi.s32.f32 %w0, %r11;
+setp.lt.s32 %w1, %w0, 32;
+not.pred %w2, %p1;
+and.pred %p2, %w2, %w1;
+@%p2 bra $DICE_BB0_5;
 
 $DICE_BB0_7:
-// Reduction iter 3: partner offset = 2048, surv = (ty & 7) == 0.
-and.b32 %w0, %r1, 7;
-setp.eq.s32 %p3, %w0, 0;
-add.s32 %w1, %r4, 2048;
-@%p3 ld.srf.f32 %w2, [%w1];
-@%p3 add.f32 %w3, %r13, %w2;
-@%p3 mov.b32 %r15, %w3;
+//bar.sync 0;
+st.global.f32 [%r5+8], %r12;
+@!%p0 add.s32 %w0, %r7, %r3;
+@!%p0 ld.shared.f32 %r2, [%w0];
+@!%p0 mad.lo.s32 %w1, %r0, %c3, %r1;
+@!%p0 cvta.to.global.u64 %w2, %c2;
+@!%p0 mul.wide.s32 %w3, %w1, 4;
+@!%p0 add.s64 %r4, %w2, %w3;
+@%p0 bra $DICE_BB0_9;
 
 $DICE_BB0_8:
-// Publish iter 3.
-@%p3 mov.b32 %r13, %r15;
+st.global.f32 [%r4], %r2;
 
 $DICE_BB0_9:
-// Reduction iter 4: partner offset = 4096, surv = (ty & 15) == 0.
-and.b32 %w0, %r1, 15;
-setp.eq.s32 %p4, %w0, 0;
-add.s32 %w1, %r4, 4096;
-@%p4 ld.srf.f32 %w2, [%w1];
-@%p4 add.f32 %w3, %r13, %w2;
-@%p4 mov.b32 %r15, %w3;
-
-$DICE_BB0_10:
-// Publish iter 4.
-@%p4 mov.b32 %r13, %r15;
-
-$DICE_BB0_11:
-// Store input_hidden_cuda[index] = %r13 (all threads).
-st.global.f32 [%r7], %r13;
-
-$DICE_BB0_12:
-// Tx==0 threads: hidden_partial_sum[by*hid + ty] = weight_matrix[0][ty]
-// (which is held in thread (ty=0, tx=ty)'s %r13).  SRF addr = ty*32 + 12.
-setp.eq.s32 %p5, %r2, 0;            // tx == 0
-shl.b32 %w0, %r1, 5;
-add.s32 %w1, %w0, 13;               // addr = ty*32 + 12
-@%p5 ld.srf.f32 %w2, [%w1];
-mad.lo.s32 %w3, %r0, %c3, %r1;      // by*hid + ty
-cvta.to.global.u64 %w4, %c2;        // hidden_partial_sum base
-mul.wide.s32 %w5, %w3, 4;
-add.s64 %r8, %w4, %w5;
-@%p5 st.global.f32 [%r8], %w2;
-
-$DICE_BB0_13:
-ret;
+ret ;
 
 }
 
@@ -162,13 +114,12 @@ ret;
 .param .u64 _Z24bpnn_adjust_weights_cudaPfiS_iS_S__param_5
 )
 {
-.reg .b32 %c<8>;
+.reg .b32 %c<32>;
 .reg .b32 %r<32>;
 .reg .pred %p<32>;
-.reg .b32 %w<32>;
+.reg .b32 %w<12>;
 
-// Kernel 2 (adjust_weights): no cross-thread RF reads -- straight per-thread
-// weight update.  No SRF needed.
+
 $DICE_BB1_0:
 ld.param.u64 %c0, [_Z24bpnn_adjust_weights_cudaPfiS_iS_S__param_0];
 ld.param.u32 %c1, [_Z24bpnn_adjust_weights_cudaPfiS_iS_S__param_1];
@@ -177,86 +128,76 @@ ld.param.u64 %c3, [_Z24bpnn_adjust_weights_cudaPfiS_iS_S__param_4];
 ld.param.u64 %c4, [_Z24bpnn_adjust_weights_cudaPfiS_iS_S__param_5];
 
 $DICE_BB1_1:
-// by, ty, tx, index, index_y, index_x.
+shl.b32 %w0, %c1, 4;
+add.s32 %w1, %w0, 16;
 mov.u32 %r0, %ctaid.y;
+add.s32 %w2, %c1, 1;
 mov.u32 %r1, %tid.y;
 mov.u32 %r2, %tid.x;
-// index = (hid+1)*HEIGHT*by + (hid+1)*ty + tx + 1 + (hid+1)
-//       = (hid+1)*16*by + (hid+1)*(ty+1) + (tx+1)
-add.s32 %w0, %c1, 1;               // hid+1
-shl.b32 %w1, %w0, 4;               // (hid+1)*16
-mad.lo.s32 %w2, %w1, %r0, 0;       // (hid+1)*16*by
-add.s32 %w3, %r1, 1;               // ty+1
-mad.lo.s32 %w4, %w0, %w3, %w2;     // + (hid+1)*(ty+1)
-add.s32 %w5, %w4, %r2;             // + tx
-add.s32 %r3, %w5, 1;               // index
-// index_y = HEIGHT*by + ty + 1
-shl.b32 %w6, %r0, 4;
-add.s32 %w7, %w6, %r1;
-add.s32 %r4, %w7, 1;               // index_y
-// index_x = tx + 1
-add.s32 %r5, %r2, 1;               // index_x
-// Load delta[index_x], ly[index_y], w[index], oldw[index].
-cvta.to.global.u64 %w8, %c0;       // delta
-mul.wide.s32 %w9, %r5, 4;
-add.s64 %r6, %w8, %w9;
-ld.global.f32 %r10, [%r6];         // delta[index_x]
-cvta.to.global.u64 %w10, %c2;      // ly
-mul.wide.s32 %w11, %r4, 4;
-add.s64 %r7, %w10, %w11;
-ld.global.f32 %r11, [%r7];         // ly[index_y]
-cvta.to.global.u64 %w12, %c3;      // w
-mul.wide.s32 %w13, %r3, 4;
-add.s64 %r8, %w12, %w13;
-ld.global.f32 %r13, [%r8];         // w[index]
-cvta.to.global.u64 %w14, %c4;      // oldw
-add.s64 %r14, %w14, %w13;
-ld.global.f32 %r15, [%r14];        // oldw[index]
+add.s32 %w3, %r2, %c1;
+mad.lo.s32 %w4, %w2, %r1, %w3;
+mad.lo.s32 %w5, %w1, %r0, %w4;
+cvta.to.global.u64 %w6, %c0;
+mul.wide.s32 %w7, %r2, 4;
+add.s64 %r3, %w6, %w7;
+ld.global.f32 %r4, [%r3+4];
+cvta.to.global.u64 %r5, %c4;
+mul.wide.s32 %r6, %w5, 4;
+add.s64 %r7, %r5, %r6;
+ld.global.f32 %r8, [%r7+8];
+or.b32 %w8, %r1, %r0;
+setp.ne.s32 %p0, %w8, 0;
 
 $DICE_BB1_2:
-// Compute the f64 update once (ETA=0.3, MOMENTUM=0.3 → same const).
-// w[index] += ETA*delta[index_x]*ly[index_y] + MOMENTUM*oldw[index];
-// oldw[index] = ETA*delta[index_x]*ly[index_y] + MOMENTUM*oldw[index];
-cvt.f64.f32 %w0, %r10;             // delta f64
-cvt.f64.f32 %w1, %r11;             // ly f64
-cvt.f64.f32 %w2, %r15;             // oldw f64
-mul.f64 %w3, %w0, %w1;             // delta*ly
-mul.f64 %w4, %w2, 0d3FD3333333333333;   // MOMENTUM * oldw
-fma.rn.f64 %w5, %w3, 0d3FD3333333333333, %w4;  // ETA*(delta*ly) + MOMENTUM*oldw
-cvt.rn.f32.f64 %r16, %w5;          // update value (f32)
-cvt.f64.f32 %w6, %r13;             // w f64
-add.f64 %w7, %w6, %w5;             // w + update
-cvt.rn.f32.f64 %r17, %w7;
-st.global.f32 [%r8], %r17;         // w[index] = new w
-st.global.f32 [%r14], %r16;        // oldw[index] = update
+cvta.to.global.u64 %r11, %c3;
+shl.b32 %w0, %r0, 4;
+add.s32 %w1, %r1, %w0;
+cvta.to.global.u64 %w2, %c2;
+mul.wide.s32 %w3, %w1, 4;
+add.s64 %w4, %w2, %w3;
+ld.global.f32 %r13, [%w4+4];
+add.s64 %r15, %r11, %r6;
+ld.global.f32 %r16, [%r15+8];
 
 $DICE_BB1_3:
-// Special path: ty==0 AND by==0 → update w[index_x] / oldw[index_x].
-or.b32 %w0, %r1, %r0;
-setp.eq.s32 %p0, %w0, 0;           // ty==0 && by==0
-@%p0 cvta.to.global.u64 %w1, %c3;
-@%p0 mul.wide.s32 %w2, %r5, 4;
-@%p0 add.s64 %r18, %w1, %w2;
-@!%p0 bra $DICE_BB1_5;
+cvt.f64.f32 %w8, %r4;
+mul.f64 %w0, %w8, 0d3FD3333333333333; //0.3
+cvt.f64.f32 %w1, %r13;
+cvt.f64.f32 %w9, %r8;
+mul.f64 %w2, %w9, 0d3FD3333333333333;
+fma.rn.f64 %w3, %w0, %w1, %w2;
+cvt.f64.f32 %w4, %r16;
+add.f64 %w5, %w3, %w4;
+cvt.rn.f32.f64 %w6, %w5;
+st.global.f32 [%r15+8], %w6;
+cvt.rn.f32.f64 %w10, %w3;
+st.global.f32 [%r7+8], %w10;
+@!%p0 ld.global.f32 %r4, [%r3+4];
+@%p0 bra $DICE_BB1_6;
+
 
 $DICE_BB1_4:
-ld.global.f32 %r19, [%r18];        // w[index_x]
-cvta.to.global.u64 %w0, %c4;
-mul.wide.s32 %w1, %r5, 4;
-add.s64 %r20, %w0, %w1;
-ld.global.f32 %r21, [%r20];        // oldw[index_x]
-cvt.f64.f32 %w2, %r10;             // delta f64
-cvt.f64.f32 %w3, %r21;             // oldw f64
-mul.f64 %w4, %w3, 0d3FD3333333333333;   // MOMENTUM*oldw
-fma.rn.f64 %w5, %w2, 0d3FD3333333333333, %w4;  // ETA*delta + MOMENTUM*oldw
-cvt.rn.f32.f64 %r22, %w5;
-cvt.f64.f32 %w6, %r19;
-add.f64 %w7, %w6, %w5;
-cvt.rn.f32.f64 %r23, %w7;
-st.global.f32 [%r18], %r23;        // w[index_x] = new
-st.global.f32 [%r20], %r22;        // oldw[index_x] = update
+add.s32 %w1, %r2, 1;
+mul.wide.s32 %w2, %w1, 4;
+add.s64 %r6, %r5, %w2;
+ld.global.f32 %r7, [%r6];
+add.s64 %r8, %r11, %w2;
+ld.global.f32 %r9, [%r8];
 
 $DICE_BB1_5:
-ret;
+cvt.f64.f32 %w0, %r4;
+cvt.f64.f32 %w1, %r7;
+mul.f64 %w2, %w1, 0d3FD3333333333333;
+fma.rn.f64 %w3, %w0, 0d3FD3333333333333, %w2;
+cvt.f64.f32 %w4, %r9;
+add.f64 %w5, %w3, %w4;
+cvt.rn.f32.f64 %w6, %w5;
+st.global.f32 [%r8], %w6;
+cvt.rn.f32.f64 %w11, %w3;
+st.global.f32 [%r6], %w11;
+
+$DICE_BB1_6:
+ret ;
 
 }
+

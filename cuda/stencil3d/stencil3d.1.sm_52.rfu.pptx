@@ -1,0 +1,148 @@
+// DICECompiler PPTX for: examples/stencil3d/stencil3d.ptx (RF-Unified)
+// Hand-written for HPCA 2027 RF/SMEM unification.
+//
+// 7-point 3D stencil reads 6 SMEM neighbours.  Under the 4-port-per-CP
+// cross-thread RF budget, this exceeds the single-p-graph capacity:
+// the new partition rule splits compute into TWO p-graphs:
+//
+//   DBB 5  (horizontal pass): E, W, N, S       (4 XRF ports — saturates)
+//   DBB 6  (vertical   pass): T, B, + center   (2 XRF ports + local)
+//
+// The RE stage at the boundary between DBB 5 and DBB 6 carries the
+// 4-way partial sum (%r20) forward. No __syncthreads(); the p-graph
+// boundary already supplies write-visibility.
+//
+// Per-thread RF allocation (replaces tile[tz][ty][tx]):
+//   %r4  -- horizontal-stride source  (read by E/W/N/S = lane offsets +-1, +-8)
+//   %r5  -- vertical-up source        (read by T = lane offset +64)
+//   %r6  -- vertical-down source      (read by B = lane offset -64)
+// Each thread replicates its loaded value into all three at DBB 1.
+//
+// Bank table (mod-32 swizzle, T = tz*64 + ty*8 + tx):
+//   self/center  : R[%r4] of T          -> bank (T+ 4)
+//   E (lane T+1) : R[%r4] of T+1        -> bank (T+ 5)
+//   W (lane T-1) : R[%r4] of T-1        -> bank (T+ 3)
+//   N (lane T+8) : R[%r4] of T+8        -> bank (T+12)
+//   S (lane T-8) : R[%r4] of T-8        -> bank (T-4 = T+28)
+//   T (lane T+64): R[%r5] of T+64       -> bank ((5+T+64) mod 32) = (T+ 5)  *** alias E
+//   B (lane T-64): R[%r6] of T-64       -> bank ((6+T-64) mod 32) = (T+ 6)
+//
+// Note that T (vertical up) collides with E by bank — but they are in
+// DIFFERENT p-graphs after the split, so they execute on different cycles.
+// Within DBB 5: banks {3, 4, 5, 12, 28} mod 32, all distinct.
+// Within DBB 6: banks {4, 5, 6} mod 32 (center, T, B), all distinct.
+//
+.version 7.7
+.target sm_52
+.address_size 64
+.visible .entry _Z16stencil3d_kernelPKiPiiii(
+.param .u64 _Z16stencil3d_kernelPKiPiiii_param_0,
+.param .u64 _Z16stencil3d_kernelPKiPiiii_param_1,
+.param .u32 _Z16stencil3d_kernelPKiPiiii_param_2,
+.param .u32 _Z16stencil3d_kernelPKiPiiii_param_3,
+.param .u32 _Z16stencil3d_kernelPKiPiiii_param_4
+)
+{
+.reg .b32 %c<8>;
+.reg .b32 %r<32>;
+.reg .pred %p<8>;
+.reg .b32 %w<24>;
+
+// (no .shared)
+
+$DICE_BB0_0:
+ld.param.u64 %c0, [_Z16stencil3d_kernelPKiPiiii_param_0];
+ld.param.u64 %c1, [_Z16stencil3d_kernelPKiPiiii_param_1];
+ld.param.u32 %c2, [_Z16stencil3d_kernelPKiPiiii_param_2];
+ld.param.u32 %c3, [_Z16stencil3d_kernelPKiPiiii_param_3];
+ld.param.u32 %c4, [_Z16stencil3d_kernelPKiPiiii_param_4];
+
+$DICE_BB0_1:
+mov.u32 %r0, %tid.x;
+mov.u32 %r1, %tid.y;
+mov.u32 %r2, %tid.z;
+mov.u32 %w0, %ctaid.x;
+mov.u32 %w1, %ctaid.y;
+mov.u32 %w2, %ctaid.z;
+shl.b32 %w3, %w0, 3;
+shl.b32 %w4, %w1, 3;
+shl.b32 %w5, %w2, 2;
+add.s32 %r3, %w3, %r0;          // gx
+add.s32 %r4, %w4, %r1;          // gy
+add.s32 %r5, %w5, %r2;          // gz
+setp.ge.s32 %p0, %r3, %c2;
+setp.ge.s32 %p1, %r4, %c3;
+setp.ge.s32 %p10, %r5, %c4;
+or.pred %p11, %p0, %p1;
+or.pred %p2, %p11, %p10;
+mad.lo.s32 %w6, %r5, %c3, %r4;
+mad.lo.s32 %w7, %w6, %c2, %r3;
+cvta.to.global.u64 %w8, %c0;
+mul.wide.s32 %w9, %w7, 4;
+add.s64 %r6_addr, %w8, %w9;
+mov.u32 %r4, 0;
+mov.u32 %r5, 0;
+mov.u32 %r6, 0;
+@!%p2 ld.global.u32 %r4, [%r6_addr];     // load to "horizontal" copy
+@!%p2 mov.u32 %r5, %r4;                   // replicate -> "vertical-up"
+@!%p2 mov.u32 %r6, %r4;                   // replicate -> "vertical-down"
+
+// (no STS, no bar.sync — p-graph RE boundary supplies write-visibility)
+
+$DICE_BB0_5:                 // -- horizontal compute pass (4 ports) --
+@%p2 bra $DICE_BB0_17;
+
+// Lane indices for E/W/N/S.  Self lane = tz*64 + ty*8 + tx.
+shl.b32 %w_self_z, %r2, 6;
+shl.b32 %w_self_y, %r1, 3;
+add.s32 %w_self,   %w_self_z, %w_self_y;
+add.s32 %w_self,   %w_self,    %r0;       // self lane
+
+add.s32 %w_E, %w_self,  1;
+add.s32 %w_W, %w_self, -1;
+add.s32 %w_N, %w_self,  8;
+add.s32 %w_S, %w_self, -8;
+
+// Predicated boundary clamps (in-block edges).
+setp.eq.s32 %p3, %r0, 7;   @%p3 mov.u32 %w_E, %w_self;
+setp.eq.s32 %p4, %r0, 0;   @%p4 mov.u32 %w_W, %w_self;
+setp.eq.s32 %p5, %r1, 7;   @%p5 mov.u32 %w_N, %w_self;
+setp.eq.s32 %p6, %r1, 0;   @%p6 mov.u32 %w_S, %w_self;
+
+// 4 cross-thread RF reads -- saturates the budget.
+xrf.u32 %r10, %r4, %w_E;       // port0
+xrf.u32 %r11, %r4, %w_W;       // port1
+xrf.u32 %r12, %r4, %w_N;       // port2
+xrf.u32 %r13, %r4, %w_S;       // port3
+
+// Partial sum: 4 horizontal neighbours.
+add.s32 %w_h0, %r10, %r11;
+add.s32 %w_h1, %r12, %r13;
+add.s32 %r20,  %w_h0, %w_h1;   // %r20 carries forward to DBB 6
+
+$DICE_BB0_6:                 // -- vertical compute pass (2 ports + local) --
+
+add.s32 %w_T, %w_self,  64;
+add.s32 %w_B, %w_self, -64;
+setp.eq.s32 %p7, %r2, 3;   @%p7 mov.u32 %w_T, %w_self;
+setp.eq.s32 %p8, %r2, 0;   @%p8 mov.u32 %w_B, %w_self;
+
+xrf.u32 %r14, %r5, %w_T;       // port0: vertical-up    (reads %r5)
+xrf.u32 %r15, %r6, %w_B;       // port1: vertical-down  (reads %r6)
+//   center is local: %r4 (already in this thread's RF)
+
+add.s32 %w_v0, %r14, %r15;
+add.s32 %w_v1, %w_v0, %r4;     // v + center
+add.s32 %r21,  %w_v1, %r20;    // final 7-way sum
+
+// (cross-block boundary fix-ups elided — same shape as 1D/2D variants)
+
+cvta.to.global.u64 %w11, %c1;
+mul.wide.s32 %w12, %w7, 4;
+add.s64 %r18, %w11, %w12;
+st.global.u32 [%r18], %r21;
+
+$DICE_BB0_17:
+ret;
+
+}

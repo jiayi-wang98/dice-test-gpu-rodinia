@@ -1,14 +1,4 @@
-// DICECompiler Metadata for: backprop (RF-unified v7, real-addr SRF)
-// HEIGHT = WIDTH = 16, 2D 16x16 CTA, tid_in_cta = ty*16 + tx.
-// Kernel 1 publication reg = %r12.  Reduction is 4 iters unrolled into
-// 4 compute+publish DBB pairs (DBB 3..10).  Split-DBB pattern avoids the
-// intra-DBB %r12 publication race.
-//
-// SRF addr = neighbor_tid * 32 + 12.  Partner offsets (in addr units):
-//   iter 1: +512   (neighbor_tid = my_tid + 16)
-//   iter 2: +1024  (my_tid + 32)
-//   iter 3: +2048  (my_tid + 64)
-//   iter 4: +4096  (my_tid + 128)
+// DICECompiler Metadata for: examples/rodinia/backprop/backprop.ptx
 FUNCTION = _Z22bpnn_layerforward_CUDAPfS_S_S_ii;
 
 DBB_ID = 0,
@@ -16,127 +6,102 @@ BITSTREAM_ADDR = $DICE_BB0_0,
 BITSTREAM_LENGTH = 4,
 UNROLLING_FACTOR = 1,
 UNROLLING_STRATEGY = 0,
-LAT = 1,
 LD_DEST_REGS = (%c0, %c1, %c2, %c3),
 IS_PARAMETER_LOAD;
 
 DBB_ID = 1,
 BITSTREAM_ADDR = $DICE_BB0_1,
-BITSTREAM_LENGTH = 23,
-UNROLLING_FACTOR = 1,
+BITSTREAM_LENGTH = 8,
+UNROLLING_FACTOR = 2,
 UNROLLING_STRATEGY = 0,
-LAT = 9,
-IN_REGS = (%c0, %c1, %c3),
-OUT_REGS = (%r0, %r1, %r2, %r3, %r4, %r5, %r6, %r7),
-LD_DEST_REGS = (%r10, %r11);
+LAT = 6,
+IN_REGS = (%c0, %ctaid.y, %tid.y, %tid.x),
+OUT_REGS = (%p0, %r0, %r1, %r2, %r3, %r4),
+LD_DEST_REGS = (%r5);
 
 DBB_ID = 2,
 BITSTREAM_ADDR = $DICE_BB0_2,
-BITSTREAM_LENGTH = 1,
-UNROLLING_FACTOR = 4,
+BITSTREAM_LENGTH = 8,
+UNROLLING_FACTOR = 2,
 UNROLLING_STRATEGY = 0,
 LAT = 3,
-IN_REGS = (%r10, %r11),
-OUT_REGS = (%r13);
+IN_REGS = (%r2, %c3, %r0, %r1, %p0, %r4, %r5),
+OUT_REGS = (%r13),
+STORE = 1;
 
 DBB_ID = 3,
 BITSTREAM_ADDR = $DICE_BB0_3,
-BITSTREAM_LENGTH = 6,
-UNROLLING_FACTOR = 2,  // optstep3 (#2): %r12->%r13 rename frees coset, UF=2 OK
+BITSTREAM_LENGTH = 5,
+UNROLLING_FACTOR = 2,
 UNROLLING_STRATEGY = 0,
-LAT = 6,
-IN_REGS = (%r1, %r4, %r13),
-OUT_REGS = (%p1, %r15),
+LAT = 3,
+IN_REGS = (%c1, %r4, %r7, %r13),
+OUT_REGS = (%r5, %r7, %r8),
+LD_DEST_REGS = (%r6, %r9),
 BARRIER;
 
 DBB_ID = 4,
 BITSTREAM_ADDR = $DICE_BB0_4,
-BITSTREAM_LENGTH = 1,
+BITSTREAM_LENGTH = 3,
 UNROLLING_FACTOR = 4,
 UNROLLING_STRATEGY = 0,
 LAT = 2,
-IN_REGS = (%p1, %r15),
-OUT_REGS = (%r13);
+IN_REGS = (%r2, %r8, %r6, %r9),
+OUT_REGS = (%r2, %r12, %r11),
+STORE = 1;
 
 DBB_ID = 5,
 BITSTREAM_ADDR = $DICE_BB0_5,
-BITSTREAM_LENGTH = 6,
-UNROLLING_FACTOR = 2,  // optstep3 (#2): %r12->%r13 rename frees coset, UF=2 OK
+BITSTREAM_LENGTH = 8,
+UNROLLING_FACTOR = 2,
 UNROLLING_STRATEGY = 0,
-LAT = 6,
-IN_REGS = (%r1, %r4, %r13),
-OUT_REGS = (%p2, %r15),
+LAT = 16,
+IN_REGS = (%r1, %r2, %r11),
+OUT_REGS = (%p1, %r11),
+LD_DEST_REGS = (%r6),
 BARRIER;
 
 DBB_ID = 6,
 BITSTREAM_ADDR = $DICE_BB0_6,
-BITSTREAM_LENGTH = 1,
+BITSTREAM_LENGTH = 4,
 UNROLLING_FACTOR = 4,
 UNROLLING_STRATEGY = 0,
 LAT = 2,
-IN_REGS = (%p2, %r15),
-OUT_REGS = (%r13);
+IN_REGS = (%p1, %r2, %r6, %r12, %r11),
+OUT_REGS = (%r12),
+STORE = 1,
+BRANCH = 1,
+BRANCH_UNI = 0,
+BRANCH_PRED = (%p2),
+BRANCH_TARGET = 5,
+BRANCH_RECVPC = 7;
 
 DBB_ID = 7,
 BITSTREAM_ADDR = $DICE_BB0_7,
 BITSTREAM_LENGTH = 6,
-UNROLLING_FACTOR = 2,  // optstep3 (#2): %r12->%r13 rename frees coset, UF=2 OK
+UNROLLING_FACTOR = 2,
 UNROLLING_STRATEGY = 0,
-LAT = 6,
-IN_REGS = (%r1, %r4, %r13),
-OUT_REGS = (%p3, %r15),
-BARRIER;
+LAT = 4,
+IN_REGS = (%c2, %c3, %p0, %r0, %r1, %r3, %r7,%r5, %r12),
+OUT_REGS = (%r4),
+LD_DEST_REGS = (%r2),
+STORE = 1,
+BRANCH = 1,
+BRANCH_UNI = 0,
+BRANCH_PRED = (%p0),
+BRANCH_TARGET = 9,
+BRANCH_RECVPC = 9;
 
 DBB_ID = 8,
 BITSTREAM_ADDR = $DICE_BB0_8,
 BITSTREAM_LENGTH = 1,
 UNROLLING_FACTOR = 4,
 UNROLLING_STRATEGY = 0,
-LAT = 2,
-IN_REGS = (%p3, %r15),
-OUT_REGS = (%r13);
+IN_REGS = (%p0, %r2, %r4),
+STORE = 1;
 
 DBB_ID = 9,
 BITSTREAM_ADDR = $DICE_BB0_9,
-BITSTREAM_LENGTH = 6,
-UNROLLING_FACTOR = 2,  // optstep3 (#2): %r12->%r13 rename frees coset, UF=2 OK
-UNROLLING_STRATEGY = 0,
-LAT = 6,
-IN_REGS = (%r1, %r4, %r13),
-OUT_REGS = (%p4, %r15),
-BARRIER;
-
-DBB_ID = 10,
-BITSTREAM_ADDR = $DICE_BB0_10,
-BITSTREAM_LENGTH = 1,
-UNROLLING_FACTOR = 4,
-UNROLLING_STRATEGY = 0,
-LAT = 2,
-IN_REGS = (%p4, %r15),
-OUT_REGS = (%r13);
-
-DBB_ID = 11,
-BITSTREAM_ADDR = $DICE_BB0_11,
-BITSTREAM_LENGTH = 1,
-UNROLLING_FACTOR = 4,
-UNROLLING_STRATEGY = 0,
-LAT = 2,
-IN_REGS = (%r7, %r13),
-STORE = 1;
-
-DBB_ID = 12,
-BITSTREAM_ADDR = $DICE_BB0_12,
-BITSTREAM_LENGTH = 10,
-UNROLLING_FACTOR = 2,
-UNROLLING_STRATEGY = 0,
-LAT = 6,
-IN_REGS = (%c2, %c3, %r0, %r1, %r2),
-OUT_REGS = (%p5, %r8),
-STORE = 1,
-BARRIER;
-
-DBB_ID = 13,
-BITSTREAM_ADDR = $DICE_BB0_13,
 RET;
 
 FUNCTION = _Z24bpnn_adjust_weights_cudaPfiS_iS_S_;
@@ -146,55 +111,65 @@ BITSTREAM_ADDR = $DICE_BB1_0,
 BITSTREAM_LENGTH = 5,
 UNROLLING_FACTOR = 1,
 UNROLLING_STRATEGY = 0,
-LAT = 1,
 LD_DEST_REGS = (%c0, %c1, %c2, %c3, %c4),
 IS_PARAMETER_LOAD;
 
 DBB_ID = 1,
 BITSTREAM_ADDR = $DICE_BB1_1,
-BITSTREAM_LENGTH = 24,
+BITSTREAM_LENGTH = 16,
 UNROLLING_FACTOR = 1,
 UNROLLING_STRATEGY = 0,
-LAT = 9,
-IN_REGS = (%c0, %c1, %c2, %c3, %c4),
-OUT_REGS = (%r0, %r1, %r2, %r3, %r4, %r5, %r6, %r7, %r8, %r14),
-LD_DEST_REGS = (%r10, %r11, %r13, %r15);
+LAT = 7,
+IN_REGS = (%c0, %c1, %c4),
+OUT_REGS = (%r0, %r1, %r2, %r3, %r5, %r6, %r7),
+LD_DEST_REGS = (%r8, %r4);
 
 DBB_ID = 2,
 BITSTREAM_ADDR = $DICE_BB1_2,
-BITSTREAM_LENGTH = 13,
-UNROLLING_FACTOR = 1,
+BITSTREAM_LENGTH = 7,
+UNROLLING_FACTOR = 2,
 UNROLLING_STRATEGY = 0,
-LAT = 9,
-IN_REGS = (%r8, %r10, %r11, %r13, %r14, %r15),
-OUT_REGS = (%r16, %r17),
-STORE = 2,
-BARRIER;
+LAT = 5,
+IN_REGS = (%c2, %c3, %r0, %r1, %r6),
+OUT_REGS = (%r11, %r15),
+LD_DEST_REGS = (%r13, %r16);
 
 DBB_ID = 3,
 BITSTREAM_ADDR = $DICE_BB1_3,
-BITSTREAM_LENGTH = 5,
-UNROLLING_FACTOR = 1,
-UNROLLING_STRATEGY = 0,
-LAT = 4,
-IN_REGS = (%c3, %r0, %r1, %r5),
-OUT_REGS = (%p0, %r18),
-BRANCH = 1,
-BRANCH_PRED = (%p0),
-BRANCH_TARGET = 5,
-BRANCH_RECVPC = 5;
-
-DBB_ID = 4,
-BITSTREAM_ADDR = $DICE_BB1_4,
 BITSTREAM_LENGTH = 14,
 UNROLLING_FACTOR = 1,
 UNROLLING_STRATEGY = 0,
-LAT = 9,
-IN_REGS = (%c4, %r5, %r10, %r18),
-OUT_REGS = (%r19, %r20, %r21, %r22, %r23),
-LD_DEST_REGS = (%r19, %r21),
-STORE = 2;
+LAT = 10,
+IN_REGS = (%r3, %r4, %r7, %r8, %r13, %r16, %r15),
+STORE = 2,
+LD_DEST_REGS = (%r4),
+BRANCH = 1,
+BRANCH_UNI = 0,
+BRANCH_PRED = (%p0),
+BRANCH_TARGET = 6,
+BRANCH_RECVPC = 6;
+
+DBB_ID = 4,
+BITSTREAM_ADDR = $DICE_BB1_4,
+BITSTREAM_LENGTH = 4,
+UNROLLING_FACTOR = 2,
+UNROLLING_STRATEGY = 0,
+LAT = 3,
+IN_REGS = (%r11, %r2, %r5),
+OUT_REGS = (%r6, %r8),
+LD_DEST_REGS = (%r7, %r9),
+BARRIER;
 
 DBB_ID = 5,
 BITSTREAM_ADDR = $DICE_BB1_5,
+BITSTREAM_LENGTH = 7,
+UNROLLING_FACTOR = 1,
+UNROLLING_STRATEGY = 0,
+LAT = 7,
+IN_REGS = (%r4, %r6, %r7, %r8, %r9),
+STORE = 2;
+
+DBB_ID = 6,
+BITSTREAM_ADDR = $DICE_BB1_6,
 RET;
+

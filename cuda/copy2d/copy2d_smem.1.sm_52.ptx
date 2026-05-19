@@ -1,0 +1,76 @@
+
+
+
+
+
+
+
+
+.version 7.7
+.target sm_52
+.address_size 64
+
+
+
+
+.visible .entry _Z18copy2d_smem_kernelPKiPiii(
+.param .u64 _Z18copy2d_smem_kernelPKiPiii_param_0,
+.param .u64 _Z18copy2d_smem_kernelPKiPiii_param_1,
+.param .u32 _Z18copy2d_smem_kernelPKiPiii_param_2,
+.param .u32 _Z18copy2d_smem_kernelPKiPiii_param_3
+)
+{
+.reg .pred %p<6>;
+.reg .b32 %r<24>;
+.reg .b64 %rd<9>;
+
+	.shared .align 4 .b8 _ZZ18copy2d_smem_kernelPKiPiiiE4tile[1024];
+
+ld.param.u64 %rd1, [_Z18copy2d_smem_kernelPKiPiii_param_0];
+ld.param.u64 %rd2, [_Z18copy2d_smem_kernelPKiPiii_param_1];
+ld.param.u32 %r8, [_Z18copy2d_smem_kernelPKiPiii_param_2];
+ld.param.u32 %r10, [_Z18copy2d_smem_kernelPKiPiii_param_3];
+mov.u32 %r11, %ctaid.x;
+shl.b32 %r12, %r11, 4;
+mov.u32 %r1, %tid.x;
+add.s32 %r2, %r12, %r1;
+mov.u32 %r13, %ctaid.y;
+shl.b32 %r14, %r13, 4;
+mov.u32 %r3, %tid.y;
+add.s32 %r4, %r14, %r3;
+setp.lt.s32 %p2, %r2, %r8;
+setp.lt.s32 %p3, %r4, %r10;
+and.pred %p1, %p2, %p3;
+mov.u32 %r23, 0;
+not.pred %p4, %p1;
+@%p4 bra $L__BB0_2;
+
+cvta.to.global.u64 %rd3, %rd1;
+mad.lo.s32 %r15, %r4, %r8, %r2;
+mul.wide.s32 %rd4, %r15, 4;
+add.s64 %rd5, %rd3, %rd4;
+ld.global.u32 %r23, [%rd5];
+
+$L__BB0_2:
+shl.b32 %r16, %r3, 6;
+mov.u32 %r17, _ZZ18copy2d_smem_kernelPKiPiiiE4tile;
+add.s32 %r18, %r17, %r16;
+shl.b32 %r19, %r1, 2;
+add.s32 %r7, %r18, %r19;
+st.shared.u32 [%r7], %r23;
+bar.sync 0;
+@%p4 bra $L__BB0_4;
+
+ld.shared.u32 %r20, [%r7];
+add.s32 %r21, %r20, 1;
+mad.lo.s32 %r22, %r4, %r8, %r2;
+cvta.to.global.u64 %rd6, %rd2;
+mul.wide.s32 %rd7, %r22, 4;
+add.s64 %rd8, %rd6, %rd7;
+st.global.u32 [%rd8], %r21;
+
+$L__BB0_4:
+ret;
+
+}
+

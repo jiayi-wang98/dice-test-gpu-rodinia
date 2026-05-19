@@ -1,0 +1,69 @@
+// DICECompiler Metadata for: stencil2d (RF-Unified)
+// Hand-written for HPCA 2027 RF/SMEM unification microbench.
+//
+// Diff vs baseline:
+//   * DBB 4 (STS + BARRIER) removed.
+//   * DBB 1 gains a mov to replicate %r4 -> %r5 (row-coloring for stride-16).
+//   * DBB 5 emits 4 XRF reads (up, down, left, right). Center reuses %r4
+//     (local; no cross-thread port).
+//   * 4 of 4 cross-thread ports used  -- this kernel saturates the budget.
+//
+FUNCTION = _Z16stencil2d_kernelPKiPiii;
+
+DBB_ID = 0,
+BITSTREAM_ADDR = $DICE_BB0_0,
+BITSTREAM_LENGTH = 4,
+UNROLLING_FACTOR = 1,
+UNROLLING_STRATEGY = 0,
+LD_DEST_REGS = (%c0, %c1, %c2, %c3),
+IS_PARAMETER_LOAD;
+
+DBB_ID = 1,
+BITSTREAM_ADDR = $DICE_BB0_1,
+BITSTREAM_LENGTH = 17,
+UNROLLING_FACTOR = 2,
+UNROLLING_STRATEGY = 0,
+LAT = 7,
+IN_REGS = (%c0, %c2, %c3),
+OUT_REGS = (%p2, %r0, %r1, %r2, %r3, %r4, %r5),
+LD_DEST_REGS = (%r4),
+RFU_REPLICATE = (%r4 -> %r5);
+
+DBB_ID = 5,
+BITSTREAM_ADDR = $DICE_BB0_5,
+BITSTREAM_LENGTH = 19,
+UNROLLING_FACTOR = 2,
+UNROLLING_STRATEGY = 0,
+LAT = 7,
+IN_REGS = (%p2, %r0, %r1, %r4, %r5),
+OUT_REGS = (%r11, %r12, %r13, %r14, %r15),
+XRF_PORTS = 4,
+XRF_BANKS = (%r4 @ T-16, %r5 @ T+16, %r4 @ T-1, %r4 @ T+1),
+XRF_NOTE = "stride-16 alias avoided by row-coloring %r4/%r5; banks {T+20,T+21,T+3,T+5,T+4} mod 32 — all distinct",
+BRANCH = 1,
+BRANCH_PRED = (%p2),
+BRANCH_TARGET = 17,
+BRANCH_RECVPC = 6;
+
+DBB_ID = 6,
+BITSTREAM_ADDR = $DICE_BB0_6,
+BITSTREAM_LENGTH = 8,
+UNROLLING_FACTOR = 2,
+UNROLLING_STRATEGY = 0,
+LAT = 4,
+IN_REGS = (%c2, %r3, %r11, %r12, %r13, %r14),
+OUT_REGS = (%r11, %r12, %r13, %r14),
+LD_DEST_REGS = (%r11, %r12, %r13, %r14);
+
+DBB_ID = 7,
+BITSTREAM_ADDR = $DICE_BB0_7,
+BITSTREAM_LENGTH = 4,
+UNROLLING_FACTOR = 2,
+UNROLLING_STRATEGY = 0,
+LAT = 3,
+IN_REGS = (%c1, %r15, %w6),
+STORE = 1;
+
+DBB_ID = 17,
+BITSTREAM_ADDR = $DICE_BB0_17,
+RET;

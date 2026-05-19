@@ -1,0 +1,42 @@
+{
+  "input_file": "/data2/jwang710/DICE-RFSMEM/DICE_ISCA_Eval/dice-test-gpu-rodinia/cuda/stencil2d/stencil2d.1.sm_52.ptx",
+  "resource_limits": {
+    "pe_count": 16,
+    "sfu_count": 4,
+    "ldst_port_count": 4
+  },
+  "overall": {
+    "kernel_count": 1,
+    "total_pgraph_count": 27,
+    "total_non_mov_ops": 49,
+    "avg_pgraph_size_non_mov_ops": 1.814815,
+    "avg_pgraph_utilization": {
+      "pe": 0.23,
+      "sfu": 0.0,
+      "ldst": 0.4,
+      "total": 0.22
+    }
+  },
+  "kernels": [
+    {
+      "function_id": 0,
+      "kernel_name": "_Z16stencil2d_kernelPKiPiii",
+      "pgraph_count": 27,
+      "active_pgraph_count": 20,
+      "total_non_mov_ops": 49,
+      "avg_pgraph_size_non_mov_ops": 1.814815,
+      "avg_active_pgraph_size_non_mov_ops": 2.45,
+      "total_resource_ops": {
+        "pe": 37,
+        "sfu": 0,
+        "ldst": 12
+      },
+      "avg_pgraph_utilization": {
+        "pe": 0.23,
+        "sfu": 0.0,
+        "ldst": 0.4,
+        "total": 0.22
+      }
+    }
+  ]
+}

@@ -1,0 +1,79 @@
+// DICECompiler PPTX for: /data2/jwang710/DICE-RFSMEM/DICE_ISCA_Eval/dice-test-gpu-rodinia/cuda/stencil1d/stencil1d.1.sm_52.ptx
+//
+// RF-unified version: 7 DBBs (was 8). Dropped the STS DBB entirely;
+// %r4 (the publication register, loaded in DBB 1) is read directly via
+// ld.srf from the producing thread.  SRF address space is flat:
+//   addr = reg_idx*(CTA_SIZE*4) + tid_in_cta*4
+// With reg_idx=0 for %r4, address is just tid*4 (+/-4 for left/right).
+// bar.sync still required to fence the producing-thread gmem load.
+//
+.version 7.7
+.target sm_52
+.address_size 64
+// .globl	_Z16stencil1d_kernelPKiPii
+.visible .entry _Z16stencil1d_kernelPKiPii(
+.param .u64 _Z16stencil1d_kernelPKiPii_param_0,
+.param .u64 _Z16stencil1d_kernelPKiPii_param_1,
+.param .u32 _Z16stencil1d_kernelPKiPii_param_2
+)
+{
+.reg .b64 %c<3>;
+.reg .b32 %r<11>;
+.reg .pred %p<5>;
+.reg .b64 %w<3>;
+
+$DICE_BB0_0:
+ld.param.u64 %c0, [_Z16stencil1d_kernelPKiPii_param_0];
+ld.param.u64 %c1, [_Z16stencil1d_kernelPKiPii_param_1];
+ld.param.u32 %c2, [_Z16stencil1d_kernelPKiPii_param_2];
+
+$DICE_BB0_1:
+mov.u32 %w0, %ctaid.x;
+shl.b32 %w1, %w0, 8;
+mov.u32 %r0, %tid.x;
+add.s32 %r1, %w1, %r0;
+setp.ge.s32 %p0, %r1, %c2;
+cvta.to.global.u64 %w0, %c0;
+mul.wide.s32 %r2, %r1, 4;
+add.s64 %r3, %w0, %r2;
+ld.global.u32 %r4, [%r3];
+
+$DICE_BB0_2:
+bar.sync 	0;
+@%p0 bra $DICE_BB0_6;
+
+$DICE_BB0_3:
+setp.gt.s32 %p1, %r0, 0;
+setp.lt.s32 %p2, %r0, 255;
+shl.b32 %r5, %r0, 2;
+selp.b32 %r6, -4, 0, %p1;
+selp.b32 %w0, 4, 0, %p2;
+add.s32 %w1, %r5, %r6;
+add.s32 %w2, %r5, %w0;
+ld.srf.u32 %r7, [%w1];
+ld.srf.u32 %r8, [%w2];
+
+$DICE_BB0_4:
+setp.eq.s32 %p1, %r0, 0;
+setp.eq.s32 %p2, %r0, 255;
+setp.gt.s32 %p3, %r1, 0;
+add.s32 %w2, %c2, -1;
+setp.lt.s32 %p4, %r1, %w2;
+and.pred %p3, %p1, %p3;
+and.pred %p4, %p2, %p4;
+@%p3 ld.global.u32 %w0, [%r3+-4];
+@%p4 ld.global.u32 %w1, [%r3+4];
+
+$DICE_BB0_5:
+selp.b32 %r9, %w0, %r7, %p3;
+selp.b32 %r10, %w1, %r8, %p4;
+add.s32 %w0, %r9, %r4;
+add.s32 %w1, %w0, %r10;
+cvta.to.global.u64 %w0, %c1;
+add.s64 %w2, %w0, %r2;
+st.global.u32 [%w2], %w1;
+
+$DICE_BB0_6:
+ret;
+
+}

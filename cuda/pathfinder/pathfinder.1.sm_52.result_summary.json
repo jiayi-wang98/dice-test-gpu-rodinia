@@ -1,0 +1,42 @@
+{
+  "input_file": "/data2/jwang710/DICE-RFSMEM/DICE_ISCA_Eval/dice-test-gpu-rodinia/cuda/pathfinder/pathfinder.1.sm_52.ptx",
+  "resource_limits": {
+    "pe_count": 16,
+    "sfu_count": 4,
+    "ldst_port_count": 4
+  },
+  "overall": {
+    "kernel_count": 1,
+    "total_pgraph_count": 19,
+    "total_non_mov_ops": 66,
+    "avg_pgraph_size_non_mov_ops": 3.473684,
+    "avg_pgraph_utilization": {
+      "pe": 0.433824,
+      "sfu": 0.0,
+      "ldst": 0.382353,
+      "total": 0.352941
+    }
+  },
+  "kernels": [
+    {
+      "function_id": 0,
+      "kernel_name": "_Z14dynproc_kerneliPiS_S_iiii",
+      "pgraph_count": 19,
+      "active_pgraph_count": 17,
+      "total_non_mov_ops": 66,
+      "avg_pgraph_size_non_mov_ops": 3.473684,
+      "avg_active_pgraph_size_non_mov_ops": 3.882353,
+      "total_resource_ops": {
+        "pe": 58,
+        "sfu": 0,
+        "ldst": 8
+      },
+      "avg_pgraph_utilization": {
+        "pe": 0.433824,
+        "sfu": 0.0,
+        "ldst": 0.382353,
+        "total": 0.352941
+      }
+    }
+  ]
+}

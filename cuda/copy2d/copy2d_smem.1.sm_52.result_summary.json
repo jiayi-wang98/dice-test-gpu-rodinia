@@ -1,0 +1,42 @@
+{
+  "input_file": "/data2/jwang710/DICE-RFSMEM/DICE_ISCA_Eval/dice-test-gpu-rodinia/cuda/copy2d/copy2d_smem.1.sm_52.ptx",
+  "resource_limits": {
+    "pe_count": 16,
+    "sfu_count": 4,
+    "ldst_port_count": 4
+  },
+  "overall": {
+    "kernel_count": 1,
+    "total_pgraph_count": 8,
+    "total_non_mov_ops": 23,
+    "avg_pgraph_size_non_mov_ops": 2.875,
+    "avg_pgraph_utilization": {
+      "pe": 0.625,
+      "sfu": 0.0,
+      "ldst": 0.666667,
+      "total": 0.527778
+    }
+  },
+  "kernels": [
+    {
+      "function_id": 0,
+      "kernel_name": "_Z18copy2d_smem_kernelPKiPiii",
+      "pgraph_count": 8,
+      "active_pgraph_count": 5,
+      "total_non_mov_ops": 23,
+      "avg_pgraph_size_non_mov_ops": 2.875,
+      "avg_active_pgraph_size_non_mov_ops": 4.6,
+      "total_resource_ops": {
+        "pe": 19,
+        "sfu": 0,
+        "ldst": 4
+      },
+      "avg_pgraph_utilization": {
+        "pe": 0.625,
+        "sfu": 0.0,
+        "ldst": 0.666667,
+        "total": 0.527778
+      }
+    }
+  ]
+}
