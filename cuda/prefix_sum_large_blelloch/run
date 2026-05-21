@@ -1,0 +1,5 @@
+#!/bin/bash
+rm -f ./_app_*
+rm -f ./_cuobjdump_*
+rm -f ./gpgpusim_power_report__*
+./prefix_sum_large_blelloch 65536
