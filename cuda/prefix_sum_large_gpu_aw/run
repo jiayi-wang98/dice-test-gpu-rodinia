@@ -1,0 +1,3 @@
+#!/bin/bash
+rm -f ./_app_* ./_cuobjdump_* gpgpusim_power_report__* accelwattch_power_report__*
+./prefix_sum_large 65536

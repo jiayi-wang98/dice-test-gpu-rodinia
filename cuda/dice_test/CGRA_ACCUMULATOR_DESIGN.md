@@ -405,3 +405,23 @@ Add a new perf counter `DICE_ACC_OPS_N` for total accumulator-PE op count. Used 
 | 7 | Run microbenchmarks end-to-end; compare DICE vs GPU at iso-config; report cycles + energy |
 | 8 | Port one Rodinia kernel (start with `hybridsort/bucketprefixoffset` — simplest) |
 | 9 | Write up results for ISCA / HPCA submission |
+
+---
+
+## 10. Implementation status (2026-05-19)
+
+### Done
+
+- **Step 1 — `dice_atomics.h`**: `cuda/dice_test/dice_atomics.h` with `dice_cta_acc_add<SLOT>(X, val)` templated intrinsic. Slot index is a template literal, not derived from address — keeps the generated PTX free of `__local_depot` frames so the DICE compiler doesn't trip on stack pointers. Reserves a fixed-size `__shared__ uint __dice_acc_slots[DICE_ACC_SLOTS]` (no `extern`; the DICE PTX parser rejected `.extern .shared`).
+- **Step 2 — microbenchmark**: `cuda/block_sum_acc/block_sum_acc.cu`. Compiles fine with NVCC; runs correctly on real GPUs (`atomicAdd` fallback).
+- **Step 2 (baseline) — `cuda/block_sum/block_sum.cu`**: SMEM tree-reduce + atomicAdd. Runs on DICE simulator: 76590 cycles, sum matches CPU.
+- **DICE atomic LDST plumbing**: simulator-side `atom.*` opcode is wired up via a v1 synchronous functional path. Patch in `cuda-sim.cc:dice_exec_inst_light` fires `atom_callback` inline (RMW + dst RF write) and suppresses LDST queue insertion so the writeback doesn't overwrite the dst RF. Committed in `82f15da`. The proper deferred path (mem_fetch through NoC → L2 → mf->do_atomic at L2 pop, mirroring SIMT) was prototyped but blocks on DICE's per-block load/store accounting (atomics fit neither bucket cleanly); plumbing left in place (mem_fetch::do_atomic routes via cgra_block_state_t::do_atomic_dice → dice_cfg_block_t::do_atomic) for a future iteration.
+
+### Blocked
+
+- **Step 3 — DICE compiler atom-recognition**: the current DICE-ILP Python compiler (`dice-ilp/DICETool.py`) **drops** `atom.shared.*` and `atom.global.*` from the PPTX as part of dead-code elimination. `block_sum_acc.1.sm_52.pptx` is missing both atomics; the kernel becomes a no-op after the load phase. Until the compiler is patched to either (a) preserve atomics on magic addresses or (b) lower them to `acc.*` PPTX instructions, `block_sum_acc` cannot be executed end-to-end on the DICE simulator.
+
+### Open questions surfaced during the prototype
+
+- The atomic v1 (synchronous) skips NoC + L2 atomic-unit traffic entirely, so DICEwattch undercounts atomic energy. For ISCA evaluation we need either (i) the deferred-callback path completed (fix the loads_done/stores_done accounting for atomics), or (ii) a side-channel counter that DICEwattch reads.
+- The DICE ILP partitioner sets `UNROLLING_FACTOR=4` on most DBBs. For an accumulator DBB where every thread targets the same magic SMEM address, four lanes per cycle pushing to the same LDST port trips `accessq[i].size() <= 1`. Once the compiler emits `acc.*` instead of `atom.shared.*`, this is moot (the PE handles serialization). Until then, the prototype hits this assertion in `dice_push_accesses`.

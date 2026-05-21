@@ -40,6 +40,9 @@
     <param name="DICE_BCT_DEC_E"        value="0.0000726"/>
     <param name="DICE_ACTIVE_CTA_E"     value="0.0004840"/>
     <param name="DICE_SCHED_EBLOCK_E"   value="0.0000968"/>
+    <!-- One PE-cycle pipeline add for the accumulator PE (atom.shared).
+         Defaults to PIPE_A. -->
+    <param name="DICE_ACC_OP_E"         value="0.0257"/>
 
     <!-- ================================================================
          2. AccelWattch-format scaling coefficients (RTX2060S target,

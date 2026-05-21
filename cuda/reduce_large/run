@@ -1,0 +1,5 @@
+#!/bin/bash
+rm -f ./_app_*
+rm -f ./_cuobjdump_*
+rm -f ./gpgpusim_power_report__*
+./reduce_large 65536
