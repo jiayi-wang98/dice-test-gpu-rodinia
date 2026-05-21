@@ -1,0 +1,3 @@
+#!/bin/bash
+rm -f ./_app_* ./_cuobjdump_* ./gpgpusim_power_report__*
+./iir_acc 256 512

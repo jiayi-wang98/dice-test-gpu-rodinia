@@ -135,4 +135,47 @@ dice_cta_acc_min_slot(unsigned int &X, unsigned int val) {
 #define dice_cta_acc_min(...) \
     dice_cta_acc_min_slot<((__COUNTER__) % DICE_ACC_SLOTS)>(__VA_ARGS__)
 
+// ===================================================================
+// FMA-mode loop-carry intrinsic for first-order linear recurrences
+//   y_new = a*x + b*y_prev
+//
+// Used for IIR filters, EMA smoothing, any 1st-order LTI recurrence.
+// On DICE: routes to a switch-box-configured feedback path through
+// an FMA-mode PE.  No new hardware - the CGRA switch boxes already
+// have configurable bypass registers; the bitstream toggles the
+// feedback wire on for the configured slot.
+// On GPU baseline: this intrinsic is not used (separate iir.cu
+// uses the standard per-thread serial loop pattern).
+//
+// Implementation here: read slot, compute FMA, atomicExch the new
+// value.  Functionally correct under DICE's dispatch-order serial-
+// isation; would race on a stock GPU SIMT (which is why the GPU
+// baseline uses a different kernel structure).
+// ===================================================================
+template <unsigned SLOT>
+__device__ __forceinline__ float
+dice_loop_carry_fma_slot(float &y_out, float x, float a, float b) {
+    static_assert(SLOT < DICE_ACC_SLOTS, "slot out of range");
+    int *slot_p = (int *)&__dice_acc_slots[SLOT];
+    int old_int, new_int;
+    float y_prev, y_new;
+    // CAS-loop: each iteration atomically reads-modifies-writes the slot.
+    // On a stock GPU this is the standard retry-until-CAS-succeeds idiom
+    // for float reductions (no native atomicFMA in PTX).
+    // On DICE the compiler can recognise this magic-address CAS-loop and
+    // lower it to a single-cycle in-fabric FMA dispatch through the
+    // configured switch-box feedback path.
+    do {
+        old_int = atomicAdd(slot_p, 0);                // atomic read of slot
+        y_prev  = __int_as_float(old_int);
+        y_new   = a * x + b * y_prev;
+        new_int = __float_as_int(y_new);
+    } while (atomicCAS(slot_p, old_int, new_int) != old_int);
+    y_out = y_new;
+    return y_prev;
+}
+
+#define dice_loop_carry_fma(...) \
+    dice_loop_carry_fma_slot<((__COUNTER__) % DICE_ACC_SLOTS)>(__VA_ARGS__)
+
 #endif  // DICE_ATOMICS_H
