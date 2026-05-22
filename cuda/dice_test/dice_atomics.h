@@ -78,6 +78,28 @@ dice_cta_acc_add_slot(int &X, int val) {
 // (other libraries also use __COUNTER__) that the raw index would exceed
 // the slot array — the static_assert in dice_cta_acc_add_slot still
 // catches out-of-range explicit usage.
+// Float ADD-mode overload. CAS-loop on the bit-cast slot (CUDA's
+// atomicAdd on float exists for global memory but at this SMEM-magic-
+// address path we go through the same int-cast CAS pattern as the
+// FMA loop-carry intrinsic below so the lowering pass sees a uniform
+// IR shape regardless of element type.
+template <unsigned SLOT>
+__device__ __forceinline__ float
+dice_cta_acc_add_slot(float &X, float val) {
+    static_assert(SLOT < DICE_ACC_SLOTS, "slot out of range");
+    int *slot_p = (int *)&__dice_acc_slots[SLOT];
+    int old_int, new_int;
+    float old_f, new_f;
+    do {
+        old_int = atomicAdd(slot_p, 0);
+        old_f   = __int_as_float(old_int);
+        new_f   = old_f + val;
+        new_int = __float_as_int(new_f);
+    } while (atomicCAS(slot_p, old_int, new_int) != old_int);
+    X = new_f;
+    return new_f;
+}
+
 #define dice_cta_acc_add(...) \
     dice_cta_acc_add_slot<((__COUNTER__) % DICE_ACC_SLOTS)>(__VA_ARGS__)
 
@@ -107,6 +129,43 @@ dice_cta_acc_max_slot(unsigned int &X, unsigned int val) {
     static_assert(SLOT < DICE_ACC_SLOTS, "slot out of range");
     unsigned int old = atomicMax(&__dice_acc_slots[SLOT], val);
     X = (old > val) ? old : val;
+    return X;
+}
+
+// Sortable-int encoding for float MAX-mode: bijectively maps a
+// float to a signed int whose ordering matches the float ordering,
+// letting us use a single atomicMax.s32 (with PTX atom.shared.max.s32)
+// instead of a CAS-loop.  Avoids the data-dependent early-out branch
+// that nvcc reintroduces when the CAS-loop's new value happens to
+// equal the old value (which would deadlock the DICE SIMT stack when
+// chained with a downstream CAS-loop, see softmax_acc).
+//
+// Encoding: keep the sign bit, flip the mantissa+exponent bits for
+// negatives.  Standard radix-sort-for-floats trick.  Self-inverse.
+__device__ __forceinline__ int dice_float_to_sortable(float f) {
+    int x = __float_as_int(f);
+    int mask = (x >> 31) & 0x7FFFFFFF;
+    return x ^ mask;
+}
+__device__ __forceinline__ float dice_sortable_to_float(int s) {
+    int mask = (s >> 31) & 0x7FFFFFFF;
+    return __int_as_float(s ^ mask);
+}
+// Init sentinel for a MAX slot: encoded form of -FLT_MAX = INT_MIN.
+#define DICE_ACC_MAX_INIT_F  (0x80000000)
+
+// Float MAX-mode overload.  Single atomicMax on the sortable encoding;
+// kernel author must initialise the slot to DICE_ACC_MAX_INIT_F (NOT
+// to -FLT_MAX) before the first call.
+template <unsigned SLOT>
+__device__ __forceinline__ float
+dice_cta_acc_max_slot(float &X, float val) {
+    static_assert(SLOT < DICE_ACC_SLOTS, "slot out of range");
+    int *slot_p   = (int *)&__dice_acc_slots[SLOT];
+    int  s_val    = dice_float_to_sortable(val);
+    int  s_old    = atomicMax(slot_p, s_val);
+    int  s_new    = (s_old > s_val) ? s_old : s_val;
+    X = dice_sortable_to_float(s_new);
     return X;
 }
 
