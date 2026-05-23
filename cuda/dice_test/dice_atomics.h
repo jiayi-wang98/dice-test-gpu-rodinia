@@ -151,8 +151,17 @@ __device__ __forceinline__ float dice_sortable_to_float(int s) {
     int mask = (s >> 31) & 0x7FFFFFFF;
     return __int_as_float(s ^ mask);
 }
-// Init sentinel for a MAX slot: encoded form of -FLT_MAX = INT_MIN.
-#define DICE_ACC_MAX_INIT_F  (0x80000000)
+// Init sentinel for a MAX slot: the sortable-int encoding of -FLT_MAX.
+// (NOT INT_MIN -- INT_MIN decodes to NaN under this encoding because
+// the lower 31 bits flip to all-1s when XOR'd with 0x7FFFFFFF, giving
+// the float NaN bit pattern.  For benchmarks that only DECODE the
+// slot after every thread has fired (e.g.\ block_max, the 3-pass
+// softmax), INT_MIN happens to work because the slot always holds a
+// real encoded xi by the time it's read.  For benchmarks where a
+// thread may read the slot before any update (online softmax: the
+// first thread's m_old is the sentinel), the decode round-trip
+// matters and we use encoded(-FLT_MAX) = 0x80800000.)
+#define DICE_ACC_MAX_INIT_F  (0x80800000)
 
 // Float MAX-mode overload.  Single atomicMax on the sortable encoding;
 // kernel author must initialise the slot to DICE_ACC_MAX_INIT_F (NOT
@@ -236,5 +245,69 @@ dice_loop_carry_fma_slot(float &y_out, float x, float a, float b) {
 
 #define dice_loop_carry_fma(...) \
     dice_loop_carry_fma_slot<((__COUNTER__) % DICE_ACC_SLOTS)>(__VA_ARGS__)
+
+// ===================================================================
+// Coupled-slot IFF: FlashAttention-style online softmax update.
+//
+// Single-pass (m, l) maintenance across threads in CTA-dispatch order:
+//     m_new = max(m_old, x)
+//     l_new = l_old * exp(m_old - m_new) + exp(x - m_new)
+//     slot_M := m_new
+//     slot_L := l_new
+//
+// The L-slot's update consumes BOTH m_old (slot-M before this thread's
+// update) and m_new (slot-M after).  On the CGRA fabric this is a
+// cross-slot wire: the M-PE's output is routed through the switch
+// box into the L-PE's input in the same dispatch cycle, allowing
+// the (m, l) tuple to advance together per thread.  This is the
+// canonical FlashAttention online softmax algorithm fused into a
+// single IFF p-graph (instead of separate MAX-pass + ADD-pass).
+//
+// SEMANTICS: correct only under DICE's CTA-order dispatch.  Stock
+// GPU SIMT cannot soundly run this kernel as written (m_old/m_new
+// across the two atom ops race against other warps).  We provide
+// this intrinsic specifically as the DICE-only AI primitive.
+// ===================================================================
+template <unsigned SLOT_M, unsigned SLOT_L>
+__device__ __forceinline__ void
+dice_online_softmax_update_slot(float x) {
+    static_assert(SLOT_M < DICE_ACC_SLOTS && SLOT_L < DICE_ACC_SLOTS,
+                  "slots out of range");
+    static_assert(SLOT_M != SLOT_L, "M and L slots must differ");
+    int *m_p = (int *)&__dice_acc_slots[SLOT_M];
+    int *l_p = (int *)&__dice_acc_slots[SLOT_L];
+
+    // M update: sortable-int atomic max (returns OLD, slot ← max).
+    int x_sortable = dice_float_to_sortable(x);
+    int s_old = atomicMax(m_p, x_sortable);
+    int s_new = (s_old > x_sortable) ? s_old : x_sortable;
+    float m_old = dice_sortable_to_float(s_old);
+    float m_new = dice_sortable_to_float(s_new);
+
+    // L update: CAS-loop on (l_old, l_new). Under DICE dispatch-order
+    // each thread's CAS succeeds first try (no concurrent writers).
+    int   l_old_int, l_new_int;
+    float l_old, l_new;
+    do {
+        l_old_int = atomicAdd(l_p, 0);             // atomic read of L
+        l_old     = __int_as_float(l_old_int);
+        float scale    = __expf(m_old - m_new);    // rescale running sum
+        float new_term = __expf(x     - m_new);    // contribution from this thread
+        l_new     = l_old * scale + new_term;
+        l_new_int = __float_as_int(l_new);
+    } while (atomicCAS(l_p, l_old_int, l_new_int) != l_old_int);
+}
+
+// Macro form pinning slots 0,1 by default (caller can use the
+// _slot template directly to pick others).
+#define dice_online_softmax_update(x) \
+    dice_online_softmax_update_slot<0, 1>(x)
+
+// Init sentinel pair for the (M, L) slot pair before the IFF chain.
+#define DICE_ONLINE_SOFTMAX_INIT(slots)                          \
+    do {                                                         \
+        ((int   *)(slots))[0] = DICE_ACC_MAX_INIT_F;             \
+        ((float *)(slots))[1] = 0.0f;                            \
+    } while (0)
 
 #endif  // DICE_ATOMICS_H
