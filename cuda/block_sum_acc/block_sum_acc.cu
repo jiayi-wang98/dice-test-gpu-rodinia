@@ -32,7 +32,7 @@ __global__ void block_sum_acc_kernel(const int *in, int *out, int N)
     // last thread's X = total. On real GPUs atomic ordering is undefined, so
     // we don't rely on X; instead we use __syncthreads + a read of the slot.
     int X = 0;
-    dice_cta_acc_add<0>(X, local);
+    dice_cta_acc_add_slot<0>(X, local);
 
     // Phase 3: barrier then publish total. On DICE the dispatch order makes
     // the explicit barrier a no-op; on real GPUs it's required to make

@@ -1,0 +1,98 @@
+// DICECompiler PPTX for: softmax_acc_v2.cu
+// K=4 cols/thread, BLOCK_SIZE=128, COLS=512.
+// Native-float acc-PE: acc.shared.max.f32 / acc.shared.add.f32 reduce
+// floats directly — no sortable-int encoding, no CAS loop. No bar.sync
+// (DICE p-graphs run sequentially+atomically). Slot init still explicit
+// here (float identities: -FLT_MAX, 0.0); folded into DBB_1.
+.version 7.7
+.target sm_52
+.address_size 64
+.visible .entry _Z21softmax_acc_v2_kernelPKfPfi(
+.param .u64 _Z21softmax_acc_v2_kernelPKfPfi_param_0,
+.param .u64 _Z21softmax_acc_v2_kernelPKfPfi_param_1,
+.param .u32 _Z21softmax_acc_v2_kernelPKfPfi_param_2
+)
+{
+.reg .b64 %c<3>;
+.reg .b32 %r<10>;
+.reg .pred %p<2>;
+.reg .b64 %w<5>;
+
+.shared .align 4 .b8 __dice_acc_slots[128];
+
+$DICE_BB0_0:
+ld.param.u64 %c0, [_Z21softmax_acc_v2_kernelPKfPfi_param_0];
+ld.param.u64 %c1, [_Z21softmax_acc_v2_kernelPKfPfi_param_1];
+ld.param.u32 %c2, [_Z21softmax_acc_v2_kernelPKfPfi_param_2];
+
+$DICE_BB0_1:
+mov.u32 %r0, %tid.x;
+setp.ne.s32 %p0, %r0, 0;
+@!%p0 mov.u32 %w0, -8388609;
+@!%p0 st.shared.u32 [__dice_acc_slots], %w0;
+@!%p0 mov.u32 %w0, 0;
+@!%p0 st.shared.u32 [__dice_acc_slots+4], %w0;
+mov.u32 %w0, %ctaid.x;
+mul.wide.s32 %w1, %c2, %w0;
+cvt.s64.s32 %w0, %r0;
+add.s64 %w2, %w1, %w0;
+cvta.to.global.u64 %w0, %c0;
+shl.b64 %w3, %w2, 2;
+add.s64 %w4, %w0, %w3;
+ld.global.f32 %r2, [%w4];
+ld.global.f32 %r3, [%w4+512];
+ld.global.f32 %r4, [%w4+1024];
+ld.global.f32 %r5, [%w4+1536];
+max.f32 %w0, %r2, %r3;
+max.f32 %w1, %r4, %r5;
+max.f32 %r6, %w0, %w1;
+
+$DICE_BB0_2:
+mov.u32 %r1, __dice_acc_slots;
+acc.shared.max.f32 %w0, [%r1], %r6;
+
+$DICE_BB0_3:
+ld.shared.f32 %r7, [__dice_acc_slots];
+sub.f32 %w1, %r2, %r7;
+mul.f32 %w0, %w1, 0f3FB8AA3B;
+ex2.approx.f32 %r2, %w0;
+sub.f32 %w1, %r3, %r7;
+mul.f32 %w0, %w1, 0f3FB8AA3B;
+ex2.approx.f32 %r3, %w0;
+sub.f32 %w1, %r4, %r7;
+mul.f32 %w0, %w1, 0f3FB8AA3B;
+ex2.approx.f32 %r4, %w0;
+sub.f32 %w1, %r5, %r7;
+mul.f32 %w0, %w1, 0f3FB8AA3B;
+ex2.approx.f32 %r5, %w0;
+add.f32 %w0, %r2, %r3;
+add.f32 %w1, %r4, %r5;
+add.f32 %r6, %w0, %w1;
+cvta.to.global.u64 %r7, %c1;
+
+$DICE_BB0_4:
+add.s32 %w1, %r1, 4;
+acc.shared.add.f32 %w0, [%w1], %r6;
+
+$DICE_BB0_5:
+ld.shared.f32 %r8, [__dice_acc_slots+4];
+div.rn.f32 %r9, 0f3F800000, %r8;
+cvt.s64.s32 %w1, %r0;
+mov.u32 %w2, %ctaid.x;
+mul.wide.s32 %w3, %c2, %w2;
+add.s64 %w4, %w3, %w1;
+shl.b64 %w0, %w4, 2;
+add.s64 %w2, %r7, %w0;
+mul.f32 %w1, %r2, %r9;
+st.global.f32 [%w2], %w1;
+mul.f32 %w1, %r3, %r9;
+st.global.f32 [%w2+512], %w1;
+mul.f32 %w1, %r4, %r9;
+st.global.f32 [%w2+1024], %w1;
+mul.f32 %w1, %r5, %r9;
+st.global.f32 [%w2+1536], %w1;
+
+$DICE_BB0_6:
+ret;
+
+}

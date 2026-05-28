@@ -2,4 +2,4 @@
 rm -f ./_app_*
 rm -f ./_cuobjdump_*
 rm -f ./gpgpusim_power_report__*
-./softmax_acc 4096 512
+./softmax_acc_v2 4096 512

@@ -13,13 +13,24 @@
 # -----------------------------
 # User-overridable variables
 # -----------------------------
+# Note: do NOT put inline comments on `?=` lines. GNU make preserves the
+# whitespace before `#`, so `arch ?= rtx2060s   # …` produces `arch =
+# "rtx2060s   "` and the trailing spaces fragment `cfg/.../rtx2060s.config`
+# into multiple cp arguments. Keep comments on their own line.
+# arch options: rtx2060s | a100 (selects DICE + GPU configs)
 app          ?= nn_cuda
-test         ?= test_dice     # or test_gpu
+test         ?= test_dice
+arch         ?= rtx2060s
+# Accept `dice_cfg=<arch>` as a synonym for `arch=<arch>` so older
+# invocations keep working.
+ifdef dice_cfg
+arch := $(dice_cfg)
+endif
 RUN_SCRIPT   ?= run
 
 BENCH_DIR    := ../$(app)
 CFG_DIR      := cfg
-SW_DIR       ?= sw_20pe
+SW_DIR       ?= sw_acc
 SUMMARY_DIR  := result_summary/$(app)
 
 # DICE compiler (used to auto-generate missing app.N artifacts)
@@ -38,8 +49,15 @@ JOBS ?= $(shell nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 8)
 # -----------------------------
 # Config files for each test type
 # -----------------------------
-CFG_gpu      := $(CFG_DIR)/gpgpusim_gpu_rtx2060s.config
-CFG_dice     := $(CFG_DIR)/gpgpusim_dice_rtx2060s.config
+CFG_gpu      := $(CFG_DIR)/gpgpusim_gpu_$(arch).config
+CFG_dice     := $(CFG_DIR)/gpgpusim_dice_$(arch).config
+
+# Interconnect netlist: Turing icnt for rtx2060s, Ampere for a100.
+ifeq ($(arch),rtx2060s)
+  ICNT_FILE := $(CFG_DIR)/config_turing_islip.icnt
+else
+  ICNT_FILE := $(CFG_DIR)/config_ampere_islip.icnt
+endif
 
 # Metadata & pptx (only for dice)
 META_SRC     := $(SW_DIR)/$(app).1.sm_52.meta
@@ -167,7 +185,7 @@ ifeq ($(test),test_gpu)
 	@cp $(CFG_DIR)/config_fermi_islip.icnt $(BENCH_DIR)/config_fermi_islip.icnt
 else
 	@cp $(CFG_dice) $(BENCH_DIR)/gpgpusim.config
-	@cp $(CFG_DIR)/config_turing_islip.icnt $(BENCH_DIR)/config_turing_islip.icnt
+	@cp $(ICNT_FILE) $(BENCH_DIR)/$(notdir $(ICNT_FILE))
 endif
 
 # Copy metadata & pptx (only for dice)
